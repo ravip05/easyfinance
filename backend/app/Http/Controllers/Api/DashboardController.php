@@ -1,0 +1,84 @@
+<?php
+namespace App\Http\Controllers\Api;
+use App\Http\Controllers\Controller;
+use App\Models\Lead;
+use App\Models\Commission;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class DashboardController extends Controller {
+    public function stats(Request $request) {
+        $user = $request->user();
+        $q = Lead::scopeForUser(Lead::query(), $user);
+        $total   = (clone $q)->count();
+        $active  = (clone $q)->whereNotIn('stage',['Closed','Disbursement'])->count();
+        $disbursed = (clone $q)->where('stage','Disbursement')->count();
+        $pending = (clone $q)->where('stage','Docs Pending')->count();
+        $totalAmt = (clone $q)->where('stage','Disbursement')->sum('loan_amount');
+        $commission = Commission::where('user_id',$user->id)->sum('amount');
+        return response()->json([
+            'total_leads'     => $total,
+            'active_leads'    => $active,
+            'disbursed_leads' => $disbursed,
+            'pending_docs'    => $pending,
+            'total_amount'    => $totalAmt,
+            'my_commission'   => $commission,
+        ]);
+    }
+    public function trend(Request $request) {
+        $user = $request->user();
+        $months = collect(range(5,0,-1))->map(function($i) use($user) {
+            $date = now()->subMonths($i);
+            $q = Lead::scopeForUser(Lead::query(), $user)
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month);
+            return [
+                'month'    => $date->format('M'),
+                'leads'    => (clone $q)->count(),
+                'disbursed'=> (clone $q)->where('stage','Disbursement')->count(),
+            ];
+        });
+        return response()->json($months);
+    }
+    public function pipelineSummary(Request $request) {
+        $user = $request->user();
+        $data = Lead::scopeForUser(Lead::query(), $user)
+            ->select('stage', DB::raw('count(*) as count'), DB::raw('sum(loan_amount) as total_amount'))
+            ->groupBy('stage')
+            ->get();
+        return response()->json($data);
+    }
+    public function followups(Request $request) {
+        $user = $request->user();
+        $today = now()->toDateString();
+        $leads = Lead::scopeForUser(Lead::query(), $user)
+            ->whereNotNull('followup_date')
+            ->whereNotIn('stage',['Closed'])
+            ->orderBy('followup_date')
+            ->limit(10)
+            ->with('assignedUser:id,name,initials')
+            ->get(['id','name','phone','loan_type','stage','followup_date','priority','assigned_to']);
+        return response()->json($leads->map(fn($l) => array_merge($l->toArray(), [
+            'status' => $l->followup_date < $today ? 'overdue' : ($l->followup_date == $today ? 'today' : 'upcoming')
+        ])));
+    }
+    public function leaderboard(Request $request) {
+        $lb = User::withCount(['leads as total_leads','leads as disbursed_leads' => fn($q) => $q->where('stage','Disbursement')])
+            ->with('roles')
+            ->whereHas('roles', fn($q) => $q->whereIn('name',['staff','manager','dsa']))
+            ->where('status','active')
+            ->orderByDesc('disbursed_leads')
+            ->limit(10)
+            ->get(['id','name','initials','department'])
+            ->map(fn($u) => [
+                'id'         => $u->id,
+                'name'       => $u->name,
+                'initials'   => $u->initials,
+                'department' => $u->department,
+                'total_leads'    => $u->total_leads,
+                'disbursed_leads'=> $u->disbursed_leads,
+            ]);
+        return response()->json($lb);
+    }
+}

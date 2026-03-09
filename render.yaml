@@ -1,0 +1,44 @@
+services:
+  # The Laravel API Service
+  - type: web
+    name: easyfinance-api
+    runtime: php
+    plan: free
+    rootDir: EasyFinanceCRM/backend
+    buildCommand: "./build.sh"
+    startCommand: "heroku-php-apache2 public/"
+    envVars:
+      - key: APP_NAME
+        value: "EasyFinance CRM"
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DATABASE_URL
+        fromDatabase:
+          name: easyfinance-db
+          property: connectionString
+      - key: FRONTEND_URL # Must be set to Vercel/Netlify URL later
+        value: "http://localhost:5173"
+      # Additional necessary Laravel envs based on default .env
+      - key: BROADCAST_DRIVER
+        value: log
+      - key: CACHE_DRIVER
+        value: file
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: SESSION_DRIVER
+        value: file
+
+  # Free PostgreSQL Database
+databases:
+  - name: easyfinance-db
+    databaseName: easyfinance
+    user: admin
+    plan: free
