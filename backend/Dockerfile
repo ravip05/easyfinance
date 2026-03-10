@@ -29,6 +29,7 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 
 # Set Permissions
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Change Apache document root to public folder
