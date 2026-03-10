@@ -16,11 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (\Throwable $e, $request) {
-            if ($request->is('api/*') || $request->wantsJson()) {
-                $code = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
-                return response()->json(['success' => false, 'message' => $e->getMessage() ?: 'Server Error'], $code);
-            }
-        });
+        // Allow Laravel's default API exception handling
+        // (AuthenticationException -> 401, ValidationException -> 422)
     })
     ->create();

@@ -8,7 +8,13 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const token = sessionStorage.getItem('crm_token')
-  if (token) config.headers.Authorization = 'Bearer ' + token
+  if (token) {
+    if (config.headers.set) {
+        config.headers.set('Authorization', `Bearer ${token}`)
+    } else {
+        config.headers['Authorization'] = `Bearer ${token}`
+    }
+  }
   return config
 })
 
