@@ -3,7 +3,7 @@
 set -o errexit
 
 echo "Installing composer dependencies..."
-composer install --no-dev --optimize-autoloader --force
+composer install --no-dev --optimize-autoloader
 
 echo "Clearing caches..."
 php artisan optimize:clear
