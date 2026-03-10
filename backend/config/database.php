@@ -1,7 +1,7 @@
 <?php
 use Illuminate\Support\Str;
 return [
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', env('DATABASE_URL') ? 'pgsql' : 'mysql'),
     'connections' => [
         'mysql' => [
             'driver'    => 'mysql',
