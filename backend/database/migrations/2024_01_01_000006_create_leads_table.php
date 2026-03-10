@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('phone', 15);
             $table->string('email')->nullable();
             $table->string('pan_number', 10)->nullable(); // ABCDE1234F format
+            $table->decimal('loan_amount', 15, 2)->nullable();
 
             // ── Loan Details ──────────────────────────────────────────────
             $table->enum('loan_type', [
