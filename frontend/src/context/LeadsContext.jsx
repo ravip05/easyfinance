@@ -62,10 +62,12 @@ export function LeadsProvider({ children }) {
     }
   }, [])
 
-  // Load both on mount
+  // Load both on mount ONLY if authenticated
   useEffect(() => {
-    fetchLeads()
-    fetchStaff()
+    if (sessionStorage.getItem('crm_token')) {
+      fetchLeads()
+      fetchStaff()
+    }
   }, [fetchLeads, fetchStaff])
 
   // ── addLead ─────────────────────────────────────────────────────────────────

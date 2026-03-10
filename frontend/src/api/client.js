@@ -24,7 +24,9 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       sessionStorage.removeItem('crm_token')
       sessionStorage.removeItem('crm_user')
-      window.location.reload()
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
