@@ -2,7 +2,7 @@
 return [
     'paths'                    => ['api/*', 'sanctum/csrf-cookie'],
     'allowed_methods'          => ['*'],
-    'allowed_origins'          => [env('FRONTEND_URL', 'https://easyfinance-rosy.vercel.app')],
+    'allowed_origins'          => [env('FRONTEND_URL', 'http://localhost:3000')],
     'allowed_origins_patterns' => [],
     'allowed_headers'          => ['*'],
     'exposed_headers'          => [],
