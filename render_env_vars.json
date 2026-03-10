@@ -1,0 +1,86 @@
+[
+  {
+    "envVar": {
+      "key": "SESSION_DRIVER",
+      "value": "file"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGow"
+  },
+  {
+    "envVar": {
+      "key": "QUEUE_CONNECTION",
+      "value": "sync"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGln"
+  },
+  {
+    "envVar": {
+      "key": "FILESYSTEM_DISK",
+      "value": "local"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGkw"
+  },
+  {
+    "envVar": {
+      "key": "CACHE_DRIVER",
+      "value": "file"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGhn"
+  },
+  {
+    "envVar": {
+      "key": "BROADCAST_DRIVER",
+      "value": "log"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGgw"
+  },
+  {
+    "envVar": {
+      "key": "FRONTEND_URL",
+      "value": "https://easyfinance-rosy.vercel.app"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGdn"
+  },
+  {
+    "envVar": {
+      "key": "DATABASE_URL",
+      "value": "postgresql://admin:PM1WJGQuZc5bb0JjBhZe1jTIeuVn50wz@dpg-d6nu9e94tr6s73caik0g-a/easyfinance_46yr"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGcw"
+  },
+  {
+    "envVar": {
+      "key": "LOG_CHANNEL",
+      "value": "stderr"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGZn"
+  },
+  {
+    "envVar": {
+      "key": "APP_DEBUG",
+      "value": "true"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGYw"
+  },
+  {
+    "envVar": {
+      "key": "APP_KEY",
+      "value": "base64:6B8ia6NefNiz6FmUr1mRvU6ozWSYTvrVVarr8sAfOuk="
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGVn"
+  },
+  {
+    "envVar": {
+      "key": "APP_ENV",
+      "value": "production"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGUw"
+  },
+  {
+    "envVar": {
+      "key": "APP_NAME",
+      "value": "EasyFinance CRM"
+    },
+    "cursor": "qJrrSEISiGBhY3A0dHI2czczY2FqMGRn"
+  }
+]
