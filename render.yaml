@@ -4,7 +4,7 @@ services:
     name: easyfinance-api
     env: docker
     plan: free
-    rootDir: EasyFinanceCRM/backend
+    rootDir: backend
     envVars:
       - key: APP_NAME
         value: "EasyFinance CRM"
