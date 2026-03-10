@@ -2,11 +2,9 @@ services:
   # The Laravel API Service
   - type: web
     name: easyfinance-api
-    runtime: php
+    env: docker
     plan: free
     rootDir: EasyFinanceCRM/backend
-    buildCommand: "./build.sh"
-    startCommand: "heroku-php-apache2 public/"
     envVars:
       - key: APP_NAME
         value: "EasyFinance CRM"
