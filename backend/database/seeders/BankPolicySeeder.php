@@ -24,11 +24,11 @@ class BankPolicySeeder extends Seeder {
         ];
 
         foreach ($banks as $b) {
-            BankPolicy::firstOrCreate(
-                ['bank_code'=>$b['bank_code']],
-                $b
-            );
-        }
+    BankPolicy::firstOrCreate(
+        ['bank_type' => $b['bank_type']],
+        $b
+    );
+}
 
         echo "  Bank policies seeded.\n";
     }
