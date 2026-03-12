@@ -24,11 +24,13 @@ import {
   useEffect, useRef, useState,
 } from 'react'
 import { leadsApi, normalizeApiLead, staffApi } from '../api/leads'
+import { useAuth } from './AuthContext'
 import { useToast } from './ToastContext'
 
 const LeadsContext = createContext(null)
 
 export function LeadsProvider({ children }) {
+  const { token } = useAuth()
   const toast = useToast()
 
   const [leads,     setLeads]     = useState([])
@@ -62,13 +64,13 @@ export function LeadsProvider({ children }) {
     }
   }, [])
 
-  // Load both on mount ONLY if authenticated
+  // Load data when authenticated (initial load OR login)
   useEffect(() => {
-    if (sessionStorage.getItem('crm_token')) {
+    if (token || sessionStorage.getItem('crm_token')) {
       fetchLeads()
       fetchStaff()
     }
-  }, [fetchLeads, fetchStaff])
+  }, [fetchLeads, fetchStaff, token])
 
   // ── addLead ─────────────────────────────────────────────────────────────────
   /**
