@@ -62,7 +62,16 @@ export const leadsApi = {
     apiClient.get('/leads/export/csv', { responseType: 'blob' }),
 }
 
-/** Staff list for the "Assign To" dropdown in the modal. */
+/** Staff / Employee management APIs */
+export const employeesApi = {
+  list: (params = {}) => apiClient.get('/employees', { params }),
+  create: (data) => apiClient.post('/employees', data),
+  update: (id, data) => apiClient.patch(`/employees/${id}`, data),
+  updateStatus: (id, status) => apiClient.patch(`/employees/${id}/status`, { status }),
+  destroy: (id) => apiClient.delete(`/employees/${id}`),
+}
+
+/** Staff list for the "Assign To" dropdown in the modal (Legacy helper) */
 export const staffApi = {
   list: () => apiClient.get('/staff'),
 }

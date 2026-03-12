@@ -10,6 +10,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import apiClient from '../api/client'
+import EmployeeModal from '../components/EmployeeModal'
 
 const ROLES = ['admin', 'manager', 'staff']
 const STATUSES = ['Active', 'On Leave', 'Inactive']
@@ -225,6 +226,13 @@ export default function Employees() {
           </div>
         </div>
       )}
+
+      {/* add employee modal */}
+      <EmployeeModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={fetchEmployees}
+      />
     </div>
   )
 }

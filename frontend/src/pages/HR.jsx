@@ -7,6 +7,9 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import apiClient from '../api/client'
+import { hrApi } from '../api/hr'
+import HolidayModal from '../components/HolidayModal'
+import PolicyModal from '../components/PolicyModal'
 
 const TABS = ['Holidays', 'Policies', 'Attendance']
 
@@ -17,6 +20,8 @@ export default function HR() {
   const [holidays, setHolidays] = useState([])
   const [policies, setPolicies] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showHolidayModal, setShowHolidayModal] = useState(false)
+  const [showPolicyModal, setShowPolicyModal] = useState(false)
 
   useEffect(() => {
     if (activeTab === 'Holidays') fetchHolidays()
@@ -27,7 +32,7 @@ export default function HR() {
   async function fetchHolidays() {
     setIsLoading(true)
     try {
-      const res = await apiClient.get('/holidays')
+      const res = await hrApi.listHolidays()
       setHolidays(res.data.data || [])
     } catch { setHolidays([]) }
     setIsLoading(false)
@@ -36,7 +41,7 @@ export default function HR() {
   async function fetchPolicies() {
     setIsLoading(true)
     try {
-      const res = await apiClient.get('/company-policies')
+      const res = await hrApi.listPolicies()
       setPolicies(res.data.data || [])
     } catch { setPolicies([]) }
     setIsLoading(false)
@@ -62,7 +67,13 @@ export default function HR() {
           <div className="card-header">
             <div className="card-title">📅 Holiday Calendar</div>
             {role === 'admin' && (
-              <button className="btn btn-primary btn-sm" id="hr-add-holiday">+ Add Holiday</button>
+              <button 
+                className="btn btn-primary btn-sm" 
+                id="hr-add-holiday"
+                onClick={() => setShowHolidayModal(true)}
+              >
+                + Add Holiday
+              </button>
             )}
           </div>
           {isLoading ? (
@@ -106,7 +117,13 @@ export default function HR() {
           <div className="card-header">
             <div className="card-title">📋 Company Policies</div>
             {role === 'admin' && (
-              <button className="btn btn-primary btn-sm" id="hr-add-policy">+ Add Policy</button>
+              <button 
+                className="btn btn-primary btn-sm" 
+                id="hr-add-policy"
+                onClick={() => setShowPolicyModal(true)}
+              >
+                + Add Policy
+              </button>
             )}
           </div>
           {isLoading ? (
@@ -150,6 +167,18 @@ export default function HR() {
           </div>
         </div>
       )}
+
+      {/* administration modals */}
+      <HolidayModal 
+        isOpen={showHolidayModal} 
+        onClose={() => setShowHolidayModal(false)} 
+        onSuccess={fetchHolidays} 
+      />
+      <PolicyModal 
+        isOpen={showPolicyModal} 
+        onClose={() => setShowPolicyModal(false)} 
+        onSuccess={fetchPolicies} 
+      />
     </div>
   )
 }

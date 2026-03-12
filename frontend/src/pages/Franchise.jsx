@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import apiClient from '../api/client'
+import FranchiseModal from '../components/FranchiseModal'
 
 export default function Franchise() {
   const { user } = useAuth()
@@ -17,6 +18,7 @@ export default function Franchise() {
   const [franchises, setFranchises] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [selected, setSelected] = useState(null)
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     fetchFranchises()
@@ -43,7 +45,13 @@ export default function Franchise() {
           </span>
         </div>
         {role === 'admin' && (
-          <button className="btn btn-primary btn-sm" id="fr-add-btn">+ Add Franchise</button>
+          <button 
+            className="btn btn-primary btn-sm" 
+            id="fr-add-btn"
+            onClick={() => setShowModal(true)}
+          >
+            + Add Franchise
+          </button>
         )}
       </div>
 
@@ -131,6 +139,13 @@ export default function Franchise() {
           </div>
         </div>
       )}
+
+      {/* add franchise modal */}
+      <FranchiseModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={fetchFranchises}
+      />
     </div>
   )
 }
