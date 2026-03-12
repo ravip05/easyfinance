@@ -73,6 +73,7 @@ export default defineConfig(({ command }) => ({
     proxy: { '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true } }
   } : {},
   build: {
+    target: 'esnext',
     outDir: 'dist',
     rollupOptions: {
       output: {

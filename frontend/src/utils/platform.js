@@ -9,17 +9,10 @@
  *   if (hasCamera) { ... }
  */
 
-let _platform = 'web'
-let _isNative = false
+import { Capacitor } from '@capacitor/core'
 
-try {
-  // dynamic import so this module works even without capacitor installed
-  const { Capacitor } = await import('@capacitor/core')
-  _platform = Capacitor.getPlatform()
-  _isNative = Capacitor.isNativePlatform()
-} catch {
-  // capacitor not installed yet, default to web
-}
+const _platform = Capacitor.getPlatform()
+const _isNative = Capacitor.isNativePlatform()
 
 export const platform   = _platform
 export const isNative   = _isNative
