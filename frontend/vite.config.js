@@ -7,7 +7,7 @@ export default defineConfig(({ command }) => ({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.png'],
+      includeAssets: ['favicon.svg'],
       manifest: false, // using public/manifest.json directly
       workbox: {
         // precache app shell
