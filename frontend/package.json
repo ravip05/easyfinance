@@ -14,6 +14,7 @@
     "@capacitor/network": "^7.0.0",
     "@capacitor/push-notifications": "^7.0.0",
     "@capacitor/preferences": "^7.0.0",
+    "@capacitor-community/biometric-auth": "^6.0.0",
     "axios": "^1.6.0",
     "dexie": "^4.0.0",
     "react": "^18.2.0",
