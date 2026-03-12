@@ -9,7 +9,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import axios from 'axios'
+import apiClient from '../api/client'
 
 const ROLES = ['admin', 'manager', 'staff']
 const STATUSES = ['Active', 'On Leave', 'Inactive']
@@ -17,7 +17,7 @@ const STATUS_BADGE = { Active: 'badge-active', 'On Leave': 'badge-med', Inactive
 const ROLE_BADGE = { admin: 'badge-high', manager: 'badge-new', staff: 'badge-contacted' }
 
 export default function Employees() {
-  const { user, token } = useAuth()
+  const { user } = useAuth()
   const toast = useToast()
   const role = user?.role ?? 'staff'
   const isAdmin = role === 'admin'
@@ -39,9 +39,7 @@ export default function Employees() {
       if (roleFilter) params.set('role', roleFilter)
       if (statusFilter) params.set('status', statusFilter)
 
-      const res = await axios.get(`/api/employees?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await apiClient.get(`/employees?${params}`)
       setEmployees(res.data.data || [])
     } catch (e) {
       toast?.('error', 'Failed to load employees')
@@ -54,9 +52,7 @@ export default function Employees() {
   // status toggle
   async function handleStatusChange(emp, newStatus) {
     try {
-      await axios.patch(`/api/employees/${emp.id}/status`, { status: newStatus }, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await apiClient.patch(`/employees/${emp.id}/status`, { status: newStatus })
       toast?.('success', `${emp.name} set to ${newStatus}`)
       fetchEmployees()
     } catch (e) {
@@ -68,9 +64,7 @@ export default function Employees() {
   async function handleDeactivate(emp) {
     if (!window.confirm(`Deactivate "${emp.name}"? Their leads will be preserved.`)) return
     try {
-      await axios.delete(`/api/employees/${emp.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await apiClient.delete(`/employees/${emp.id}`)
       toast?.('success', `${emp.name} deactivated`)
       fetchEmployees()
     } catch (e) {

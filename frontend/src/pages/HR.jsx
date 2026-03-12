@@ -6,12 +6,12 @@
  */
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import axios from 'axios'
+import apiClient from '../api/client'
 
 const TABS = ['Holidays', 'Policies', 'Attendance']
 
 export default function HR() {
-  const { user, token } = useAuth()
+  const { user } = useAuth()
   const role = user?.role ?? 'staff'
   const [activeTab, setActiveTab] = useState('Holidays')
   const [holidays, setHolidays] = useState([])
@@ -27,7 +27,7 @@ export default function HR() {
   async function fetchHolidays() {
     setIsLoading(true)
     try {
-      const res = await axios.get('/api/holidays', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await apiClient.get('/holidays')
       setHolidays(res.data.data || [])
     } catch { setHolidays([]) }
     setIsLoading(false)
@@ -36,7 +36,7 @@ export default function HR() {
   async function fetchPolicies() {
     setIsLoading(true)
     try {
-      const res = await axios.get('/api/company-policies', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await apiClient.get('/company-policies')
       setPolicies(res.data.data || [])
     } catch { setPolicies([]) }
     setIsLoading(false)

@@ -7,13 +7,13 @@
  */
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import axios from 'axios'
+import apiClient from '../api/client'
 import DateRangeFilter from '../components/DateRangeFilter'
 
 const TABS = ['Lead Conversion', 'Employee Performance', 'Revenue', 'Branch / Franchise']
 
 export default function Reports() {
-  const { user, token } = useAuth()
+  const { user } = useAuth()
   const role = user?.role ?? 'staff'
   const [activeTab, setActiveTab] = useState('Lead Conversion')
   const [stats, setStats] = useState(null)
@@ -32,9 +32,7 @@ export default function Reports() {
       if (dateRange.to) params.set('to', dateRange.to)
       params.set('type', activeTab.toLowerCase().replace(/ \/ /g, '_').replace(/ /g, '_'))
 
-      const res = await axios.get(`/api/reports?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await apiClient.get(`/reports?${params}`)
       setStats(res.data.data || {})
     } catch {
       setStats({})

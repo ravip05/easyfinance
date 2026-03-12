@@ -8,10 +8,10 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import axios from 'axios'
+import apiClient from '../api/client'
 
 export default function Franchise() {
-  const { user, token } = useAuth()
+  const { user } = useAuth()
   const toast = useToast()
   const role = user?.role ?? 'staff'
   const [franchises, setFranchises] = useState([])
@@ -25,9 +25,7 @@ export default function Franchise() {
   async function fetchFranchises() {
     setIsLoading(true)
     try {
-      const res = await axios.get('/api/franchises', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await apiClient.get('/franchises')
       setFranchises(res.data.data || [])
     } catch (e) {
       toast?.('error', 'Failed to load franchises')
