@@ -32,11 +32,18 @@ return new class extends Migration
         });
 
         // ── users table: expand role enum + add new columns ──────────────────
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['admin', 'manager', 'staff', 'dsa', 'client'])
-                  ->default('staff')
-                  ->change();
-        });
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check');
+            DB::statement("ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(255)");
+            DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'manager', 'staff', 'dsa', 'client'))");
+            DB::statement("ALTER TABLE users ALTER COLUMN role SET DEFAULT 'staff'");
+        } else {
+            Schema::table('users', function (Blueprint $table) {
+                $table->enum('role', ['admin', 'manager', 'staff', 'dsa', 'client'])
+                      ->default('staff')
+                      ->change();
+            });
+        }
 
         Schema::table('users', function (Blueprint $table) {
             $table->string('virtual_id', 20)->unique()->nullable()->after('franchise_id');
@@ -142,11 +149,18 @@ return new class extends Migration
             $table->dropColumn(['virtual_id', 'experience_years', 'seniority', 'reference']);
         });
 
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['admin', 'manager', 'staff', 'dsa'])
-                  ->default('staff')
-                  ->change();
-        });
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check');
+            DB::statement("ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(255)");
+            DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'manager', 'staff', 'dsa'))");
+            DB::statement("ALTER TABLE users ALTER COLUMN role SET DEFAULT 'staff'");
+        } else {
+            Schema::table('users', function (Blueprint $table) {
+                $table->enum('role', ['admin', 'manager', 'staff', 'dsa'])
+                      ->default('staff')
+                      ->change();
+            });
+        }
 
         Schema::table('leads', function (Blueprint $table) {
             $table->dropColumn([
