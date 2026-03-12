@@ -32,7 +32,11 @@ return new class extends Migration
         });
 
         // ── users table: expand role enum + add new columns ──────────────────
-        DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin','manager','staff','dsa','client') DEFAULT 'staff'");
+        Schema::table('users', function (Blueprint $table) {
+            $table->enum('role', ['admin', 'manager', 'staff', 'dsa', 'client'])
+                  ->default('staff')
+                  ->change();
+        });
 
         Schema::table('users', function (Blueprint $table) {
             $table->string('virtual_id', 20)->unique()->nullable()->after('franchise_id');
@@ -138,7 +142,11 @@ return new class extends Migration
             $table->dropColumn(['virtual_id', 'experience_years', 'seniority', 'reference']);
         });
 
-        DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin','manager','staff','dsa') DEFAULT 'staff'");
+        Schema::table('users', function (Blueprint $table) {
+            $table->enum('role', ['admin', 'manager', 'staff', 'dsa'])
+                  ->default('staff')
+                  ->change();
+        });
 
         Schema::table('leads', function (Blueprint $table) {
             $table->dropColumn([
