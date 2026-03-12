@@ -100,6 +100,16 @@ const ROLE_CONFIG = {
       { s: 'My HR',      i: [{ p: 'myattendance', ic: '📅', l: 'My Attendance' }] },
     ],
   },
+  client: {
+    label: 'Client', pill: 'rp-client', icon: '🧑',
+    nav: [
+      { s: 'Main',       i: [{ p: 'dashboard',    ic: '📊', l: 'My Dashboard' }] },
+      { s: 'My Loans',   i: [{ p: 'clients',      ic: '📋', l: 'My Applications' }] },
+      { s: 'Tools',      i: [{ p: 'calculator',   ic: '🧮', l: 'Loan Calculator' }] },
+      { s: 'Support',    i: [{ p: 'tickets',      ic: '🎫', l: 'Support Tickets' }] },
+      { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' }] },
+    ],
+  },
 }
 
 // ── Page → route path mapping ──────────────────────────────────────────────────
@@ -122,6 +132,7 @@ const PAGE_ROUTES = {
   duplicates:   '/duplicates',
   idcard:       '/idcard',
   myattendance: '/myattendance',
+  tickets:      '/tickets',
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────

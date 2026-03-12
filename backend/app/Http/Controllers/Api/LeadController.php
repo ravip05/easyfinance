@@ -448,40 +448,49 @@ class LeadController extends Controller
     private function formatLead(Lead $lead): array
     {
         return [
-            'id'             => $lead->id,
-            'name'           => $lead->name,
-            'phone'          => $lead->phone,
-            'email'          => $lead->email,
-            'pan_number'     => $lead->pan_number,
-            'loan_type'      => $lead->loan_type,
-            'amount'         => $lead->amount,                  // raw decimal
-            'amount_display' => $lead->amount_formatted,        // '₹45L' accessor
-            'monthly_income' => $lead->monthly_income,
-            'stage'          => $lead->stage,
-            'priority'       => $lead->priority,
-            'source'         => $lead->source,
-            'follow_up_date' => $lead->follow_up_date?->toDateString(),
-            'notes'          => $lead->notes,
-            'is_overdue'     => $lead->is_overdue,              // bool accessor
-            'assigned_to'    => $lead->assigned_to,
-            'assigned_user'  => $lead->assignedUser ? [
+            'id'              => $lead->id,
+            'name'            => $lead->name,
+            'phone'           => $lead->phone,
+            'email'           => $lead->email,
+            'pan_number'      => $lead->pan_number,
+            'birth_date'      => $lead->birth_date?->toDateString(),
+            'age'             => $lead->age,
+            'location'        => $lead->location,
+            'loan_type'       => $lead->loan_type,
+            'amount'          => $lead->amount,
+            'amount_display'  => $lead->amount_formatted,
+            'monthly_income'  => $lead->monthly_income,
+            'income_status'   => $lead->income_status,
+            'running_loans'   => $lead->running_loans,
+            'previous_issues' => $lead->previous_issues,
+            'cibil_score'     => $lead->cibil_score,
+            'lead_value'      => $lead->lead_value,
+            'stage'           => $lead->stage,
+            'priority'        => $lead->priority,
+            'source'          => $lead->source,
+            'follow_up_date'  => $lead->follow_up_date?->toDateString(),
+            'follow_up_time'  => $lead->follow_up_time,
+            'notes'           => $lead->notes,
+            'is_overdue'      => $lead->is_overdue,
+            'assigned_to'     => $lead->assigned_to,
+            'assigned_user'   => $lead->assignedUser ? [
                 'id'       => $lead->assignedUser->id,
                 'name'     => $lead->assignedUser->name,
                 'emp_code' => $lead->assignedUser->emp_code,
             ] : null,
-            'added_by'       => $lead->added_by,
-            'added_by_user'  => $lead->addedByUser ? [
+            'added_by'        => $lead->added_by,
+            'added_by_user'   => $lead->addedByUser ? [
                 'id'   => $lead->addedByUser->id,
                 'name' => $lead->addedByUser->name,
             ] : null,
-            'franchise_id'   => $lead->franchise_id,
-            'franchise'      => $lead->franchise ? [
+            'franchise_id'    => $lead->franchise_id,
+            'franchise'       => $lead->franchise ? [
                 'id'   => $lead->franchise->id,
                 'name' => $lead->franchise->name,
                 'code' => $lead->franchise->code,
             ] : null,
-            'created_at'     => $lead->created_at->toDateTimeString(),
-            'updated_at'     => $lead->updated_at->toDateTimeString(),
+            'created_at'      => $lead->created_at->toDateTimeString(),
+            'updated_at'      => $lead->updated_at->toDateTimeString(),
         ];
     }
 }

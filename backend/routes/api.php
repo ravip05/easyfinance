@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\FranchiseController;
+use App\Http\Controllers\Api\HRController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -102,6 +103,41 @@ Route::middleware('auth:sanctum')->group(function () {
     // GET /api/franchises/{franchise}/payouts
     Route::get('franchises/{franchise}/payouts', [FranchiseController::class, 'payouts'])
          ->name('franchises.payouts');
+
+    // ── HR Module: Holidays, Policies, Push ──────────────────────────────────
+
+    Route::get('holidays', [HRController::class, 'holidays'])->name('holidays.index');
+    Route::post('holidays', [HRController::class, 'storeHoliday'])->name('holidays.store');
+    Route::delete('holidays/{holiday}', [HRController::class, 'destroyHoliday'])->name('holidays.destroy');
+
+    Route::get('company-policies', [HRController::class, 'policies'])->name('policies.index');
+    Route::post('company-policies', [HRController::class, 'storePolicy'])->name('policies.store');
+
+    Route::post('push-subscriptions', [HRController::class, 'registerPushDevice'])->name('push.register');
+    Route::delete('push-subscriptions', [HRController::class, 'unregisterPushDevice'])->name('push.unregister');
+
+    // ── Reports (stub — returns aggregated stats) ─────────────────────────────
+
+    Route::get('reports', function (\Illuminate\Http\Request $request) {
+        // stub: returns placeholder stats, will be expanded with real analytics
+        $totalLeads = \App\Models\Lead::forUser($request->user())->count();
+        $converted = \App\Models\Lead::forUser($request->user())->where('stage', 'Disbursed')->count();
+        $rate = $totalLeads > 0 ? round(($converted / $totalLeads) * 100, 1) : 0;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_leads' => $totalLeads,
+                'conversions' => $converted,
+                'conversion_rate' => $rate,
+                'revenue' => '₹' . number_format($converted * 15000),
+                'active_employees' => \App\Models\User::where('status', 'Active')->whereIn('role', ['admin','manager','staff'])->count(),
+                'pipeline' => [],
+                'leaderboard' => [],
+                'branches' => [],
+            ],
+        ]);
+    })->name('reports.index');
 });
 
 // ── Catch-all: return JSON 404 instead of falling through to the web router ───

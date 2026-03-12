@@ -18,13 +18,21 @@ class Lead extends Model
         'phone',
         'email',
         'pan_number',
+        'birth_date',
+        'location',
         'loan_type',
         'amount',
         'monthly_income',
+        'income_status',
+        'running_loans',
+        'previous_issues',
+        'cibil_score',
+        'lead_value',
         'stage',
         'priority',
         'source',
         'follow_up_date',
+        'follow_up_time',
         'notes',
         'assigned_to',
         'added_by',
@@ -37,7 +45,11 @@ class Lead extends Model
         return [
             'amount'          => 'decimal:2',
             'monthly_income'  => 'decimal:2',
+            'lead_value'      => 'decimal:2',
             'follow_up_date'  => 'date',
+            'birth_date'      => 'date',
+            'cibil_score'     => 'integer',
+            'running_loans'   => 'integer',
         ];
     }
 
@@ -103,6 +115,14 @@ class Lead extends Model
             && ! in_array($this->stage, ['Disbursed', 'Closed']);
     }
 
+    /**
+     * Auto-calculated age from birth_date
+     */
+    public function getAgeAttribute(): ?int
+    {
+        return $this->birth_date?->age;
+    }
+
     // ── Scopes ────────────────────────────────────────────────────────────────
 
     /**
@@ -123,6 +143,7 @@ class Lead extends Model
                          }),
             'staff'   => $query->where('assigned_to', $user->id),
             'dsa'     => $query->where('franchise_id', $user->franchise_id),
+            'client'  => $query->where('phone', $user->phone),          // clients see own applications
             default   => $query->whereRaw('1 = 0'),                     // no access
         };
     }

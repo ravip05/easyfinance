@@ -29,6 +29,8 @@ import { useState, createContext, useContext, useCallback } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar  from './Topbar'
+import BottomNav from './BottomNav'
+import OfflineBanner from './OfflineBanner'
 
 // ── Search query context ───────────────────────────────────────────────────────
 // Child pages (Leads, Clients…) subscribe to this to filter their tables
@@ -82,6 +84,9 @@ export default function MainLayout() {
     <NewLeadContext.Provider value={registerNewLeadHandler}>
       <SearchContext.Provider value={searchQuery}>
 
+        {/* ── Offline indicator ── */}
+        <OfflineBanner />
+
         {/* ── Sidebar ── */}
         <Sidebar
           isOpen={sidebarOpen}
@@ -112,6 +117,9 @@ export default function MainLayout() {
           </div>
 
         </main>
+
+        {/* ── Mobile bottom navigation ── */}
+        <BottomNav onMorePress={() => setSidebarOpen(true)} />
 
       </SearchContext.Provider>
     </NewLeadContext.Provider>

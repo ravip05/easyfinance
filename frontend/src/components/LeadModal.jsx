@@ -34,6 +34,7 @@ import { useToast } from '../context/ToastContext'
 const LOAN_TYPES = ['Home Loan', 'Business Loan', 'Personal Loan', 'Car Loan', 'LAP', 'Insurance']
 const SOURCES    = ['Direct', 'Website', 'Referral', 'DSA Partner', 'Social Media', 'Walk-in']
 const PRIORITIES = ['High', 'Medium', 'Low']
+const INCOME_STATUSES = ['Salaried', 'Self-Employed', 'Business', 'Retired', 'Other']
 
 const DEFAULT_FOLLOWUP = () => {
   const d = new Date(Date.now() + 7 * 86_400_000)
@@ -44,13 +45,21 @@ const EMPTY_FORM = () => ({
   name:           '',
   phone:          '',
   email:          '',
+  birth_date:     '',
+  location:       '',
   loan_type:      'Home Loan',
   amount:         '',
   source:         'Direct',
-  assigned_to:    '',   // will be set by role logic on open
+  assigned_to:    '',
   priority:       'Medium',
   follow_up_date: DEFAULT_FOLLOWUP(),
+  follow_up_time: '',
   monthly_income: '',
+  income_status:  '',
+  running_loans:  '',
+  previous_issues:'',
+  cibil_score:    '',
+  lead_value:     '',
   notes:          '',
 })
 
@@ -142,17 +151,25 @@ export default function LeadModal({ isOpen, onClose, onSuccess }) {
     setIsLoading(true)
 
     const payload = {
-      name:           form.name.trim(),
-      phone:          form.phone.replace(/[^0-9]/g, ''),
-      email:          form.email.trim() || undefined,
-      loan_type:      form.loan_type,
-      amount:         form.amount ? parseFloat(form.amount) : undefined,
-      source:         form.source,
-      assigned_to:    form.assigned_to || undefined,
-      priority:       form.priority,
-      follow_up_date: form.follow_up_date || undefined,
-      monthly_income: form.monthly_income ? parseFloat(form.monthly_income) : undefined,
-      notes:          form.notes.trim() || undefined,
+      name:            form.name.trim(),
+      phone:           form.phone.replace(/[^0-9]/g, ''),
+      email:           form.email.trim() || undefined,
+      birth_date:      form.birth_date || undefined,
+      location:        form.location.trim() || undefined,
+      loan_type:       form.loan_type,
+      amount:          form.amount ? parseFloat(form.amount) : undefined,
+      source:          form.source,
+      assigned_to:     form.assigned_to || undefined,
+      priority:        form.priority,
+      follow_up_date:  form.follow_up_date || undefined,
+      follow_up_time:  form.follow_up_time || undefined,
+      monthly_income:  form.monthly_income ? parseFloat(form.monthly_income) : undefined,
+      income_status:   form.income_status || undefined,
+      running_loans:   form.running_loans ? parseInt(form.running_loans) : undefined,
+      previous_issues: form.previous_issues.trim() || undefined,
+      cibil_score:     form.cibil_score ? parseInt(form.cibil_score) : undefined,
+      lead_value:      form.lead_value ? parseFloat(form.lead_value) : undefined,
+      notes:           form.notes.trim() || undefined,
     }
 
     const result = await addLead(payload)
@@ -347,7 +364,121 @@ export default function LeadModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
 
+            {/* Birth Date */}
+            <div className="form-group">
+              <div className="form-label">Birth Date</div>
+              <input
+                className="form-input"
+                type="date"
+                name="birth_date"
+                value={form.birth_date}
+                onChange={handleChange}
+                id="nl-birthdate"
+              />
+              {form.birth_date && (
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 3 }}>
+                  Age: {Math.floor((Date.now() - new Date(form.birth_date)) / 31557600000)} years
+                </div>
+              )}
+            </div>
+
+            {/* Location */}
+            <div className="form-group">
+              <div className="form-label">Location</div>
+              <input
+                className="form-input"
+                placeholder="City, State"
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Income Status */}
+            <div className="form-group">
+              <div className="form-label">Income Status</div>
+              <select
+                className="form-select"
+                name="income_status"
+                value={form.income_status}
+                onChange={handleChange}
+              >
+                <option value="">Select...</option>
+                {INCOME_STATUSES.map((s) => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+
+            {/* Running Loans */}
+            <div className="form-group">
+              <div className="form-label">Running Loans</div>
+              <input
+                className="form-input"
+                type="number"
+                placeholder="0"
+                name="running_loans"
+                value={form.running_loans}
+                onChange={handleChange}
+                min="0"
+                max="20"
+              />
+            </div>
+
+            {/* CIBIL Score */}
+            <div className="form-group">
+              <div className="form-label">CIBIL Score</div>
+              <input
+                className="form-input"
+                type="number"
+                placeholder="750"
+                name="cibil_score"
+                value={form.cibil_score}
+                onChange={handleChange}
+                min="300"
+                max="900"
+              />
+            </div>
+
+            {/* Lead Value */}
+            <div className="form-group">
+              <div className="form-label">Lead Value (₹)</div>
+              <input
+                className="form-input"
+                type="number"
+                placeholder="50000"
+                name="lead_value"
+                value={form.lead_value}
+                onChange={handleChange}
+                min="0"
+              />
+            </div>
+
+            {/* Follow-up Time */}
+            <div className="form-group">
+              <div className="form-label">Follow-up Time</div>
+              <input
+                className="form-input"
+                type="time"
+                name="follow_up_time"
+                value={form.follow_up_time}
+                onChange={handleChange}
+                id="nl-followup-time"
+              />
+            </div>
+
           </div>{/* /form-grid */}
+
+          {/* Previous Issues — full width */}
+          <div className="form-group">
+            <div className="form-label">Previous Issues</div>
+            <textarea
+              className="form-textarea"
+              placeholder="Any previous loan issues, rejections, CIBIL problems..."
+              name="previous_issues"
+              value={form.previous_issues}
+              onChange={handleChange}
+              style={{ minHeight: 60 }}
+            />
+          </div>
 
           {/* Notes — full width */}
           <div className="form-group">

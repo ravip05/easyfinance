@@ -27,6 +27,10 @@ class User extends Authenticatable
         'commission_rate',
         'team_leader_id',
         'franchise_id',
+        'virtual_id',
+        'experience_years',
+        'seniority',
+        'reference',
     ];
 
     // ── Hidden (never serialized to JSON) ─────────────────────────────────────
@@ -80,6 +84,14 @@ class User extends Authenticatable
     public function scopeInternal($query)
     {
         return $query->whereIn('role', ['admin', 'manager', 'staff']);
+    }
+
+    /**
+     * Limit query to client role users only
+     */
+    public function scopeClients($query)
+    {
+        return $query->where('role', 'client');
     }
 
     /**
@@ -144,6 +156,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Push notification device registrations for this user.
+     */
+    public function pushDevices(): HasMany
+    {
+        return $this->hasMany(PushDevice::class);
+    }
+
+    /**
      * Payouts issued to this user.
      */
     public function payouts(): HasMany
@@ -193,6 +213,7 @@ class User extends Authenticatable
                          || $this->teamMembers()->pluck('id')->contains($lead->assigned_to),
             'staff'   => $lead->assigned_to === $this->id,
             'dsa'     => $lead->franchise_id === $this->franchise_id,
+            'client'  => $lead->phone === $this->phone,
             default   => false,
         };
     }

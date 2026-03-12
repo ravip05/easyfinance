@@ -35,6 +35,10 @@ import Leads        from './pages/Leads'
 import Clients      from './pages/Clients'
 import Pipeline     from './pages/Pipeline'
 import Calculator   from './pages/Calculator'
+import Employees    from './pages/Employees'
+import HR           from './pages/HR'
+import Franchise    from './pages/Franchise'
+import Reports      from './pages/Reports'
 
 // ── Placeholder page for routes not yet built ─────────────────────────────────
 // Replace each one with its real component as you build Step 4 and beyond.
@@ -121,19 +125,20 @@ export default function App() {
 
         {/* ── Remaining pages — ComingSoon placeholders ── */}
         <Route path="pipeline"      element={<Pipeline />} />
-        <Route path="employees"     element={<ComingSoon page="Employees" />} />
-        <Route path="franchise"     element={<ComingSoon page="Franchise" />} />
+        <Route path="employees"     element={<Employees />} />
+        <Route path="franchise"     element={<Franchise />} />
         <Route path="bankpolicies"  element={<ComingSoon page="Bank Policies" />} />
         <Route path="lms"           element={<ComingSoon page="Training & LMS" />} />
-        <Route path="reports"       element={<ComingSoon page="Reports" />} />
+        <Route path="reports"       element={<Reports />} />
         <Route path="announcements" element={<ComingSoon page="Announcements" />} />
         <Route path="calculator"    element={<Calculator />} />
         <Route path="cibil"         element={<ComingSoon page="CIBIL Checker" />} />
         <Route path="settings"      element={<ComingSoon page="Admin Settings" />} />
-        <Route path="hr"            element={<ComingSoon page="HR Module" />} />
+        <Route path="hr"            element={<HR />} />
         <Route path="duplicates"    element={<ComingSoon page="Duplicate Checker" />} />
         <Route path="idcard"        element={<ComingSoon page="ID Cards" />} />
         <Route path="myattendance"  element={<ComingSoon page="My Attendance" />} />
+        <Route path="tickets"       element={<ComingSoon page="Support Tickets" />} />
 
         {/* Catch-all within the layout → 404 inside the shell */}
         <Route

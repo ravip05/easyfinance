@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext'
 import { useNewLeadTrigger } from '../components/MainLayout'
 import LeadsList, { LeadsFilterBar } from '../components/LeadsList'
 import LeadModal from '../components/LeadModal'
+import DateRangeFilter from '../components/DateRangeFilter'
 
 export default function Leads() {
   const { user }           = useAuth()
@@ -36,13 +37,14 @@ export default function Leads() {
     search: '', stage: '', loanType: '', priority: '',
   })
 
+  // ── Date range filter for PRD requirement ─────────────────────────────────
+  const [dateRange, setDateRange] = useState({ from: '', to: '' })
+
   function handleFilterChange(key, val) {
     setFilters((prev) => ({ ...prev, [key]: val }))
   }
 
   // ── Register the Topbar "+ New Lead" trigger on mount ─────────────────────
-  // When this page unmounts (user navigates away), we clear the registration
-  // so the button stops appearing in the Topbar for other pages.
   useEffect(() => {
     if (canEdit) {
       registerNewLead?.(() => setModalOpen(true))
@@ -53,6 +55,9 @@ export default function Leads() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div id="page-leads" className="page active">
+
+      {/* Date range filter */}
+      <DateRangeFilter onApply={setDateRange} />
 
       {/* Filter bar above the table card */}
       <LeadsFilterBar
