@@ -36,6 +36,12 @@ export default function Franchise() {
     setIsLoading(false)
   }
 
+  const networkStats = franchises.reduce((acc, fr) => ({
+    totalLeads: acc.totalLeads + (fr.total_leads || 0),
+    converted: acc.converted + (fr.converted_leads || 0),
+    revenue: acc.revenue + (parseInt(fr.revenue?.replace(/[^0-9]/g, '') || 0))
+  }), { totalLeads: 0, converted: 0, revenue: 0 })
+
   return (
     <div id="page-franchise" className="page active">
       <div className="filter-bar" style={{ marginBottom: 16 }}>
@@ -54,6 +60,23 @@ export default function Franchise() {
           </button>
         )}
       </div>
+
+      {!isLoading && franchises.length > 0 && (
+        <div className="stats-grid" style={{ marginBottom: 20 }}>
+          <div className="stat-card">
+            <div className="stat-label">Total Network Leads</div>
+            <div className="stat-value" style={{ color: 'var(--accent)' }}>{networkStats.totalLeads}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Total Conversions</div>
+            <div className="stat-value" style={{ color: 'var(--green)' }}>{networkStats.converted}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Network Revenue</div>
+            <div className="stat-value" style={{ color: 'var(--gold)' }}>₹{new Intl.NumberFormat('en-IN').format(networkStats.revenue)}</div>
+          </div>
+        </div>
+      )}
 
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
         {isLoading && Array.from({ length: 4 }, (_, i) => (

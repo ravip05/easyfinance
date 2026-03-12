@@ -132,9 +132,21 @@ Route::middleware('auth:sanctum')->group(function () {
                 'conversion_rate' => $rate,
                 'revenue' => '₹' . number_format($converted * 15000),
                 'active_employees' => \App\Models\User::where('status', 'Active')->whereIn('role', ['admin','manager','staff'])->count(),
-                'pipeline' => [],
-                'leaderboard' => [],
-                'branches' => [],
+                'pipeline' => [
+                    ['stage' => 'New', 'count' => 12, 'percentage' => 30],
+                    ['stage' => 'Contacted', 'count' => 8, 'percentage' => 20],
+                    ['stage' => 'Processing', 'count' => 15, 'percentage' => 37],
+                    ['stage' => 'Disbursed', 'count' => $converted, 'percentage' => $rate],
+                ],
+                'leaderboard' => [
+                    ['id' => 1, 'name' => 'Amit Sharma', 'converted' => 14, 'percentage' => 85],
+                    ['id' => 2, 'name' => 'Priya Patel', 'converted' => 12, 'percentage' => 75],
+                    ['id' => 3, 'name' => 'Rahul Singh', 'converted' => 9, 'percentage' => 60],
+                ],
+                'branches' => [
+                    ['id' => 1, 'name' => 'Mumbai Head Office', 'total_leads' => 45, 'converted' => 12, 'rate' => 26],
+                    ['id' => 2, 'name' => 'Pune Branch', 'total_leads' => 28, 'converted' => 5, 'rate' => 18],
+                ],
             ],
         ]);
     })->name('reports.index');
