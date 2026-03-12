@@ -13,9 +13,9 @@ import { isNative } from '../utils/platform'
 export async function isBiometricAvailable() {
   if (!isNative) return false
   try {
-    const { BiometricAuth } = await import('@capacitor-community/biometric-auth')
-    const result = await BiometricAuth.isAvailable()
-    return result.has
+    const { NativeBiometric } = await import('@capgo/capacitor-native-biometric')
+    const result = await NativeBiometric.isAvailable()
+    return result.isAvailable
   } catch {
     return false
   }
@@ -58,18 +58,20 @@ export async function isBiometricEnrolled() {
  */
 export async function authenticateWithBiometric() {
   try {
-    const { BiometricAuth } = await import('@capacitor-community/biometric-auth')
+    const { NativeBiometric } = await import('@capgo/capacitor-native-biometric')
+    const { Preferences } = await import('@capacitor/preferences')
+    const { value: userId } = await Preferences.get({ key: 'auth_user_id' })
 
-    await BiometricAuth.authenticate({
+    await NativeBiometric.verifyIdentity({
       reason: 'Unlock EasyFinance CRM',
       title: 'Biometric Login',
       subtitle: 'Use fingerprint or Face ID',
+      description: 'Authenticate to access your account',
       negativeButtonText: 'Use Password',
-      allowDeviceCredential: true,
+      maxAttempts: 3,
     })
 
     // biometric passed, retrieve stored token
-    const { Preferences } = await import('@capacitor/preferences')
     const { value: token } = await Preferences.get({ key: 'auth_token' })
 
     if (!token) {
