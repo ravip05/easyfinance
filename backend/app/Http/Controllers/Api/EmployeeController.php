@@ -121,7 +121,7 @@ class EmployeeController extends Controller
 
         // Auto-generate sequential emp_code
         $lastCode = User::where('emp_code', 'like', 'EF-%')
-                        ->orderByRaw('CAST(SUBSTRING(emp_code, 4) AS UNSIGNED) DESC')
+                        ->orderByRaw('CAST(SUBSTRING(emp_code, 4) AS INTEGER) DESC')
                         ->value('emp_code');
         $nextNum  = $lastCode ? ((int) substr($lastCode, 3)) + 1 : 1;
         $validated['emp_code'] = 'EF-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
