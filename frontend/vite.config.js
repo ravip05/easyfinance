@@ -10,7 +10,7 @@ export default defineConfig(({ command }) => ({
       includeAssets: ['favicon.svg'],
       manifest: false, // using public/manifest.json directly
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg}'],
         // offline shell fallback for spa navigation
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
