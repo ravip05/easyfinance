@@ -78,7 +78,7 @@ class Lead extends Model
      */
     public function getAmountFormattedAttribute(): string
     {
-        if (! $this->amount) {
+        if (empty($this->amount) || (float)$this->amount === 0.0) {
             return 'TBD';
         }
 

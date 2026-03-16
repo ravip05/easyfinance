@@ -17,7 +17,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import apiClient from '../api/client'
 
-const AuthContext = createContext(null)
+export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)

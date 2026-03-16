@@ -65,36 +65,6 @@ return new class extends Migration
             $table->index(['user_id', 'platform']);
         });
 
-        // ── tickets ──────────────────────────────────────────────────────────
-        Schema::create('tickets', function (Blueprint $table) {
-            $table->id();
-            $table->string('ticket_number', 20)->unique();
-            $table->enum('type', ['client', 'staff', 'franchise']);
-            $table->string('title');
-            $table->text('description');
-            $table->enum('status', ['open', 'in_progress', 'resolved', 'closed'])->default('open');
-            $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
-            $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('assigned_to')->nullable()->constrained('users');
-            $table->foreignId('client_id')->nullable()->constrained('clients');
-            $table->foreignId('franchise_id')->nullable()->constrained('franchises');
-            $table->timestamp('resolved_at')->nullable();
-            $table->timestamp('closed_at')->nullable();
-            $table->timestamps();
-            $table->index(['type', 'status']);
-            $table->index(['assigned_to', 'status']);
-            $table->index('created_by');
-        });
-
-        // ── ticket_replies ───────────────────────────────────────────────────
-        Schema::create('ticket_replies', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('ticket_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained();
-            $table->text('message');
-            $table->boolean('is_internal')->default(false);
-            $table->timestamps();
-        });
 
         // ── holidays ─────────────────────────────────────────────────────────
         Schema::create('holidays', function (Blueprint $table) {
@@ -141,8 +111,6 @@ return new class extends Migration
         Schema::dropIfExists('virtual_cards');
         Schema::dropIfExists('company_policies');
         Schema::dropIfExists('holidays');
-        Schema::dropIfExists('ticket_replies');
-        Schema::dropIfExists('tickets');
         Schema::dropIfExists('push_devices');
 
         Schema::table('users', function (Blueprint $table) {

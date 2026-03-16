@@ -22,7 +22,7 @@ class StoreClientRequest extends FormRequest
             'email'                 => ['nullable', 'email'],
             'pan_number'            => ['nullable', 'string', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]$/'],
             'aadhaar_number'        => ['nullable', 'string', 'digits:12'],
-            'loan_type'             => ['required', Rule::in(Client::STAGES)],
+            'loan_type'             => ['required', Rule::in(\App\Models\Lead::LOAN_TYPES)],
             'amount'                => ['nullable', 'numeric', 'min:0'],
             'monthly_income'        => ['nullable', 'numeric', 'min:0'],
             'emi_amount'            => ['nullable', 'numeric', 'min:0'],

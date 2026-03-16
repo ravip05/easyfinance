@@ -92,6 +92,62 @@
 .li-pdf { background:#fff7ed; }
 .li-quiz { background:#eff6ff; }
 .li-text { background:#ecfdf5; }
+
+/* ===== VIRTUAL ID CARD ===== */
+.id-card-wrap {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+.id-card {
+  width: 100%;
+  aspect-ratio: 1.6 / 1;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.id-card.flipped { transform: rotateY(180deg); }
+.id-card-front, .id-card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+.id-card-front {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(124, 58, 237, 0.9) 100%);
+  color: white;
+}
+.id-card-back {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: var(--text);
+  transform: rotateY(180deg);
+}
+.id-card-glass {
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+.id-card-chip {
+  width: 48px; height: 36px; border-radius: 6px;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  margin-bottom: 20px;
+}
+.id-card-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; margin-bottom: 4px; }
+.id-card-name { font-size: 22px; font-weight: 700; margin-top: auto; }
+.id-card-role { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+.id-card-qr { width: 80px; height: 80px; background: white; padding: 5px; border-radius: 8px; margin: 0 auto; }
 .lesson-done { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; margin-left:auto; }
 .ld-done { background:#ecfdf5; color:#059669; }
 .ld-pending { background:#f1f5f9; color:#94a3b8; }

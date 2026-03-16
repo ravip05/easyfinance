@@ -40,7 +40,7 @@ class FranchiseController extends Controller
     {
         $user = $request->user();
 
-        if ($user->role === 'staff') {
+        if (in_array($user->role, ['staff', 'dsa', 'client'])) {
             return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
         }
 
@@ -249,6 +249,41 @@ class FranchiseController extends Controller
                 'last_page'    => $payouts->lastPage(),
                 'total'        => $payouts->total(),
             ],
+        ]);
+    }
+
+    /**
+     * GET /api/franchise/dashboard — Stats for the owner/manager
+     */
+    public function dashboard(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if ($user->role !== 'dsa') {
+            return response()->json(['success' => false, 'message' => 'DSA access required.'], 403);
+        }
+
+        $franchise = Franchise::find($user->franchise_id);
+        if (!$franchise) {
+            return response()->json(['success' => false, 'message' => 'Franchise not found.'], 404);
+        }
+
+        $leads = Lead::where('franchise_id', $franchise->id)->get();
+        
+        $stats = [
+            'collection' => $leads->where('stage', 'Disbursed')->sum('valuation'),
+            'target' => 5000000, // Hardcoded for now, could be in settings
+            'active_clients' => $leads->where('stage', 'Processing')->count(),
+            'new_clients_this_month' => $leads->where('created_at', '>=', now()->startOfMonth())->count(),
+            'unpaid_commission' => Payout::where('franchise_id', $franchise->id)->where('status', 'pending')->sum('net_amount'),
+            'branches' => [
+                ['id' => 1, 'name' => 'Main Branch', 'collection' => $leads->where('stage', 'Disbursed')->sum('valuation') * 0.7],
+                ['id' => 2, 'name' => 'Satellite Branch', 'collection' => $leads->where('stage', 'Disbursed')->sum('valuation') * 0.3],
+            ]
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats
         ]);
     }
 

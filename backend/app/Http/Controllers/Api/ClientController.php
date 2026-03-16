@@ -346,6 +346,41 @@ class ClientController extends Controller
         ], 201);
     }
 
+    /**
+     * GET /api/client/dashboard — Detailed progress for the client portal
+     */
+    public function dashboard(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if ($user->role !== 'client') {
+            return response()->json(['success' => false, 'message' => 'Client access required.'], 403);
+        }
+
+        // A client sees lead data matching their phone
+        $lead = Lead::where('phone', $user->phone)->first();
+        if (!$lead) {
+            return response()->json(['success' => false, 'message' => 'No active application found.'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'lead' => $lead,
+                'stages' => [
+                    ['id' => 'new', 'name' => 'New Application'],
+                    ['id' => 'processing', 'name' => 'Loan Processing'],
+                    ['id' => 'sanctioned', 'name' => 'Sanctioned'],
+                    ['id' => 'disbursed', 'name' => 'Disbursed'],
+                ],
+                // Simplified document list for base UI
+                'documents' => [
+                    ['id' => 1, 'name' => 'Aadhar Card', 'type' => 'pdf', 'date' => '2024-03-10'],
+                    ['id' => 2, 'name' => 'PAN Card Scan', 'type' => 'jpg', 'date' => '2024-03-10'],
+                ]
+            ]
+        ]);
+    }
+
     // ── Private Helpers ───────────────────────────────────────────────────────
 
     private function authorizeClientAccess(User $user, Client $client): void

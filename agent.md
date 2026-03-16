@@ -283,6 +283,22 @@ EasyFinanceCRM/
 └── agent.md                        # this file
 ```
 
+### Core Pages/Features
+
+- `/pipeline`         — kanban board (Step 4)
+- `/leadboard`        — advanced lead board with bulk actions (Built)
+- `/employees`        — team management (Step 4)
+- `/franchise`        — franchise overview (Step 4)
+- `/bankpolicies`     — bank policy reference (Step 4)
+- `/lms`              — training LMS & material library (Built)
+- `/reports`          — analytics (Step 4)
+- `/announcements`    — broadcast messages (Step 4)
+- `/calculator`       — loan calculator (Built)
+- `/cibil`            — CIBIL checker (Step 4)
+- `/idcard`           — virtual visiting card (Built)
+- `/tickets`          — support ticketing system (Built)
+- `/settings`         — admin settings (Step 4)
+
 ### naming conventions
 
 | item | convention | example |

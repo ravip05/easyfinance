@@ -25,12 +25,12 @@ import { useAuth } from '../context/AuthContext'
 import { useLeads } from '../context/LeadsContext'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const STAGES = [
+export const STAGES = [
   'New', 'Contacted', 'Docs Pending', 'Docs Received',
   'CIBIL', 'Login', 'Processing', 'Sanctioned', 'Disbursed', 'Closed',
 ]
-const LOAN_TYPES = ['Home Loan', 'Business Loan', 'Personal Loan', 'Car Loan', 'LAP', 'Insurance']
-const PRIORITIES = ['High', 'Medium', 'Low']
+export const LOAN_TYPES = ['Home Loan', 'Business Loan', 'Personal Loan', 'Car Loan', 'LAP', 'Insurance']
+export const PRIORITIES = ['High', 'Medium', 'Low']
 
 // Priority → badge CSS class (mirrors prioMap in renderLeads())
 const PRIO_BADGE = { High: 'badge-high', Medium: 'badge-med', Low: 'badge-low' }

@@ -1,0 +1,366 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/Users/parma/Downloads/EasyFinanceCRM-Hostinger (1)/EasyFinanceCRM/frontend[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32mΓ£ô[39m src/tests/Baseline.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[32m 245[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/ApiLayer.test.jsx [2m([22m[2m3 tests[22m[2m)[22m[32m 72[2mms[22m[39m
+node.exe : 
+[vitest-pool]: 
+Failed to terminate 
+forks worker for 
+test files C:/Users/p
+arma/Downloads/EasyFi
+nanceCRM-Hostinger (1
+)/EasyFinanceCRM/fron
+tend/src/tests/ApiLay
+er.test.jsx. Error: 
+kill EPERM
+At C:\Program Files\n
+odejs\npx.ps1:29 
+char:3
++   & $NODE_EXE 
+$NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ([vitest   
+ -pool]: ...ror:     
+kill EPERM:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+    at 
+ChildProcess.kill (no
+de:internal/child_pro
+cess:511:26)
+    at 
+ForksPoolWorker.stop 
+(file:///C:/Users/par
+ma/Downloads/EasyFina
+nceCRM-Hostinger%20(1
+)/EasyFinanceCRM/fron
+tend/node_modules/vit
+est/dist/chunks/cli-a
+pi.DuT9iuvY.js:3106:8
+)
+    at file:///C:/Use
+rs/parma/Downloads/Ea
+syFinanceCRM-Hostinge
+r%20(1)/EasyFinanceCR
+M/frontend/node_modul
+es/vitest/dist/chunks
+/cli-api.DuT9iuvY.js:
+2985:118
+    at Traces.$ (file
+:///C:/Users/parma/Do
+wnloads/EasyFinanceCR
+M-Hostinger%20(1)/Eas
+yFinanceCRM/frontend/
+node_modules/vitest/d
+ist/chunks/traces.CCm
+nQaNT.js:142:27)
+    at 
+PoolRunner.stop (file
+:///C:/Users/parma/Do
+wnloads/EasyFinanceCR
+M-Hostinger%20(1)/Eas
+yFinanceCRM/frontend/
+node_modules/vitest/d
+ist/chunks/cli-api.Du
+T9iuvY.js:2985:23)
+    at processTicksAn
+dRejections (node:int
+ernal/process/task_qu
+eues:105:5) {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'kill'
+}
+ [32mΓ£ô[39m src/tests/ToastContext.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[33m 584[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m shows success toast on button click [33m 490[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/AuthContext.test.jsx [2m([22m[2m4 tests[22m[2m)[22m[33m 613[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m restores session from storage on mount [33m 307[2mms[22m[39m
+[90mstderr[2m | src
+/tests/DashboardSmoke
+.test.jsx[2m > 
+[22m[2mDashboard 
+Smoke Tests[2m > 
+[22m[2mrenders 
+Admin dashboard 
+correctly
+[22m[39mΓÜá∩╕Å 
+React Router Future 
+Flag Warning: React 
+Router will begin 
+wrapping state 
+updates in `React.sta
+rtTransition` in v7. 
+You can use the 
+`v7_startTransition` 
+future flag to 
+opt-in early. For 
+more information, 
+see https://reactrout
+er.com/v6/upgrading/f
+uture#v7_starttransit
+ion.
+ΓÜá∩╕Å React Router 
+Future Flag Warning: 
+Relative route 
+resolution within 
+Splat routes is 
+changing in v7. You 
+can use the `v7_relat
+iveSplatPath` future 
+flag to opt-in 
+early. For more 
+information, see http
+s://reactrouter.com/v
+6/upgrading/future#v7
+_relativesplatpath.
+Warning: An update 
+to Dashboard inside 
+a test was not 
+wrapped in act(...).
+
+When testing, code 
+that causes React 
+state updates should 
+be wrapped into 
+act(...):
+
+act(() => {
+  /* fire events 
+that update state */
+});
+/* assert on the 
+output */
+
+This ensures that 
+you're testing the 
+behavior the user 
+would see in the 
+browser. Learn more 
+at https://reactjs.or
+g/link/wrap-tests-wit
+h-act
+    at Dashboard (C:/
+Users/parma/Downloads
+/EasyFinanceCRM-Hosti
+nger (1)/EasyFinanceC
+RM/frontend/src/pages
+/Dashboard.jsx:1342:5
+3)
+    at Router (C:\Use
+rs\parma\Downloads\Ea
+syFinanceCRM-Hostinge
+r (1)\EasyFinanceCRM\
+frontend\node_modules
+\react-router\dist\um
+d\react-router.develo
+pment.js:1207:17)
+    at MemoryRouter (
+C:\Users\parma\Downlo
+ads\EasyFinanceCRM-Ho
+stinger (1)\EasyFinan
+ceCRM\frontend\node_m
+odules\react-router\d
+ist\umd\react-router.
+development.js:1101:7
+)
+
+[90mstderr[2m | src
+/tests/TicketsUI.test
+.jsx[2m > 
+[22m[2mTickets 
+UI[2m > 
+[22m[2mallows 
+opening new ticket 
+modal
+[22m[39mWarning: 
+An update to Tickets 
+inside a test was 
+not wrapped in 
+act(...).
+
+When testing, code 
+that causes React 
+state updates should 
+be wrapped into 
+act(...):
+
+act(() => {
+  /* fire events 
+that update state */
+});
+/* assert on the 
+output */
+
+This ensures that 
+you're testing the 
+behavior the user 
+would see in the 
+browser. Learn more 
+at https://reactjs.or
+g/link/wrap-tests-wit
+h-act
+    at Tickets (C:/Us
+ers/parma/Downloads/E
+asyFinanceCRM-Hosting
+er (1)/EasyFinanceCRM
+/frontend/src/pages/T
+ickets.jsx:8:53)
+    at ToastProvider 
+(C:/Users/parma/Downl
+oads/EasyFinanceCRM-H
+ostinger (1)/EasyFina
+nceCRM/frontend/src/c
+ontext/ToastContext.j
+sx:7:26)
+Warning: An update 
+to Tickets inside a 
+test was not wrapped 
+in act(...).
+
+When testing, code 
+that causes React 
+state updates should 
+be wrapped into 
+act(...):
+
+act(() => {
+  /* fire events 
+that update state */
+});
+/* assert on the 
+output */
+
+This ensures that 
+you're testing the 
+behavior the user 
+would see in the 
+browser. Learn more 
+at https://reactjs.or
+g/link/wrap-tests-wit
+h-act
+    at Tickets (C:/Us
+ers/parma/Downloads/E
+asyFinanceCRM-Hosting
+er (1)/EasyFinanceCRM
+/frontend/src/pages/T
+ickets.jsx:8:53)
+    at ToastProvider 
+(C:/Users/parma/Downl
+oads/EasyFinanceCRM-H
+ostinger (1)/EasyFina
+nceCRM/frontend/src/c
+ontext/ToastContext.j
+sx:7:26)
+
+[90mstderr[2m | src
+/tests/AuthSecurity.t
+est.jsx[2m > 
+[22m[2mAuth 
+Security (RBAC 
+UI)[2m > 
+[22m[2mrenders 
+Admin specific links 
+for admin role
+[22m[39mΓÜá∩╕Å 
+React Router Future 
+Flag Warning: React 
+Router will begin 
+wrapping state 
+updates in `React.sta
+rtTransition` in v7. 
+You can use the 
+`v7_startTransition` 
+future flag to 
+opt-in early. For 
+more information, 
+see https://reactrout
+er.com/v6/upgrading/f
+uture#v7_starttransit
+ion.
+ΓÜá∩╕Å React Router 
+Future Flag Warning: 
+Relative route 
+resolution within 
+Splat routes is 
+changing in v7. You 
+can use the `v7_relat
+iveSplatPath` future 
+flag to opt-in 
+early. For more 
+information, see http
+s://reactrouter.com/v
+6/upgrading/future#v7
+_relativesplatpath.
+
+ [32mΓ£ô[39m src/tests/TicketsUI.test.jsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1863[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders ticket list and allows viewing details [33m 989[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m allows opening new ticket modal [33m 472[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m submits a new ticket reply [33m 361[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/DashboardSmoke.test.jsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1679[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders Admin dashboard correctly [33m 1053[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders Staff dashboard correctly [33m 406[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/AuthSecurity.test.jsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1299[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders Admin specific links for admin role [33m 675[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/LeadsContext.test.jsx [2m([22m[2m3 tests[22m[2m)[22m[33m 937[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m fetches leads and staff on mount if authenticated [33m 403[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/Calculator.test.jsx [2m([22m[2m5 tests[22m[2m)[22m[33m 3368[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m switches between tabs correctly [33m 1561[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m calculates EMI correctly for default values [33m 406[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m calculates eligibility based on age boundary [33m 721[2mms[22m[39m
+       [33m[2mΓ£ô[22m[39m calculates risk category correctly [33m 320[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/Pipeline.test.jsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1550[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders all pipeline stages [33m 942[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/LeadsList.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[33m 2119[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders table headers and lead rows [33m 885[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m sorts by amount [33m 324[2mms[22m[39m
+ [32mΓ£ô[39m src/tests/LeadBoard.test.jsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1909[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders lead data correctly in a table [33m 1147[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m selects all leads when global checkbox is clicked [33m 305[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m12 passed[39m[22m[90m (12)[39m
+[2m      Tests [22m [1m[32m44 passed[39m[22m[90m (44)[39m
+[2m   Start at [22m 01:49:51
+[2m   Duration [22m 12.54s[2m (transform 15.50s, setup 40.50s, import 27.37s, tests 16.24s, environment 20.28s)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   58.62 |    46.91 |   49.34 |   63.06 |                   
+ api               |    22.5 |     7.14 |      15 |    22.5 |                   
+  client.js        |   18.75 |       20 |       0 |   18.75 | 10-18,22-31       
+  leads.js         |      25 |     3.12 |   17.64 |      25 | ...2,67-71,95-111 
+ components        |   47.36 |    39.09 |   36.58 |      50 |                   
+  ...ngeFilter.jsx |   15.78 |    14.28 |      20 |   17.64 | ...8,48-70,80-107 
+  LeadModal.jsx    |   35.48 |    12.19 |   27.27 |   39.18 | ...24-196,202-518 
+  LeadsList.jsx    |   65.21 |    57.89 |   45.23 |   68.88 | ...62,335,401-461 
+  Sidebar.jsx      |      60 |    61.53 |    37.5 |      60 | 152-163,192-196   
+ context           |   72.61 |    44.89 |   68.29 |   76.42 |                   
+  AuthContext.jsx  |   97.56 |    83.33 |     100 |     100 | 116               
+  LeadsContext.jsx |   61.62 |    33.33 |   70.58 |   62.82 | ...56,162,174-181 
+  ToastContext.jsx |      70 |    71.42 |      50 |    82.6 | 30,35,41,71       
+ pages             |   63.91 |    56.61 |   55.27 |   70.27 |                   
+  Calculator.jsx   |   86.79 |    73.63 |   82.35 |   90.62 | ...77,388,569,718 
+  Dashboard.jsx    |   61.76 |    46.45 |   55.76 |   71.69 | ...05,601-607,689 
+  LeadBoard.jsx    |   45.97 |     44.7 |      40 |   54.41 | ...37,143-163,170 
+  Pipeline.jsx     |   61.11 |       75 |      45 |      60 | ...78-185,224-233 
+  Tickets.jsx      |   55.93 |    53.57 |      45 |   58.18 | ...23-163,201-252 
+-------------------|---------|----------|---------|---------|-------------------
+[vitest-pool]: 
+Timeout terminating 
+forks worker for 
+test files C:/Users/p
+arma/Downloads/EasyFi
+nanceCRM-Hostinger (1
+)/EasyFinanceCRM/fron
+tend/src/tests/ApiLay
+er.test.jsx.

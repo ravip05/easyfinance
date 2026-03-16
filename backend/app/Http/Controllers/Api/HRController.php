@@ -88,7 +88,8 @@ class HRController extends Controller
      */
     public function policies(Request $request): JsonResponse
     {
-        $policies = CompanyPolicy::orderBy('updated_at', 'desc')
+        $policies = CompanyPolicy::where('is_active', true)
+            ->orderBy('updated_at', 'desc')
             ->get(['id', 'title', 'category', 'content', 'version', 'is_active', 'updated_at']);
 
         return response()->json([

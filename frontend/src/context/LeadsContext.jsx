@@ -27,7 +27,7 @@ import { leadsApi, normalizeApiLead, staffApi } from '../api/leads'
 import { useAuth } from './AuthContext'
 import { useToast } from './ToastContext'
 
-const LeadsContext = createContext(null)
+export const LeadsContext = createContext(null)
 
 export function LeadsProvider({ children }) {
   const { token } = useAuth()

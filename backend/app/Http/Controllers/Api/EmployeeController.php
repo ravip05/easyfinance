@@ -43,7 +43,7 @@ class EmployeeController extends Controller
     {
         $user = $request->user();
 
-        if ($user->role === 'staff') {
+        if (in_array($user->role, ['staff', 'dsa', 'client'])) {
             return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
         }
 

@@ -10,12 +10,13 @@ export default defineConfig(({ command }) => ({
       includeAssets: ['favicon.svg'],
       manifest: false, // using public/manifest.json directly
       workbox: {
-        // precache app shell
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-
+        // offline shell fallback for spa navigation
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
-          // leads api: network first with offline fallback
           {
+            // lead data uses network first with offline fallback to dexie
             urlPattern: /\/api\/leads/,
             handler: 'NetworkFirst',
             options: {
@@ -25,8 +26,8 @@ export default defineConfig(({ command }) => ({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // lms content: stale while revalidate for offline reading
           {
+            // lms content is relatively static so stale while revalidate works well
             urlPattern: /\/api\/lms\//,
             handler: 'StaleWhileRevalidate',
             options: {
@@ -35,8 +36,8 @@ export default defineConfig(({ command }) => ({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          // dashboard stats: network first with short cache
           {
+            // dashboard data needs freshness but should fall back to cache
             urlPattern: /\/api\/dashboard/,
             handler: 'NetworkFirst',
             options: {
@@ -45,7 +46,27 @@ export default defineConfig(({ command }) => ({
               networkTimeoutSeconds: 3,
             },
           },
-          // static images: cache first
+          {
+            // support tickets need real time accuracy
+            urlPattern: /\/api\/tickets/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'tickets-cache',
+              expiration: { maxEntries: 100, maxAgeSeconds: 3600 },
+              networkTimeoutSeconds: 3,
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // staff and franchise dashboards use stale while revalidate for snappy loading
+            urlPattern: /\/api\/(staff|franchise|client)\//,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'role-dashboard-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 1800 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: 'CacheFirst',
@@ -54,14 +75,30 @@ export default defineConfig(({ command }) => ({
               expiration: { maxEntries: 100, maxAgeSeconds: 2592000 },
             },
           },
-          // lms materials (pdfs, videos): cache first for offline
           {
+            // lms training materials cached for offline study
             urlPattern: /\/storage\/lms-materials\//,
             handler: 'CacheFirst',
             options: {
               cacheName: 'lms-materials-cache',
               expiration: { maxEntries: 50, maxAgeSeconds: 2592000 },
               rangeRequests: true,
+            },
+          },
+          {
+            // google fonts for offline rendering
+            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 20, maxAgeSeconds: 31536000 },
             },
           },
         ],
@@ -83,5 +120,15 @@ export default defineConfig(({ command }) => ({
         }
       }
     }
-  }
+  },
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    setupFiles: ['./src/tests/setup.js'],
+    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
+  },
 }))

@@ -6,6 +6,10 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\FranchiseController;
 use App\Http\Controllers\Api\HRController;
+use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\AnnouncementController;
+use App\Http\Controllers\Api\LmsController;
+use App\Http\Controllers\Api\StaffController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -115,6 +119,47 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('push-subscriptions', [HRController::class, 'registerPushDevice'])->name('push.register');
     Route::delete('push-subscriptions', [HRController::class, 'unregisterPushDevice'])->name('push.unregister');
+
+    // ── Staff Module (staff, manager, admin only) ─────────────────────────────
+    Route::middleware('role:staff,manager,admin')->group(function () {
+        Route::get('staff/me', [StaffController::class, 'me']);
+        Route::get('staff/payouts', [StaffController::class, 'payouts']);
+    });
+
+    // ── Franchise Dashboard (dsa role only) ──────────────────────────────────
+    Route::get('franchise/dashboard', [FranchiseController::class, 'dashboard'])
+         ->middleware('role:dsa');
+
+    // ── Client Dashboard (client role only) ──────────────────────────────────
+    Route::get('client/dashboard', [ClientController::class, 'dashboard'])
+         ->middleware('role:client');
+
+    // ── Support Tickets ───────────────────────────────────────────────────────
+    Route::get('tickets/portal', [TicketController::class, 'portal']);
+    Route::apiResource('tickets', TicketController::class);
+    Route::post('tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
+
+    // ── Announcements ─────────────────────────────────────────────────────────
+    Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+    Route::post('announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+    Route::post('announcements/{announcement}/read', [AnnouncementController::class, 'markRead'])->name('announcements.read');
+
+    // ── LMS: Learning Management System ─────────────────────────────────────
+    Route::group(['prefix' => 'lms'], function () {
+        Route::get('courses', [LmsController::class, 'courses']);
+        Route::get('courses/{id}', [LmsController::class, 'courseDetail']);
+        Route::post('courses/{id}/enroll', [LmsController::class, 'enroll']);
+        Route::post('courses/{id}/progress', [LmsController::class, 'updateProgress']);
+        
+        Route::get('materials', [LmsController::class, 'materials']);
+        Route::post('materials', [LmsController::class, 'uploadMaterial']);
+        
+        Route::get('quizzes', [LmsController::class, 'quizzes']);
+        Route::post('quizzes/{id}/submit', [LmsController::class, 'submitQuiz']);
+        
+        Route::get('leaderboard', [LmsController::class, 'leaderboard']);
+        Route::get('certificates', [LmsController::class, 'certificates']);
+    });
 
     // ── Reports (stub — returns aggregated stats) ─────────────────────────────
 

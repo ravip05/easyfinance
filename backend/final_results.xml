@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="22" assertions="41" errors="0" failures="4" skipped="0" time="1.108165">
+    <testsuite name="Tests\Feature\AnnouncementTest" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\AnnouncementTest.php" tests="3" assertions="6" errors="0" failures="0" skipped="0" time="0.545564">
+      <testcase name="test_user_can_see_published_announcements" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\AnnouncementTest.php" line="14" class="Tests\Feature\AnnouncementTest" classname="Tests.Feature.AnnouncementTest" assertions="2" time="0.490118">
+        <system-out>        </system-out>
+      </testcase>
+      <testcase name="test_role_based_announcement_visibility" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\AnnouncementTest.php" line="32" class="Tests\Feature\AnnouncementTest" classname="Tests.Feature.AnnouncementTest" assertions="2" time="0.022117"/>
+      <testcase name="test_user_can_mark_announcement_as_read" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\AnnouncementTest.php" line="53" class="Tests\Feature\AnnouncementTest" classname="Tests.Feature.AnnouncementTest" assertions="2" time="0.033328"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\ClientTest" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\ClientTest.php" tests="4" assertions="8" errors="0" failures="0" skipped="0" time="0.115229">
+      <testcase name="test_admin_can_list_all_clients" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\ClientTest.php" line="15" class="Tests\Feature\ClientTest" classname="Tests.Feature.ClientTest" assertions="2" time="0.038922"/>
+      <testcase name="test_staff_can_only_see_own_clients" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\ClientTest.php" line="26" class="Tests\Feature\ClientTest" classname="Tests.Feature.ClientTest" assertions="2" time="0.023554"/>
+      <testcase name="test_dsa_can_only_see_franchise_clients" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\ClientTest.php" line="40" class="Tests\Feature\ClientTest" classname="Tests.Feature.ClientTest" assertions="2" time="0.026263"/>
+      <testcase name="test_can_create_client" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\ClientTest.php" line="59" class="Tests\Feature\ClientTest" classname="Tests.Feature.ClientTest" assertions="2" time="0.026490"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\EmployeeTest" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\EmployeeTest.php" tests="3" assertions="5" errors="0" failures="1" skipped="0" time="0.058410">
+      <testcase name="test_admin_can_list_employees" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\EmployeeTest.php" line="13" class="Tests\Feature\EmployeeTest" classname="Tests.Feature.EmployeeTest" assertions="3" time="0.020161"/>
+      <testcase name="test_admin_can_create_employee" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\EmployeeTest.php" line="27" class="Tests\Feature\EmployeeTest" classname="Tests.Feature.EmployeeTest" assertions="1" time="0.024408">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\EmployeeTest::test_admin_can_create_employee&#13;
+Expected response status code [201] but received 422.
+Failed asserting that 422 is identical to 201.&#13;
+&#13;
+The following errors occurred during the last request:
+
+{
+    "message": "The phone field is required.",
+    "errors": {
+        "phone": [
+            "The phone field is required."
+        ]
+    }
+}
+&#13;
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:160
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\EmployeeTest.php:40</failure>
+      </testcase>
+      <testcase name="test_staff_cannot_list_employees" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\EmployeeTest.php" line="44" class="Tests\Feature\EmployeeTest" classname="Tests.Feature.EmployeeTest" assertions="1" time="0.013841"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\FranchiseTest" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\FranchiseTest.php" tests="3" assertions="4" errors="0" failures="2" skipped="0" time="0.056196">
+      <testcase name="test_admin_can_list_franchises" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\FranchiseTest.php" line="14" class="Tests\Feature\FranchiseTest" classname="Tests.Feature.FranchiseTest" assertions="2" time="0.021491"/>
+      <testcase name="test_admin_can_create_franchise" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\FranchiseTest.php" line="25" class="Tests\Feature\FranchiseTest" classname="Tests.Feature.FranchiseTest" assertions="1" time="0.017479">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\FranchiseTest::test_admin_can_create_franchise&#13;
+Expected response status code [201] but received 422.
+Failed asserting that 422 is identical to 201.&#13;
+&#13;
+The following errors occurred during the last request:
+
+{
+    "message": "The code field format is invalid. (and 1 more error)",
+    "errors": {
+        "code": [
+            "The code field format is invalid."
+        ],
+        "commission_rate": [
+            "The commission rate field is required."
+        ]
+    }
+}
+&#13;
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:160
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\FranchiseTest.php:39</failure>
+      </testcase>
+      <testcase name="test_dsa_cannot_see_other_franchises" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\FranchiseTest.php" line="43" class="Tests\Feature\FranchiseTest" classname="Tests.Feature.FranchiseTest" assertions="1" time="0.017226">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\FranchiseTest::test_dsa_cannot_see_other_franchises&#13;
+Expected response status code [403] but received 200.
+Failed asserting that 200 is identical to 403.
+&#13;
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:160
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\FranchiseTest.php:54</failure>
+      </testcase>
+    </testsuite>
+    <testsuite name="Tests\Feature\HRTest" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\HRTest.php" tests="3" assertions="6" errors="0" failures="1" skipped="0" time="0.051118">
+      <testcase name="test_user_can_list_holidays" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\HRTest.php" line="15" class="Tests\Feature\HRTest" classname="Tests.Feature.HRTest" assertions="2" time="0.017677"/>
+      <testcase name="test_user_can_list_active_policies" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\HRTest.php" line="26" class="Tests\Feature\HRTest" classname="Tests.Feature.HRTest" assertions="2" time="0.018662">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\HRTest::test_user_can_list_active_policies&#13;
+Failed to assert that the response count matched the expected 2
+Failed asserting that actual size 3 matches expected size 2.
+&#13;
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\vendor\laravel\framework\src\Illuminate\Testing\AssertableJsonString.php:73
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:940
+C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\HRTest.php:36</failure>
+      </testcase>
+      <testcase name="test_admin_can_create_holiday" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\HRTest.php" line="39" class="Tests\Feature\HRTest" classname="Tests.Feature.HRTest" assertions="2" time="0.014779"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\LeadTest" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\LeadTest.php" tests="3" assertions="6" errors="0" failures="0" skipped="0" time="0.051916">
+      <testcase name="test_admin_can_list_all_leads" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\LeadTest.php" line="14" class="Tests\Feature\LeadTest" classname="Tests.Feature.LeadTest" assertions="2" time="0.017755"/>
+      <testcase name="test_staff_can_only_see_assigned_leads" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\LeadTest.php" line="26" class="Tests\Feature\LeadTest" classname="Tests.Feature.LeadTest" assertions="2" time="0.017637"/>
+      <testcase name="test_can_create_lead" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\LeadTest.php" line="41" class="Tests\Feature\LeadTest" classname="Tests.Feature.LeadTest" assertions="2" time="0.016523"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\TicketTest" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\TicketTest.php" tests="3" assertions="6" errors="0" failures="0" skipped="0" time="0.229732">
+      <testcase name="test_user_can_create_ticket" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\TicketTest.php" line="15" class="Tests\Feature\TicketTest" classname="Tests.Feature.TicketTest" assertions="2" time="0.013520"/>
+      <testcase name="test_staff_can_reply_to_ticket" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\TicketTest.php" line="34" class="Tests\Feature\TicketTest" classname="Tests.Feature.TicketTest" assertions="2" time="0.015544"/>
+      <testcase name="test_client_cannot_see_others_tickets" file="C:\Users\parma\Downloads\EasyFinanceCRM-Hostinger (1)\EasyFinanceCRM\backend\tests\Feature\TicketTest.php" line="53" class="Tests\Feature\TicketTest" classname="Tests.Feature.TicketTest" assertions="2" time="0.200668"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

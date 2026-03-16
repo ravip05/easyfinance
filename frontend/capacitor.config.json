@@ -1,0 +1,16 @@
+{
+  "appId": "com.easyfinancewale.crm",
+  "appName": "EasyFinance CRM",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "Camera": {
+      "permissions": ["camera", "photos"]
+    }
+  }
+}
