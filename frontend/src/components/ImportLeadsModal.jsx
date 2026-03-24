@@ -8,7 +8,7 @@
  */
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import apiClient from '../services/apiClient'
+import apiClient from '../api/client'
 
 export default function ImportLeadsModal({ isOpen, onClose, onSuccess }) {
   const [file,      setFile]      = useState(null)

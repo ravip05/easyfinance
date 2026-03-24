@@ -10,7 +10,7 @@
  *   - 48px min-height on all form controls for mobile touch targets
  */
 import { useState, useEffect } from 'react'
-import apiClient from '../services/apiClient'
+import apiClient from '../api/client'
 
 export default function ConvertLeadModal({ lead, isOpen, onClose, onSuccess }) {
   const [bankPolicies, setBankPolicies] = useState([])
