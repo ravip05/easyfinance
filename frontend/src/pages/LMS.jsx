@@ -51,7 +51,7 @@ export default function LMS() {
     { id: 'compliance', label: 'Compliance' }
   ]
 
-  const filteredCourses = courses.filter(c => filterCategory === 'all' || c.category === filterCategory)
+  const filteredCourses = (courses || []).filter(c => filterCategory === 'all' || c.category === filterCategory)
 
   if (selectedCourse) {
     return <CoursePlayer course={selectedCourse} onBack={() => setSelectedCourse(null)} />
@@ -129,7 +129,7 @@ export default function LMS() {
                 </tr>
               </thead>
               <tbody>
-                {materials.map(m => (
+                {(materials || []).map(m => (
                   <tr key={m.id}>
                     <td><strong>{m.title}</strong></td>
                     <td><span className="badge">{m.category}</span></td>
