@@ -17,10 +17,9 @@ export default function PolicyManagement() {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="page-container fade-in text-center py-5">
-        <div style={{ fontSize: 48 }}>🔒</div>
-        <h2 className="h4 mt-3">Admin Access Only</h2>
-        <p className="text-muted">You need admin privileges to manage bank policies.</p>
+      <div className="empty">
+        <div className="empty-icon">🔒</div>
+        <div className="empty-text">Admin Access Only. You need admin privileges to manage bank policies.</div>
       </div>
     );
   }
@@ -86,107 +85,118 @@ export default function PolicyManagement() {
   }
 
   return (
-    <div className="page-container fade-in" style={{ paddingBottom: '80px' }}>
-      <header className="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
-        <div>
-          <h1 className="page-title mb-0">Policy Management</h1>
-          <p className="text-muted mb-0 small">Admin-only: Add, edit, or remove bank lending policies.</p>
+    <div id="page-policy-management" className="page active" style={{ paddingBottom: 80 }}>
+      {/* Header */}
+      <div className="filter-bar" style={{ marginBottom: 24 }}>
+        <div style={{ flex: 1 }}>
+          <h1 className="page-title" style={{ fontSize: 24, fontWeight: 800, marginBottom: 4 }}>⚙️ Policy Management</h1>
+          <p style={{ color: 'var(--text3)', fontSize: 13, margin: 0 }}>Add, edit, or remove bank lending policies globally.</p>
         </div>
-        <button className="btn btn-primary d-flex align-items-center gap-2" onClick={openNew} style={{ minHeight: 48 }}>
-          <span style={{ fontSize: 20 }}>＋</span> Add Policy
+        <button className="btn btn-primary" onClick={openNew}>
+          + Add New Policy
         </button>
-      </header>
+      </div>
 
-      {/* -- Inline Form -- */}
+      {/* Editing Form */}
       {showForm && (
-        <div className="card shadow-sm border-0 mb-4">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <strong>{editingId ? 'Edit Policy' : 'New Policy'}</strong>
-            <button className="btn btn-sm btn-light" onClick={() => setShowForm(false)}>✕</button>
+        <div className="card" style={{ marginBottom: 24, borderLeft: '4px solid var(--accent)' }}>
+          <div className="card-header">
+            <div className="card-title">{editingId ? '✏️ Edit Policy' : '✨ New Policy'}</div>
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>✕</button>
           </div>
           <div className="card-body">
-            {error && <div className="alert alert-danger py-2 small">{error}</div>}
+            {error && <div style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12, padding: 8, background: 'var(--red-light)', borderRadius: 6 }}>{error}</div>}
+            
             <form onSubmit={handleSave}>
-              <div className="row g-3">
-                <div className="col-12 col-md-6">
-                  <label className="form-label fw-semibold">Bank Name *</label>
-                  <input className="form-control" style={{ minHeight: 48 }} placeholder="e.g. HDFC Bank"
+              <div className="form-grid">
+                <div className="form-group">
+                  <label className="form-label">Bank Name <span className="req">*</span></label>
+                  <input className="form-input" placeholder="e.g. HDFC Bank"
                     value={form.bank_name} onChange={e => setForm(f => ({...f, bank_name: e.target.value}))} required />
                 </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label fw-semibold">Bank Code *</label>
-                  <input className="form-control" style={{ minHeight: 48 }} placeholder="e.g. HDFC"
+                <div className="form-group">
+                  <label className="form-label">Bank Code <span className="req">*</span></label>
+                  <input className="form-input" placeholder="e.g. HDFC"
                     value={form.bank_code} onChange={e => setForm(f => ({...f, bank_code: e.target.value}))} required />
                 </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label fw-semibold">Category *</label>
-                  <select className="form-select" style={{ minHeight: 48 }}
+                <div className="form-group">
+                  <label className="form-label">Category <span className="req">*</span></label>
+                  <select className="form-select"
                     value={form.category} onChange={e => setForm(f => ({...f, category: e.target.value}))}>
                     {CATEGORIES.map(c => <option key={c}>{c}</option>)}
                   </select>
                 </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label fw-semibold">Policy URL</label>
-                  <input className="form-control" style={{ minHeight: 48 }} placeholder="https://..."
+                <div className="form-group">
+                  <label className="form-label">Policy URL</label>
+                  <input className="form-input" placeholder="https://..." type="url"
                     value={form.policy_url} onChange={e => setForm(f => ({...f, policy_url: e.target.value}))} />
                 </div>
-                <div className="col-12">
-                  <label className="form-label fw-semibold">Description</label>
-                  <textarea className="form-control" rows={2} placeholder="Key eligibility criteria..."
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Description</label>
+                  <textarea className="form-textarea" placeholder="Key eligibility criteria..." rows={2}
                     value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} />
                 </div>
-                <div className="col-12">
-                  <div className="form-check form-switch">
-                    <input className="form-check-input" type="checkbox" id="policyActive"
-                      checked={!!form.is_active} onChange={e => setForm(f => ({...f, is_active: e.target.checked ? 1 : 0}))} />
-                    <label className="form-check-label" htmlFor="policyActive">Active</label>
-                  </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" id="policyActive" style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }}
+                    checked={!!form.is_active} onChange={e => setForm(f => ({...f, is_active: e.target.checked ? 1 : 0}))} />
+                  <label htmlFor="policyActive" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer' }}>Set as Active</label>
                 </div>
-                <div className="col-12 d-flex gap-2 justify-content-end">
-                  <button type="button" className="btn btn-outline-secondary" style={{ minHeight: 48 }} onClick={() => setShowForm(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary px-4" style={{ minHeight: 48 }} disabled={saving}>
-                    {saving ? 'Saving...' : editingId ? 'Update Policy' : 'Create Policy'}
-                  </button>
-                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? 'Saving...' : editingId ? 'Update Policy' : '✓ Create Policy'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* -- Table -- */}
+      {/* Policies Table */}
       {loading ? (
-        <div className="text-center py-5"><div className="spinner-border text-primary" role="status"></div></div>
+        <div className="empty">
+          <div className="empty-icon" style={{ animation: 'pulse 1.5s infinite' }}>⏳</div>
+          <div className="empty-text">Loading policies...</div>
+        </div>
       ) : policies.length === 0 ? (
-        <div className="card text-center py-5 border-0">
-          <p className="text-muted">No policies yet. Click "Add Policy" to get started.</p>
+        <div className="empty">
+          <div className="empty-icon">📂</div>
+          <div className="empty-text">No policies configured yet.</div>
         </div>
       ) : (
-        <div className="card shadow-sm border-0">
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead className="table-light">
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th>Bank</th><th>Code</th><th>Category</th><th>Status</th><th className="text-end">Actions</th>
+                  <th style={{ paddingLeft: 20 }}>Bank</th>
+                  <th>Code</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right', paddingRight: 20 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {policies.map(p => (
                   <tr key={p.id}>
-                    <td className="fw-semibold">{p.bank_name}</td>
-                    <td><span className="badge bg-light text-dark border">{p.bank_code}</span></td>
-                    <td>{p.category}</td>
+                    <td style={{ paddingLeft: 20 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, background: 'var(--bg2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>🏦</div>
+                        <span style={{ fontWeight: 600, color: 'var(--text)' }}>{p.bank_name}</span>
+                      </div>
+                    </td>
+                    <td><span className="badge" style={{ background: 'var(--bg2)', color: 'var(--text2)' }}>{p.bank_code}</span></td>
+                    <td><span className="badge badge-new">{p.category}</span></td>
                     <td>
-                      <span className={`badge ${p.is_active ? 'bg-success' : 'bg-secondary'}`}>
+                      <span className={`badge ${p.is_active ? 'badge-active' : 'badge-inactive'}`}>
                         {p.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="text-end">
-                      <div className="d-flex gap-2 justify-content-end">
-                        <button className="btn btn-sm btn-outline-secondary" style={{ minHeight: 36 }}
-                          onClick={() => openEdit(p)}>✏️ Edit</button>
-                        <button className="btn btn-sm btn-outline-danger" style={{ minHeight: 36 }}
-                          onClick={() => handleDelete(p.id, p.bank_name)}>🗑</button>
+                    <td style={{ textAlign: 'right', paddingRight: 20 }}>
+                      <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                        <button className="btn btn-ghost btn-xs" style={{ color: 'var(--accent)' }} onClick={() => openEdit(p)}>✏️ Edit</button>
+                        <button className="btn btn-ghost btn-xs" style={{ color: 'var(--red)' }} onClick={() => handleDelete(p.id, p.bank_name)}>🗑</button>
                       </div>
                     </td>
                   </tr>
