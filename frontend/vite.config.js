@@ -91,7 +91,6 @@ export default defineConfig(({ command }) => ({
             options: {
               cacheName: 'google-fonts-stylesheets-v1.3',
             },
-            },
           },
           {
             urlPattern: /^https:\/\/fonts\.gstatic\.com/,
