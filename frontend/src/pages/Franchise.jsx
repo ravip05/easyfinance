@@ -46,7 +46,7 @@ export default function Franchise() {
     <div id="page-franchise" className="page active">
       <div className="filter-bar" style={{ marginBottom: 16 }}>
         <div style={{ flex: 1 }}>
-          <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 17, fontWeight: 700 }}>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 17, fontWeight: 700 }}>
             🤝 Franchise Network
           </span>
         </div>

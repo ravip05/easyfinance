@@ -432,7 +432,7 @@ function EligibilityTab() {
                       ✅ ELIGIBLE FOR LOAN
                     </div>
                     <div style={{
-                      fontFamily: "'Syne',sans-serif",
+                      fontFamily: "'Inter',sans-serif",
                       fontSize: 26, fontWeight: 800,
                       color: 'var(--green)', margin: '6px 0',
                     }}>
@@ -598,7 +598,7 @@ function FoirTab() {
               {/* Big percentage */}
               <div style={{ textAlign: 'center', marginBottom: 16 }}>
                 <div style={{
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Inter',sans-serif",
                   fontSize: 52, fontWeight: 800,
                   color: result.status.color,
                   lineHeight: 1.1,

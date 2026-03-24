@@ -112,6 +112,19 @@ export default defineConfig(({ command }) => ({
     target: 'esnext',
     outDir: 'dist',
     rollupOptions: {
+      external: [
+        '/@capacitor/app',
+        '@capacitor/app',
+        '@capacitor/camera',
+        '@capacitor/core',
+        '@capacitor/filesystem',
+        '@capacitor/geolocation',
+        '@capacitor/network',
+        '@capacitor/preferences',
+        '@capacitor/push-notifications',
+        '@capacitor/share',
+        '@capgo/capacitor-native-biometric'
+      ],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],

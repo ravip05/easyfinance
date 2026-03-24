@@ -28,6 +28,7 @@
 import { useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { App as CapApp } from '@capacitor/app'
+const isNative = typeof window !== 'undefined' && !!window.Capacitor;
 import { useAuth } from './context/AuthContext'
 
 import MainLayout      from './components/MainLayout'
@@ -108,11 +109,15 @@ export default function App() {
       })
     }
 
-    setupDeepLinking()
+    if (isNative && CapApp) {
+      setupDeepLinking()
+    }
 
     // Clean up
     return () => {
-      CapApp.removeAllListeners()
+      if (isNative && CapApp) {
+        CapApp.removeAllListeners()
+      }
     }
   }, [navigate])
 
