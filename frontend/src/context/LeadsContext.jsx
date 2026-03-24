@@ -135,6 +135,34 @@ export function LeadsProvider({ children }) {
     }
   }, [toast])
 
+  // ── editLead ───────────────────────────────────────────────────────────────
+  const editLead = useCallback(async (id, payload) => {
+    try {
+      const { data } = await leadsApi.update(id, payload)
+      // The API returns the updated lead in data.data or similar. We should re-fetch or optimistically update.
+      const updatedLead = normalizeApiLead(data.data ?? data)
+      setLeads((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, ...updatedLead } : l))
+      )
+      toast.success(`Lead updated successfully!`)
+      return { ok: true }
+    } catch (err) {
+      const status = err.response?.status
+      const body   = err.response?.data
+
+      if (status === 422) {
+        const errors = body?.errors
+        const first  = errors ? Object.values(errors)[0] : null
+        const msg    = (Array.isArray(first) ? first[0] : first) ?? body?.message ?? 'Validation error.'
+        toast.error(msg)
+        return { ok: false, message: msg }
+      }
+      toast.error(body?.message ?? 'Failed to update lead.')
+      return { ok: false }
+    }
+  }, [toast])
+
+
   // ── updateStage ─────────────────────────────────────────────────────────────
   /**
    * React port of updateLeadStage() from the prototype.
@@ -190,6 +218,7 @@ export function LeadsProvider({ children }) {
     fetchLeads,
     addLead,
     addLeadForce,
+    editLead,
     updateStage,
     deleteLead,
   }

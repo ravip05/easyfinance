@@ -53,7 +53,7 @@ import Settings        from './pages/Settings'
 import Duplicates        from './pages/Duplicates'
 import MyAttendance      from './pages/MyAttendance'
 import PolicyManagement  from './pages/PolicyManagement'
-
+import Profile           from './pages/Profile'
 
 
 // ── Route guards ──────────────────────────────────────────────────────────────
@@ -168,6 +168,7 @@ export default function App() {
         <Route path="myattendance"     element={<MyAttendance />} />
         <Route path="tickets"          element={<Tickets />} />
         <Route path="policy-management" element={<PolicyManagement />} />
+        <Route path="profile"          element={<Profile />} />
 
         {/* Catch-all within the layout → 404 inside the shell */}
         <Route

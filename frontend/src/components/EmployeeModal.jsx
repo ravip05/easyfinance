@@ -27,7 +27,7 @@ const EMPTY_FORM = () => ({
   commission_rate: 0,
 })
 
-export default function EmployeeModal({ isOpen, onClose, onSuccess }) {
+export default function EmployeeModal({ isOpen, onClose, onSuccess, initialData }) {
   const { user } = useAuth()
   const toast = useToast()
   
@@ -48,11 +48,24 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess }) {
 
   useEffect(() => {
     if (!isOpen) return
-    setForm(EMPTY_FORM())
+    if (initialData) {
+      setForm({
+        name: initialData.name || '',
+        email: initialData.email || '',
+        phone: initialData.phone || '',
+        role: initialData.role || 'staff',
+        department: initialData.department || 'General',
+        team_leader_id: initialData.team_leader_id || '',
+        joining_date: initialData.joining_date || new Date().toISOString().split('T')[0],
+        commission_rate: initialData.commission_rate || 0,
+      })
+    } else {
+      setForm(EMPTY_FORM())
+    }
     setErrors({})
     setIsLoading(false)
     setTimeout(() => nameRef.current?.focus(), 60)
-  }, [isOpen])
+  }, [isOpen, initialData])
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -82,10 +95,15 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess }) {
       const payload = { ...form }
       if (!payload.team_leader_id) delete payload.team_leader_id
       
-      const res = await employeesApi.create(payload)
-      toast?.('success', res.data.message || 'Employee created successfully')
+      let res;
+      if (initialData) {
+        res = await employeesApi.update(initialData.id, payload)
+        toast?.('success', res.data?.message || 'Employee updated successfully')
+      } else {
+        res = await employeesApi.create(payload)
+        toast?.('success', res.data?.message || 'Employee created successfully')
+      }
       onSuccess?.()
-      onClose()
     } catch (e) {
       const status = e.response?.status
       const body = e.response?.data
@@ -108,7 +126,7 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess }) {
     <div className="modal-overlay open">
       <div className="modal" style={{ maxWidth: 500 }}>
         <div className="modal-header">
-          <div className="modal-title">👤 Add New Employee</div>
+          <div className="modal-title">👤 {initialData ? 'Edit Employee' : 'Add New Employee'}</div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         
@@ -209,7 +227,7 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess }) {
         <div className="modal-footer">
           <button className="btn btn-ghost" onClick={onClose} disabled={isLoading}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? 'Creating...' : '✓ Create Employee'}
+            {isLoading ? 'Saving...' : (initialData ? '✓ Save Changes' : '✓ Create Employee')}
           </button>
         </div>
       </div>

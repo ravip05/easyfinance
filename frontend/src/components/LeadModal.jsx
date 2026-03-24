@@ -64,9 +64,9 @@ const EMPTY_FORM = () => ({
 })
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function LeadModal({ isOpen, onClose, onSuccess }) {
+export default function LeadModal({ isOpen, onClose, onSuccess, initialData }) {
   const { user }                          = useAuth()
-  const { staff, addLead, addLeadForce }  = useLeads()
+  const { staff, addLead, addLeadForce, editLead }  = useLeads()
   const toast                             = useToast()
 
   const [form,      setForm]      = useState(EMPTY_FORM)
@@ -108,15 +108,40 @@ export default function LeadModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (!isOpen) return
 
-    // Default assigned_to = current user's id (mirrors refreshLeadModal)
-    const defaultAssign = assignOptions[0]?.id ?? ''
-    setForm({ ...EMPTY_FORM(), assigned_to: defaultAssign, follow_up_date: DEFAULT_FOLLOWUP() })
+    if (initialData) {
+      setForm({
+        name:           initialData.name ?? '',
+        phone:          initialData.phone ?? '',
+        email:          initialData.email ?? '',
+        birth_date:     initialData._raw?.birth_date ?? '',
+        location:       initialData._raw?.location ?? '',
+        loan_type:      initialData.type ?? 'Home Loan',
+        amount:         initialData.amountRaw ?? '',
+        source:         initialData.source ?? 'Direct',
+        assigned_to:    initialData.assignedId ?? assignOptions[0]?.id ?? '',
+        priority:       initialData.priority ?? 'Medium',
+        follow_up_date: initialData._raw?.follow_up_date ?? DEFAULT_FOLLOWUP(),
+        follow_up_time: initialData._raw?.follow_up_time ?? '',
+        monthly_income: initialData._raw?.monthly_income ?? '',
+        income_status:  initialData._raw?.income_status ?? '',
+        running_loans:  initialData._raw?.running_loans ?? '',
+        previous_issues:initialData._raw?.previous_issues ?? '',
+        cibil_score:    initialData._raw?.cibil_score ?? '',
+        lead_value:     initialData._raw?.lead_value ?? '',
+        notes:          initialData.notes ?? '',
+      })
+    } else {
+      // Default assigned_to = current user's id (mirrors refreshLeadModal)
+      const defaultAssign = assignOptions[0]?.id ?? ''
+      setForm({ ...EMPTY_FORM(), assigned_to: defaultAssign, follow_up_date: DEFAULT_FOLLOWUP() })
+    }
+    
     setErrors({})
     setIsLoading(false)
 
     // Auto-focus the name field
     setTimeout(() => nameRef.current?.focus(), 60)
-  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, initialData]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Escape key closes modal ────────────────────────────────────────────────
   useEffect(() => {
@@ -172,6 +197,16 @@ export default function LeadModal({ isOpen, onClose, onSuccess }) {
       notes:           form.notes.trim() || undefined,
     }
 
+    if (initialData) {
+      const result = await editLead(initialData.id, payload)
+      if (result.ok) {
+        onSuccess?.()
+        onClose()
+      }
+      setIsLoading(false)
+      return
+    }
+
     const result = await addLead(payload)
 
     if (result.ok) {
@@ -205,7 +240,7 @@ export default function LeadModal({ isOpen, onClose, onSuccess }) {
 
         {/* ── Header ── */}
         <div className="modal-header">
-          <div className="modal-title" id="modal-lead-title">🎯 Add New Lead</div>
+          <div className="modal-title" id="modal-lead-title">{initialData ? '✏️ Edit Lead' : '🎯 Add New Lead'}</div>
           <button className="modal-close" onClick={onClose} aria-label="Close modal">✕</button>
         </div>
 
@@ -504,7 +539,7 @@ export default function LeadModal({ isOpen, onClose, onSuccess }) {
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? 'Saving…' : '✓ Add Lead'}
+            {isLoading ? 'Saving…' : (initialData ? '✓ Save Changes' : '✓ Add Lead')}
           </button>
         </div>
 

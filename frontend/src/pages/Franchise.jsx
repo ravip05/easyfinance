@@ -19,6 +19,7 @@ export default function Franchise() {
   const [isLoading, setIsLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [editingFranchise, setEditingFranchise] = useState(null)
 
   useEffect(() => {
     fetchFranchises()
@@ -34,6 +35,17 @@ export default function Franchise() {
       setFranchises([])
     }
     setIsLoading(false)
+  }
+
+  async function handleDelete(fr) {
+    if (!window.confirm(`Delete franchise "${fr.name}"?`)) return
+    try {
+      await apiClient.delete(`/franchises/${fr.id}`)
+      toast?.('success', `Franchise deleted`)
+      fetchFranchises()
+    } catch (e) {
+      toast?.('error', e.response?.data?.message || 'Failed to delete franchise')
+    }
   }
 
   const networkStats = franchises.reduce((acc, fr) => ({
@@ -54,7 +66,7 @@ export default function Franchise() {
           <button 
             className="btn btn-primary btn-sm" 
             id="fr-add-btn"
-            onClick={() => setShowModal(true)}
+            onClick={() => { setEditingFranchise(null); setShowModal(true); }}
           >
             + Add Franchise
           </button>
@@ -130,6 +142,27 @@ export default function Franchise() {
                 <div className="fr-stat-lbl">Revenue</div>
               </div>
             </div>
+
+            {role === 'admin' && (
+              <div style={{ display: 'flex', gap: 4, marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 8, justifyContent: 'flex-end' }}>
+                <button
+                  className="btn btn-ghost btn-xs"
+                  style={{ color: '#2563eb' }}
+                  onClick={(e) => { e.stopPropagation(); setEditingFranchise(fr); setShowModal(true) }}
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button
+                  className="btn btn-ghost btn-xs"
+                  style={{ color: 'var(--red)' }}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(fr) }}
+                  title="Delete"
+                >
+                  🗑
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -166,8 +199,9 @@ export default function Franchise() {
       {/* add franchise modal */}
       <FranchiseModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={fetchFranchises}
+        initialData={editingFranchise}
+        onClose={() => { setShowModal(false); setEditingFranchise(null) }}
+        onSuccess={() => { fetchFranchises(); setShowModal(false); setEditingFranchise(null) }}
       />
     </div>
   )

@@ -135,6 +135,7 @@ const PAGE_ROUTES = {
   myattendance: '/myattendance',
   tickets:      '/tickets',
   'policy-management': '/policy-management',
+  profile:      '/profile',
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -214,12 +215,22 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* ── Bottom: user info + actions ── */}
       <div className="sidebar-bottom">
         {/* Avatar with user initials */}
-        <div className="user-avatar" id="sb-avatar">
+        <div 
+          className="user-avatar" 
+          id="sb-avatar" 
+          onClick={() => handleNavClick('profile')}
+          style={{ cursor: 'pointer' }}
+          title="My Account"
+        >
           {user?.initials ?? user?.name?.slice(0, 2).toUpperCase() ?? '??'}
         </div>
 
         {/* Name + role label */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div 
+          style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} 
+          onClick={() => handleNavClick('profile')}
+          title="My Account"
+        >
           <div className="user-name" id="sb-name">
             {user?.name ?? '—'}
           </div>

@@ -75,6 +75,7 @@ export default function Topbar({
   const location  = useLocation()
   const navigate  = useNavigate()
   const [search, setSearch] = useState('')
+  const [showNotif, setShowNotif] = useState(false)
 
   const role       = user?.role ?? 'staff'
   const activePage = location.pathname.replace(/^\//, '').split('/')[0] || 'dashboard'
@@ -163,48 +164,95 @@ export default function Topbar({
         <span
           className={`role-pill ${pillConfig.cls}`}
           id="topbar-role-pill"
+          onClick={() => navigate('/profile')}
+          style={{ cursor: 'pointer' }}
+          title="My Account"
         >
           {pillConfig.label}
         </span>
 
         {/* Notification bell */}
-        <button
-          className="icon-btn notif-btn"
-          id="bell-btn-1"
-          title="Notifications"
-          aria-label={`Notifications${notifCount > 0 ? ` (${notifCount} unread)` : ''}`}
-          style={{ position: 'relative' }}
-        >
-          🔔
-          {notifCount > 0 && (
-            <>
-              {/* Red dot — always shown when count > 0 */}
-              <span
-                id="notif-dot-1"
-                style={{
-                  position: 'absolute', top: 5, right: 5,
-                  width: 8, height: 8,
-                  background: '#ef4444', borderRadius: '50%',
-                  border: '2px solid white',
-                }}
-              />
-              {/* Numeric badge — shown when count fits in the badge */}
-              {notifCount <= 99 && (
+        <div style={{ position: 'relative' }}>
+          <button
+            className="icon-btn notif-btn"
+            id="bell-btn-1"
+            title="Notifications"
+            onClick={() => setShowNotif(!showNotif)}
+            aria-label={`Notifications${notifCount > 0 ? ` (${notifCount} unread)` : ''}`}
+            style={{ position: 'relative' }}
+          >
+            🔔
+            {notifCount > 0 && (
+              <>
+                {/* Red dot — always shown when count > 0 */}
                 <span
-                  id="notif-badge-1"
+                  id="notif-dot-1"
                   style={{
-                    position: 'absolute', top: 2, right: 2,
-                    background: '#ef4444', color: '#fff',
-                    fontSize: 9, fontWeight: 700,
-                    borderRadius: '50%', width: 16, height: 16,
-                    lineHeight: '16px', textAlign: 'center',
+                    position: 'absolute', top: 5, right: 5,
+                    width: 8, height: 8,
+                    background: '#ef4444', borderRadius: '50%',
+                    border: '2px solid white',
                   }}
+                />
+                {/* Numeric badge — shown when count fits in the badge */}
+                {notifCount <= 99 && (
+                  <span
+                    id="notif-badge-1"
+                    style={{
+                      position: 'absolute', top: 2, right: 2,
+                      background: '#ef4444', color: '#fff',
+                      fontSize: 9, fontWeight: 700,
+                      borderRadius: '50%', width: 16, height: 16,
+                      lineHeight: '16px', textAlign: 'center',
+                    }}
+                  >
+                    {notifCount}
+                  </span>
+                )}
+              </>
+            )}
+          </button>
+          
+          {/* Notification Dropdown */}
+          {showNotif && (
+            <div 
+              className="notif-dropdown"
+              style={{
+                position: 'absolute', top: '100%', right: 0, marginTop: '8px',
+                width: '320px', background: 'var(--bg)', borderRadius: '12px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border)',
+                zIndex: 1000, overflow: 'hidden'
+              }}
+            >
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>Notifications</span>
+                <span 
+                  style={{ fontSize: '12px', color: 'var(--accent)', cursor: 'pointer' }}
+                  onClick={() => { setShowNotif(false); navigate('/announcements'); }}
                 >
-                  {notifCount}
+                  View All
                 </span>
-              )}
-            </>
+              </div>
+              <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                {/* Empty State for now */}
+                <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text3)', fontSize: '13px' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📭</div>
+                  No new notifications.
+                </div>
+              </div>
+            </div>
           )}
+        </div>
+
+        {/* My Account Button */}
+        <button
+          className="icon-btn"
+          id="topbar-profile-btn"
+          onClick={() => navigate('/profile')}
+          title="My Account"
+          aria-label="My Account"
+        >
+          👤
         </button>
 
         {/* "+ New Lead" — only on the Leads page */}

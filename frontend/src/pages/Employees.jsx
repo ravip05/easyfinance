@@ -30,6 +30,7 @@ export default function Employees() {
   const [statusFilter, setStatusFilter] = useState('')
   const [selected, setSelected] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [editingEmployee, setEditingEmployee] = useState(null)
 
   // fetch employees
   async function fetchEmployees() {
@@ -105,7 +106,7 @@ export default function Employees() {
           {STATUSES.map((s) => <option key={s}>{s}</option>)}
         </select>
         {isAdmin && (
-          <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)} id="emp-add-btn">
+          <button className="btn btn-primary btn-sm" onClick={() => { setEditingEmployee(null); setShowModal(true) }} id="emp-add-btn">
             + Add Employee
           </button>
         )}
@@ -178,6 +179,14 @@ export default function Employees() {
                 </select>
                 <button
                   className="btn btn-ghost btn-xs"
+                  style={{ color: '#2563eb' }}
+                  onClick={(e) => { e.stopPropagation(); setEditingEmployee(emp); setShowModal(true) }}
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button
+                  className="btn btn-ghost btn-xs"
                   style={{ color: 'var(--red)' }}
                   onClick={(e) => { e.stopPropagation(); handleDeactivate(emp) }}
                   title="Deactivate"
@@ -230,8 +239,9 @@ export default function Employees() {
       {/* add employee modal */}
       <EmployeeModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={fetchEmployees}
+        initialData={editingEmployee}
+        onClose={() => { setShowModal(false); setEditingEmployee(null); }}
+        onSuccess={() => { fetchEmployees(); setShowModal(false); setEditingEmployee(null); }}
       />
     </div>
   )

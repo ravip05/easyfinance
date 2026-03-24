@@ -31,6 +31,7 @@ export default function Leads() {
 
   // ── Modal state ────────────────────────────────────────────────────────────
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingLead, setEditingLead] = useState(null)
 
   // ── Filter state (lifted here so FilterBar and LeadsList share it) ─────────
   const [filters, setFilters] = useState({
@@ -47,7 +48,7 @@ export default function Leads() {
   // ── Register the Topbar "+ New Lead" trigger on mount ─────────────────────
   useEffect(() => {
     if (canEdit) {
-      registerNewLead?.(() => setModalOpen(true))
+      registerNewLead?.(() => { setEditingLead(null); setModalOpen(true); })
       return () => registerNewLead?.(null)
     }
   }, [canEdit, registerNewLead])
@@ -73,14 +74,16 @@ export default function Leads() {
       {/* The table — passes filter state down */}
       <LeadsList
         filters={filters}
-        onAddLead={() => setModalOpen(true)}
+        onAddLead={() => { setEditingLead(null); setModalOpen(true); }}
+        onEditLead={(lead) => { setEditingLead(lead); setModalOpen(true); }}
       />
 
       {/* Add Lead modal */}
       <LeadModal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSuccess={() => setModalOpen(false)}
+        initialData={editingLead}
+        onClose={() => { setModalOpen(false); setEditingLead(null); }}
+        onSuccess={() => { setModalOpen(false); setEditingLead(null); }}
       />
 
     </div>

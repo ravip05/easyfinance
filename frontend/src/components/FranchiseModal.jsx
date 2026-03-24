@@ -17,7 +17,7 @@ const EMPTY_FORM = () => ({
   address: '',
 })
 
-export default function FranchiseModal({ isOpen, onClose, onSuccess }) {
+export default function FranchiseModal({ isOpen, onClose, onSuccess, initialData }) {
   const toast = useToast()
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
@@ -26,11 +26,25 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess }) {
 
   useEffect(() => {
     if (!isOpen) return
-    setForm(EMPTY_FORM())
+    if (initialData) {
+      setForm({
+        name: initialData.name || '',
+        code: initialData.code || '',
+        owner_name: initialData.owner_name || '',
+        city: initialData.city || '',
+        commission_rate: initialData.commission_rate || 0.03, // 3% default
+        status: initialData.status || 'Active',
+        phone: initialData.phone || '',
+        email: initialData.email || '',
+        address: initialData.address || '',
+      })
+    } else {
+      setForm(EMPTY_FORM())
+    }
     setErrors({})
     setIsLoading(false)
     setTimeout(() => nameRef.current?.focus(), 60)
-  }, [isOpen])
+  }, [isOpen, initialData])
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -63,10 +77,15 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess }) {
 
     setIsLoading(true)
     try {
-      const res = await franchiseApi.create(form)
-      toast?.('success', res.data.message || 'Franchise created successfully')
+      let res;
+      if (initialData) {
+        res = await franchiseApi.update(initialData.id, form)
+        toast?.('success', res.data?.message || 'Franchise updated successfully')
+      } else {
+        res = await franchiseApi.create(form)
+        toast?.('success', res.data?.message || 'Franchise created successfully')
+      }
       onSuccess?.()
-      onClose()
     } catch (e) {
       const body = e.response?.data
       if (body?.errors) setErrors(body.errors)
@@ -82,7 +101,7 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess }) {
     <div className="modal-overlay open">
       <div className="modal" style={{ maxWidth: 500 }}>
         <div className="modal-header">
-          <div className="modal-title">🤝 Onboard New Franchise</div>
+          <div className="modal-title">🤝 {initialData ? 'Edit Franchise' : 'Onboard New Franchise'}</div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
@@ -190,7 +209,7 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess }) {
         <div className="modal-footer">
           <button className="btn btn-ghost" onClick={onClose} disabled={isLoading}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? 'Onboarding...' : '✓ Onboard Franchise'}
+            {isLoading ? 'Saving...' : (initialData ? '✓ Save Changes' : '✓ Onboard Franchise')}
           </button>
         </div>
       </div>

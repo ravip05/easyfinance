@@ -56,7 +56,7 @@ const ROLE_TITLE = {
 // Stages that are convertible to a client
 const CONVERTIBLE_STAGES = ['Login', 'Sanctioned']
 
-export default function LeadsList({ onAddLead, filters: externalFilters }) {
+export default function LeadsList({ onAddLead, onEditLead, filters: externalFilters }) {
   const { user }                        = useAuth()
   const { leads, isLoading, updateStage, deleteLead, refreshLeads } = useLeads()
 
@@ -276,6 +276,7 @@ export default function LeadsList({ onAddLead, filters: externalFilters }) {
                 onStageChange={(stage) => updateStage(lead.id, stage)}
                 onDelete={() => handleDelete(lead)}
                 onConvert={canConvert && CONVERTIBLE_STAGES.includes(lead.stage) ? () => setConvertLead(lead) : null}
+                onEdit={() => onEditLead?.(lead)}
                 canEdit={canEdit}
                 canDelete={canDelete}
               />
@@ -311,7 +312,7 @@ export default function LeadsList({ onAddLead, filters: externalFilters }) {
 
 // ── LeadRow ───────────────────────────────────────────────────────────────────
 // Extracted for performance — only re-renders when its own props change.
-function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConvert, canEdit, canDelete }) {
+function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConvert, onEdit, canEdit, canDelete }) {
   const isOverdue = lead.isOverdue
   const followupColor = isOverdue ? '#dc2626' : '#64748b'
 
@@ -403,7 +404,7 @@ function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConver
             <button
               className="btn btn-ghost btn-xs"
               title="Edit lead"
-              onClick={() => {/* Step 5: open edit modal */}}
+              onClick={onEdit}
             >
               ✏️
             </button>
