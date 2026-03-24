@@ -6,6 +6,7 @@ import App from './App'
 import { AuthProvider }  from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { LeadsProvider } from './context/LeadsContext'
+import './tailwind.css'
 import './crm.css'
 
 // Register PWA service worker
