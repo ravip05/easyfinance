@@ -48,15 +48,19 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email'    => ['required', 'email'],
+            'email'    => ['required', 'string'], // Re-using 'email' field for simplicity or rename to 'login'
             'password' => ['required', 'string'],
+            'role'     => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $login = $request->email;
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        $user = User::where($field, $login)->first();
+
+        if (! $user || ! Hash::check($request->password, $user->password) || $user->role !== $request->role) {
             throw ValidationException::withMessages([
-                'email' => ['Invalid credentials.'],
+                'email' => ['Invalid credentials or role mismatch.'],
             ]);
         }
 
@@ -115,6 +119,37 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'user'    => $this->formatUser($request->user()->load('franchise')),
+        ]);
+    }
+
+    /**
+     * POST /api/settings/profile
+     *
+     * Updates the authenticated user's profile names, phone, and password.
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name'     => ['required', 'string', 'max:255'],
+            'phone'    => ['required', 'string', 'max:20'],
+            'password' => ['nullable', 'string', 'min:6'],
+        ]);
+
+        $user->name = $validated['name'];
+        $user->phone = $validated['phone'];
+
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully.',
+            'user'    => $this->formatUser($user),
         ]);
     }
 

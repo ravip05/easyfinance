@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import apiClient from '../api/client'
 import DateRangeFilter from '../components/DateRangeFilter'
+import AnalyticsFunnelChart from '../components/AnalyticsFunnelChart'
+import RevenueGrowthChart from '../components/RevenueGrowthChart'
 
 const TABS = ['Lead Conversion', 'Employee Performance', 'Revenue', 'Branch / Franchise']
 
@@ -29,11 +31,26 @@ export default function Reports() {
     try {
       const params = new URLSearchParams()
       if (dateRange.from) params.set('from', dateRange.from)
-      if (dateRange.to) params.set('to', dateRange.to)
-      params.set('type', activeTab.toLowerCase().replace(/ \/ /g, '_').replace(/ /g, '_'))
+      if (dateRange.to)   params.set('to', dateRange.to)
 
-      const res = await apiClient.get(`/reports?${params}`)
-      setStats(res.data.data || {})
+      // Core lead aggregates
+      const leadsRes  = await apiClient.get(`/reports/leads?${params}`)
+      const disbRes   = await apiClient.get(`/reports/disbursement?${params}`)
+
+      const leadsData = leadsRes.data?.data ?? {}
+      const disbData  = disbRes.data?.data ?? {}
+
+      setStats({
+        // Lead Conversion
+        total_leads:     leadsData.total ?? 0,
+        by_stage:        leadsData.by_stage ?? [],
+        by_type:         leadsData.by_type ?? [],
+        // Revenue
+        total_amount:    disbData.total_amount ?? 0,
+        disbByType:      disbData.by_type ?? [],
+        // keep legacy keys in case other components rely on them
+        ...leadsData,
+      })
     } catch {
       setStats({})
     }
@@ -112,39 +129,13 @@ export default function Reports() {
       {activeTab === 'Lead Conversion' && (
         <div className="card">
           <div className="card-header">
-            <div className="card-title">📊 Lead Conversion Breakdown</div>
+            <div className="card-title">📊 Lead Pipeline Funnel</div>
           </div>
           {isLoading ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading analytics...</div>
           ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Stage</th>
-                    <th>Count</th>
-                    <th>% of Total</th>
-                    <th>Pipeline</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(stats?.pipeline || []).map((item) => (
-                    <tr key={item.stage}>
-                      <td><span className={`badge badge-${item.stage?.toLowerCase().replace(/ /g, '') || 'new'}`}>{item.stage}</span></td>
-                      <td style={{ fontWeight: 700 }}>{item.count}</td>
-                      <td>{item.percentage}%</td>
-                      <td>
-                        <div className="progress-bar" style={{ width: 100 }}>
-                          <div className="progress-fill" style={{ width: `${item.percentage}%`, background: 'var(--accent)' }} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {(!stats?.pipeline || stats.pipeline.length === 0) && (
-                    <tr><td colSpan={4} style={{ textAlign: 'center', padding: 20, color: 'var(--text3)' }}>No pipeline data available for selected period.</td></tr>
-                  )}
-                </tbody>
-              </table>
+            <div style={{ padding: '8px 0' }}>
+              <AnalyticsFunnelChart data={stats?.by_stage ?? []} />
             </div>
           )}
         </div>
@@ -182,11 +173,10 @@ export default function Reports() {
       {activeTab === 'Revenue' && (
         <div className="card">
           <div className="card-header">
-            <div className="card-title">💰 Revenue Report</div>
+            <div className="card-title">💰 Revenue Growth</div>
           </div>
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--text3)' }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>📈</div>
-            Revenue charts and breakdowns will appear here once loan disbursement data is available.
+          <div style={{ padding: '8px 16px 16px' }}>
+            <RevenueGrowthChart isLoading={isLoading} />
           </div>
         </div>
       )}

@@ -25,40 +25,35 @@
  * ProtectedRoute redirects unauthenticated users to /login.
  * PublicRoute redirects already-authenticated users to /dashboard.
  */
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { App as CapApp } from '@capacitor/app'
 import { useAuth } from './context/AuthContext'
 
-import MainLayout   from './components/MainLayout'
-import Login        from './pages/Login'
-import Dashboard    from './pages/Dashboard'
-import Leads        from './pages/Leads'
-import Clients      from './pages/Clients'
-import Pipeline     from './pages/Pipeline'
-import Calculator   from './pages/Calculator'
-import Employees    from './pages/Employees'
-import HR           from './pages/HR'
-import Franchise    from './pages/Franchise'
-import Reports      from './pages/Reports'
-import IDCard       from './pages/IDCard'
-import Tickets      from './pages/Tickets'
-import LeadBoard    from './pages/LeadBoard'
-import LMS          from './pages/LMS'
+import MainLayout      from './components/MainLayout'
+import Login           from './pages/Login'
+import Dashboard       from './pages/Dashboard'
+import Leads           from './pages/Leads'
+import Clients         from './pages/Clients'
+import Pipeline        from './pages/Pipeline'
+import Calculator      from './pages/Calculator'
+import Employees       from './pages/Employees'
+import HR              from './pages/HR'
+import Franchise       from './pages/Franchise'
+import Reports         from './pages/Reports'
+import IDCard          from './pages/IDCard'
+import Tickets         from './pages/Tickets'
+import LeadBoard       from './pages/LeadBoard'
+import LMS             from './pages/LMS'
+import BankPolicies    from './pages/BankPolicies'
+import Announcements   from './pages/Announcements'
+import CibilChecker    from './pages/CibilChecker'
+import Settings        from './pages/Settings'
+import Duplicates        from './pages/Duplicates'
+import MyAttendance      from './pages/MyAttendance'
+import PolicyManagement  from './pages/PolicyManagement'
 
-// ── Placeholder page for routes not yet built ─────────────────────────────────
-// Replace each one with its real component as you build Step 4 and beyond.
-function ComingSoon({ page }) {
-  return (
-    <div className="empty" style={{ paddingTop: 80 }}>
-      <div className="empty-icon">🚧</div>
-      <div className="empty-text" style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
-        {page}
-      </div>
-      <div className="empty-text" style={{ marginTop: 6 }}>
-        This page will be built in the next step.
-      </div>
-    </div>
-  )
-}
+
 
 // ── Route guards ──────────────────────────────────────────────────────────────
 
@@ -98,6 +93,29 @@ function PublicRoute({ children }) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // ── Deep Linking ───────────────────────────────────────────────────────────
+    // Handles incoming URL intents (e.g. easyfinance://leads/123)
+    const setupDeepLinking = async () => {
+      CapApp.addListener('appUrlOpen', (event) => {
+        // Example: in.easyfinancewale.crm://leads/123 -> /leads/123
+        const slug = event.url.split('://').pop()
+        if (slug) {
+          navigate(slug.startsWith('/') ? slug : `/${slug}`)
+        }
+      })
+    }
+
+    setupDeepLinking()
+
+    // Clean up
+    return () => {
+      CapApp.removeAllListeners()
+    }
+  }, [navigate])
+
   return (
     <Routes>
       {/* ── Public ── */}
@@ -132,18 +150,19 @@ export default function App() {
         <Route path="leadboard"     element={<LeadBoard />} />
         <Route path="employees"     element={<Employees />} />
         <Route path="franchise"     element={<Franchise />} />
-        <Route path="bankpolicies"  element={<ComingSoon page="Bank Policies" />} />
+        <Route path="bankpolicies"  element={<BankPolicies />} />
         <Route path="lms"           element={<LMS />} />
         <Route path="reports"       element={<Reports />} />
-        <Route path="announcements" element={<ComingSoon page="Announcements" />} />
+        <Route path="announcements" element={<Announcements />} />
         <Route path="calculator"    element={<Calculator />} />
-        <Route path="cibil"         element={<ComingSoon page="CIBIL Checker" />} />
-        <Route path="settings"      element={<ComingSoon page="Admin Settings" />} />
+        <Route path="cibil"         element={<CibilChecker />} />
+        <Route path="settings"      element={<Settings />} />
         <Route path="hr"            element={<HR />} />
-        <Route path="duplicates"    element={<ComingSoon page="Duplicate Checker" />} />
-        <Route path="idcard"        element={<IDCard />} />
-        <Route path="myattendance"  element={<ComingSoon page="My Attendance" />} />
-        <Route path="tickets"       element={<Tickets />} />
+        <Route path="duplicates"       element={<Duplicates />} />
+        <Route path="idcard"           element={<IDCard />} />
+        <Route path="myattendance"     element={<MyAttendance />} />
+        <Route path="tickets"          element={<Tickets />} />
+        <Route path="policy-management" element={<PolicyManagement />} />
 
         {/* Catch-all within the layout → 404 inside the shell */}
         <Route

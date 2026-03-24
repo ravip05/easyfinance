@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string('department', 100)->nullable(); // 'Home Loans', 'Insurance' …
 
             // ── Contact ───────────────────────────────────────────────────
-            $table->string('phone', 15)->nullable();
+            $table->string('phone', 15)->unique()->nullable();
 
             // ── Employment ────────────────────────────────────────────────
             $table->enum('status', ['Active', 'On Leave', 'Inactive'])

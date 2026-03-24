@@ -31,6 +31,7 @@ class UpdateLeadRequest extends FormRequest
             'follow_up_date' => ['sometimes', 'nullable', 'date'],
             'notes'          => ['sometimes', 'nullable', 'string', 'max:2000'],
             'assigned_to'    => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
+            'cibil_score'     => ['sometimes', 'nullable', 'integer', 'min:300', 'max:900'],
         ];
     }
 

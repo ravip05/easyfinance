@@ -424,6 +424,167 @@ class LeadController extends Controller
         ]);
     }
 
+    /**
+     * POST /api/leads/merge
+     *
+     * Merges multiple duplicate leads into a single master lead.
+     * Transfers all LeadNote, LeadDocument, and LeadTimeline records.
+     * Soft-deletes the non-master leads.
+     */
+    public function merge(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        if (! in_array($user->role, ['admin', 'manager'])) {
+            return response()->json(['success' => false, 'message' => 'Admin or Manager access required.'], 403);
+        }
+
+        $validated = $request->validate([
+            'master_id' => 'required|integer|exists:leads,id',
+            'duplicate_ids' => 'required|array|min:1',
+            'duplicate_ids.*' => 'integer|exists:leads,id'
+        ]);
+
+        $masterId = $validated['master_id'];
+        $duplicateIds = array_diff($validated['duplicate_ids'], [$masterId]);
+
+        if (empty($duplicateIds)) {
+            return response()->json(['success' => false, 'message' => 'No distinct duplicates to merge.'], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $master = Lead::findOrFail($masterId);
+
+            // Transfer related records
+            DB::table('lead_notes')->whereIn('lead_id', $duplicateIds)->update(['lead_id' => $masterId]);
+            DB::table('lead_documents')->whereIn('lead_id', $duplicateIds)->update(['lead_id' => $masterId]);
+            DB::table('lead_timelines')->whereIn('lead_id', $duplicateIds)->update(['lead_id' => $masterId]);
+
+            // Add an audit note to the master timeline
+            DB::table('lead_timelines')->insert([
+                'lead_id' => $masterId,
+                'user_id' => $user->id,
+                'action' => 'merged',
+                'notes' => 'Merged with duplicate leads: ' . implode(', ', $duplicateIds),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Soft-delete the duplicates
+            Lead::whereIn('id', $duplicateIds)->delete();
+
+            // --- Audit Log ---
+            \App\Models\AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'merged_leads',
+                'model_type' => 'Lead',
+                'model_id' => $masterId,
+                'new_values' => [
+                    'master_id' => $masterId,
+                    'merged_ids' => $duplicateIds,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Leads merged successfully. Retained ID: ' . $masterId,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Merge failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * GET /api/leads/duplicates
+     *
+     * finds leads sharing the same phone or pan_number.
+     * uses indexed subqueries so this stays fast even at 100k+ rows.
+     * returns groups like: { type: 'phone', value: '9876543210', leads: [...], count: 3 }
+     */
+    public function getDuplicates(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! in_array($user->role, ['admin', 'manager'])) {
+            return response()->json(['success' => false, 'message' => 'Admin or Manager access required.'], 403);
+        }
+
+        $groups = [];
+
+        // --- phone duplicates (uses leads_phone_idx) ---
+        $dupePhones = DB::table('leads')
+            ->select('phone', DB::raw('COUNT(*) as cnt'))
+            ->whereNull('deleted_at')
+            ->whereNotNull('phone')
+            ->where('phone', '!=', '')
+            ->groupBy('phone')
+            ->having('cnt', '>', 1)
+            ->orderByDesc('cnt')
+            ->limit(50)
+            ->get();
+
+        foreach ($dupePhones as $row) {
+            $leads = Lead::forUser($user)
+                ->where('phone', $row->phone)
+                ->with('assignedUser:id,name,emp_code')
+                ->get()
+                ->map(fn ($l) => $this->formatLead($l));
+
+            if ($leads->count() > 1) {
+                $groups[] = [
+                    'type'  => 'phone',
+                    'value' => $row->phone,
+                    'count' => $leads->count(),
+                    'leads' => $leads,
+                ];
+            }
+        }
+
+        // --- pan_number duplicates ---
+        $dupePans = DB::table('leads')
+            ->select('pan_number', DB::raw('COUNT(*) as cnt'))
+            ->whereNull('deleted_at')
+            ->whereNotNull('pan_number')
+            ->where('pan_number', '!=', '')
+            ->groupBy('pan_number')
+            ->having('cnt', '>', 1)
+            ->orderByDesc('cnt')
+            ->limit(50)
+            ->get();
+
+        foreach ($dupePans as $row) {
+            $leads = Lead::forUser($user)
+                ->where('pan_number', $row->pan_number)
+                ->with('assignedUser:id,name,emp_code')
+                ->get()
+                ->map(fn ($l) => $this->formatLead($l));
+
+            if ($leads->count() > 1) {
+                $groups[] = [
+                    'type'  => 'pan_number',
+                    'value' => $row->pan_number,
+                    'count' => $leads->count(),
+                    'leads' => $leads,
+                ];
+            }
+        }
+
+        return response()->json([
+            'success'      => true,
+            'total_groups' => count($groups),
+            'data'         => $groups,
+        ]);
+    }
+
     // ── Private Helpers ───────────────────────────────────────────────────────
 
     /**

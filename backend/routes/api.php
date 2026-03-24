@@ -8,7 +8,11 @@ use App\Http\Controllers\Api\FranchiseController;
 use App\Http\Controllers\Api\HRController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\AnnouncementController;
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\LmsController;
+use App\Http\Controllers\Api\PayrollController;
+use App\Http\Controllers\Api\BankPolicyController;
+use App\Http\Controllers\Api\BulkAllocationController;
 use App\Http\Controllers\Api\StaffController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,8 +45,16 @@ Route::prefix('auth')->name('auth.')->group(function () {
 // ── Private: Requires valid Sanctum Bearer token ───────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
+    // ── Attendance ───────────────────────────────────────────────────────────
+    Route::post('attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
+    Route::post('attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
+
     // GET /api/auth/me  — current user profile + role
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
+
+    // ── Settings ─────────────────────────────────────────────────────────────
+    Route::get('user/settings', [AuthController::class, 'me']); // Alias for frontend
+    Route::post('settings/profile', [AuthController::class, 'updateProfile']);
 
     // ── Leads ─────────────────────────────────────────────────────────────────
     // NOTE: Named extra routes MUST come before apiResource() so Laravel
@@ -55,6 +67,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // GET  /api/leads/export/csv  — streams a CSV download of scoped leads
     Route::get('leads/export/csv', [LeadController::class, 'exportCsv'])
          ->name('leads.export');
+
+    // GET  /api/leads/duplicates  — phone/pan collision groups
+    Route::get('leads/duplicates', [LeadController::class, 'getDuplicates'])
+         ->name('leads.duplicates');
+
+    // POST /api/leads/merge — merge duplicate leads
+    Route::post('leads/merge', [LeadController::class, 'merge'])
+         ->name('leads.merge');
 
     // Standard CRUD: index, store, show, update, destroy
     Route::apiResource('leads', LeadController::class);
@@ -96,6 +116,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('employees/{employee}/leads', [EmployeeController::class, 'leads'])
          ->name('employees.leads');
 
+    // POST /api/hr/employees/{employee}/seniority — update seniority tier + audit log
+    Route::post('hr/employees/{employee}/seniority', [EmployeeController::class, 'updateSeniority'])
+         ->middleware('role:admin')
+         ->name('employees.seniority');
+
     // ── Franchises ────────────────────────────────────────────────────────────
 
     Route::apiResource('franchises', FranchiseController::class);
@@ -110,6 +135,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── HR Module: Holidays, Policies, Push ──────────────────────────────────
 
+    Route::post('hr/allocate-bulk', [BulkAllocationController::class, 'allocateBulk'])
+        ->middleware('role:admin,manager')
+        ->name('hr.allocate-bulk');
+
     Route::get('holidays', [HRController::class, 'holidays'])->name('holidays.index');
     Route::post('holidays', [HRController::class, 'storeHoliday'])->name('holidays.store');
     Route::delete('holidays/{holiday}', [HRController::class, 'destroyHoliday'])->name('holidays.destroy');
@@ -119,6 +148,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('push-subscriptions', [HRController::class, 'registerPushDevice'])->name('push.register');
     Route::delete('push-subscriptions', [HRController::class, 'unregisterPushDevice'])->name('push.unregister');
+
+    // ── Payroll (admin, manager only) ────────────────────────────────────────
+    Route::middleware('role:admin,manager')->group(function () {
+        Route::get('payroll/summary',  [PayrollController::class, 'summary'])->name('payroll.summary');
+        Route::post('payroll/process', [PayrollController::class, 'process'])->name('payroll.process');
+    });
 
     // ── Staff Module (staff, manager, admin only) ─────────────────────────────
     Route::middleware('role:staff,manager,admin')->group(function () {
@@ -143,6 +178,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
     Route::post('announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
     Route::post('announcements/{announcement}/read', [AnnouncementController::class, 'markRead'])->name('announcements.read');
+
+    // ── Bank Policies ─────────────────────────────────────────────────────────
+    Route::apiResource('bank-policies', BankPolicyController::class);
 
     // ── LMS: Learning Management System ─────────────────────────────────────
     Route::group(['prefix' => 'lms'], function () {

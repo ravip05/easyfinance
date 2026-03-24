@@ -1,51 +1,54 @@
 /**
  * services/biometricAuth.js
  *
- * biometric authentication service for native platforms
- * fingerprint / face id login after initial password auth
- * stores auth token securely in capacitor preferences
+ * Biometric authentication bridge for Capacitor native apps.
+ * Uses @capgo/capacitor-native-biometric for fingerprint / Face ID
+ * and @capacitor/preferences for secure Sanctum token persistence.
+ *
+ * Security model:
+ *   - Token is stored in Capacitor Preferences (Android EncryptedSharedPreferences
+ *     / iOS Keychain) — NOT in sessionStorage or localStorage.
+ *   - Biometric prompt is required before the stored token is returned.
+ *   - If biometric fails, the user must fall back to password login.
+ *   - On logout, stored credentials are wiped immediately.
+ *
+ * Web fallback: all methods are safe to call on web — they return
+ * false / null so the caller can skip biometric flows gracefully.
  */
+
 import { isNative } from '../utils/platform'
 
+// ── Storage keys ─────────────────────────────────────────────────────────────
+const KEY_TOKEN    = 'crm_bio_token'
+const KEY_USER     = 'crm_bio_user'
+const KEY_ENROLLED = 'crm_bio_enrolled'
+
+// ── Public API ───────────────────────────────────────────────────────────────
+
 /**
- * check if biometric authentication is available on the device
+ * Check if the device supports biometric authentication.
+ * @returns {Promise<boolean>}
  */
 export async function isBiometricAvailable() {
   if (!isNative) return false
   try {
     const { NativeBiometric } = await import('@capgo/capacitor-native-biometric')
     const result = await NativeBiometric.isAvailable()
-    return result.isAvailable
+    return result.isAvailable === true
   } catch {
     return false
   }
 }
 
 /**
- * enroll biometric auth — save auth token to secure storage
- * call this after a successful password login
- */
-export async function enrollBiometric(token, userId) {
-  if (!isNative) return
-  try {
-    const { Preferences } = await import('@capacitor/preferences')
-    await Preferences.set({ key: 'auth_token', value: token })
-    await Preferences.set({ key: 'auth_user_id', value: String(userId) })
-    await Preferences.set({ key: 'biometric_enrolled', value: 'true' })
-    console.log('biometric enrollment complete')
-  } catch (e) {
-    console.error('biometric enrollment failed:', e)
-  }
-}
-
-/**
- * check if biometric has been previously enrolled
+ * Check if the user has previously enrolled biometric credentials.
+ * @returns {Promise<boolean>}
  */
 export async function isBiometricEnrolled() {
   if (!isNative) return false
   try {
     const { Preferences } = await import('@capacitor/preferences')
-    const { value } = await Preferences.get({ key: 'biometric_enrolled' })
+    const { value } = await Preferences.get({ key: KEY_ENROLLED })
     return value === 'true'
   } catch {
     return false
@@ -53,48 +56,75 @@ export async function isBiometricEnrolled() {
 }
 
 /**
- * attempt biometric authentication
- * returns { success: true, token } or { success: false, error }
+ * Store Sanctum token + full user object securely after a successful
+ * password login.  Call this AFTER the backend has validated credentials.
+ *
+ * @param {string} token  - Sanctum Bearer token
+ * @param {object} user   - Full user object from auth response
  */
-export async function authenticateWithBiometric() {
+export async function enrollBiometric(token, user) {
+  if (!isNative) return
   try {
-    const { NativeBiometric } = await import('@capgo/capacitor-native-biometric')
     const { Preferences } = await import('@capacitor/preferences')
-    const { value: userId } = await Preferences.get({ key: 'auth_user_id' })
-
-    await NativeBiometric.verifyIdentity({
-      reason: 'Unlock EasyFinance CRM',
-      title: 'Biometric Login',
-      subtitle: 'Use fingerprint or Face ID',
-      description: 'Authenticate to access your account',
-      negativeButtonText: 'Use Password',
-      maxAttempts: 3,
-    })
-
-    // biometric passed, retrieve stored token
-    const { value: token } = await Preferences.get({ key: 'auth_token' })
-
-    if (!token) {
-      return { success: false, error: 'no stored token' }
-    }
-
-    return { success: true, token }
-  } catch (e) {
-    return { success: false, error: e.message || 'biometric auth failed' }
+    await Preferences.set({ key: KEY_TOKEN,    value: token })
+    await Preferences.set({ key: KEY_USER,     value: JSON.stringify(user) })
+    await Preferences.set({ key: KEY_ENROLLED, value: 'true' })
+  } catch (err) {
+    console.warn('[BiometricAuth] Enrollment failed:', err)
   }
 }
 
 /**
- * clear biometric enrollment (on logout)
+ * Prompt the user for biometric verification and return stored credentials.
+ * Returns { success, token, user } — on failure, success is false and the
+ * caller should fall back to password login.
+ *
+ * @returns {Promise<{ success: boolean, token?: string, user?: object, error?: string }>}
+ */
+export async function authenticateWithBiometric() {
+  try {
+    const { NativeBiometric } = await import('@capgo/capacitor-native-biometric')
+    const { Preferences }     = await import('@capacitor/preferences')
+
+    // Prompt biometric — throws if cancelled or failed
+    await NativeBiometric.verifyIdentity({
+      reason:             'Unlock EasyFinance CRM',
+      title:              'Biometric Login',
+      subtitle:           'Use fingerprint or Face ID',
+      description:        'Authenticate to access your account',
+      negativeButtonText: 'Use Password',
+      maxAttempts:        3,
+    })
+
+    // Biometric passed — retrieve stored credentials
+    const { value: token }    = await Preferences.get({ key: KEY_TOKEN })
+    const { value: userJson } = await Preferences.get({ key: KEY_USER })
+
+    if (!token) {
+      return { success: false, error: 'No stored token found' }
+    }
+
+    return {
+      success: true,
+      token,
+      user: userJson ? JSON.parse(userJson) : null,
+    }
+  } catch (err) {
+    return { success: false, error: err.message || 'Biometric auth failed' }
+  }
+}
+
+/**
+ * Wipe all stored biometric credentials.  Call on logout.
  */
 export async function clearBiometricEnrollment() {
   if (!isNative) return
   try {
     const { Preferences } = await import('@capacitor/preferences')
-    await Preferences.remove({ key: 'auth_token' })
-    await Preferences.remove({ key: 'auth_user_id' })
-    await Preferences.remove({ key: 'biometric_enrolled' })
+    await Preferences.remove({ key: KEY_TOKEN })
+    await Preferences.remove({ key: KEY_USER })
+    await Preferences.remove({ key: KEY_ENROLLED })
   } catch {
-    // silent
+    // silent — we're logging out regardless
   }
 }

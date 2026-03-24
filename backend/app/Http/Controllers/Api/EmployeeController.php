@@ -256,6 +256,47 @@ class EmployeeController extends Controller
     }
 
     /**
+     * POST /api/hr/employees/{employee}/seniority
+     *
+     * Updates an employee's seniority tier and logs the change for auditing.
+     * Admin only.
+     */
+    public function updateSeniority(Request $request, User $employee): JsonResponse
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Admin access required.'], 403);
+        }
+
+        $request->validate([
+            'seniority' => ['required', 'integer', 'min:1', 'max:10'],
+            'reason'    => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $oldSeniority = $employee->seniority ?? 0;
+        $newSeniority = (int) $request->seniority;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($employee, $oldSeniority, $newSeniority, $request) {
+            $employee->update(['seniority' => $newSeniority]);
+
+            \Illuminate\Support\Facades\DB::table('seniority_tracking')->insert([
+                'user_id'       => $employee->id,
+                'old_seniority' => $oldSeniority,
+                'new_seniority' => $newSeniority,
+                'changed_by'    => $request->user()->id,
+                'reason'        => $request->reason,
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Seniority for {$employee->name} updated to tier {$newSeniority}.",
+            'data'    => ['id' => $employee->id, 'seniority' => $newSeniority],
+        ]);
+    }
+
+    /**
      * GET /api/employees/{employee}/leads
      *
      * Returns the 50 most recent leads assigned to this employee.

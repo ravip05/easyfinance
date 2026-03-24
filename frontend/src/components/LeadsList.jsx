@@ -20,9 +20,11 @@
  * Props:
  *   onAddLead  fn  — called when the user clicks "+ Add Lead" or the empty-state CTA
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLeads } from '../context/LeadsContext'
+import ConvertLeadModal from './ConvertLeadModal'
+import ImportLeadsModal from './ImportLeadsModal'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 export const STAGES = [
@@ -51,15 +53,27 @@ const ROLE_TITLE = {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+// Stages that are convertible to a client
+const CONVERTIBLE_STAGES = ['Login', 'Sanctioned']
+
 export default function LeadsList({ onAddLead, filters: externalFilters }) {
   const { user }                        = useAuth()
-  const { leads, isLoading, updateStage, deleteLead } = useLeads()
+  const { leads, isLoading, updateStage, deleteLead, refreshLeads } = useLeads()
 
-  const role     = user?.role ?? 'staff'
-  const canEdit  = ['admin', 'manager', 'staff'].includes(role)
+  const role      = user?.role ?? 'staff'
+  const canEdit   = ['admin', 'manager', 'staff'].includes(role)
   const canDelete = role === 'admin'
+  const canConvert = ['admin', 'manager'].includes(role)
 
-  // ── Filter state (own state = fallback when no parent passes filters) ─────
+  // ── Convert-to-client modal state ─────────────────────────────────────────
+  const [convertLead, setConvertLead] = useState(null)
+
+  const handleConversionSuccess = useCallback(() => {
+    refreshLeads?.()
+  }, [refreshLeads])
+
+  // ── Import modal state ───────────────────────────────────────────────
+  const [importOpen, setImportOpen] = useState(false)
   const [ownSearch,   setOwnSearch]   = useState('')
   const [ownStageFil, setOwnStageFil] = useState('')
   const [ownTypeFil,  setOwnTypeFil]  = useState('')
@@ -261,10 +275,24 @@ export default function LeadsList({ onAddLead, filters: externalFilters }) {
                 onToggle={() => toggleOne(lead.id)}
                 onStageChange={(stage) => updateStage(lead.id, stage)}
                 onDelete={() => handleDelete(lead)}
+                onConvert={canConvert && CONVERTIBLE_STAGES.includes(lead.stage) ? () => setConvertLead(lead) : null}
                 canEdit={canEdit}
                 canDelete={canDelete}
               />
             ))}
+
+            {/* Import modal */}
+            <ImportLeadsModal
+              isOpen={importOpen}
+              onClose={() => setImportOpen(false)}
+              onSuccess={() => { setImportOpen(false); refreshLeads?.() }}
+            />
+            <ConvertLeadModal
+              lead={convertLead}
+              isOpen={!!convertLead}
+              onClose={() => setConvertLead(null)}
+              onSuccess={handleConversionSuccess}
+            />
           </tbody>
         </table>
       </div>
@@ -283,9 +311,9 @@ export default function LeadsList({ onAddLead, filters: externalFilters }) {
 
 // ── LeadRow ───────────────────────────────────────────────────────────────────
 // Extracted for performance — only re-renders when its own props change.
-function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, canEdit, canDelete }) {
+function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConvert, canEdit, canDelete }) {
   const isOverdue = lead.isOverdue
-  const followupColor = isOverdue ? 'var(--red)' : 'var(--text2)'
+  const followupColor = isOverdue ? '#dc2626' : '#64748b'
 
   return (
     <tr style={isSelected ? { background: 'var(--accent-light)' } : undefined}>
@@ -356,14 +384,14 @@ function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, canEdit,
       </td>
 
       {/* Follow-up date */}
-      <td style={{ fontSize: 12, color: followupColor }}>
-        {isOverdue && <span title="Overdue">⚠ </span>}
+      <td style={{ fontSize: 13, color: followupColor, fontWeight: isOverdue ? 600 : 400 }}>
+        {isOverdue && <span title="Overdue" style={{ marginRight: 4 }}>⚠️</span>}
         {lead.followup || '—'}
       </td>
 
       {/* Actions */}
       <td>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'nowrap' }}>
           <button
             className="btn btn-ghost btn-xs"
             title="View details"
@@ -378,6 +406,16 @@ function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, canEdit,
               onClick={() => {/* Step 5: open edit modal */}}
             >
               ✏️
+            </button>
+          )}
+          {onConvert && (
+            <button
+              className="btn btn-ghost btn-xs"
+              title="Convert to client"
+              style={{ color: '#2563eb', fontWeight: 600 }}
+              onClick={onConvert}
+            >
+              🚀
             </button>
           )}
           {canDelete && (
@@ -458,7 +496,7 @@ export function LeadsFilterBar({ search, stage, loanType, priority, onChange, on
       <button
         className="btn btn-secondary btn-sm"
         id="leads-import-btn"
-        onClick={() => alert('Import coming soon')}
+        onClick={() => setImportOpen(true)}
       >
         ⬆ Import
       </button>

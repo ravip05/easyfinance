@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.easyfinance.crm',
+  appId: 'in.easyfinancewale.crm',
   appName: 'EasyFinance CRM',
   webDir: 'dist',
   bundledWebRuntime: false,

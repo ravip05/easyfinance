@@ -10,23 +10,23 @@
  *   ✓ Demo Accounts panel with "Use" quick-fill buttons
  *   ✓ Error banner with the server's message
  *   ✓ Loading state on the Sign In button
- *   ✓ All original CSS class names preserved
  *
- * Changes from the prototype:
- *   • doLogin() → calls AuthContext.login() instead of raw fetch()
- *   • selectRole() → setState instead of DOM manipulation
- *   • fillDemo() → setState instead of direct input value assignment
- *   • togglePassView() → useState instead of DOM toggle
+ * Phase 4 additions:
+ *   ✓ Biometric login button (native only)
+ *   ✓ Auto-detect biometric availability on mount
+ *   ✓ Graceful fallback to password form
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { isBiometricAvailable, isBiometricEnrolled } from '../services/biometricAuth'
 
 // ── Role definitions (mirrors ROLE_CONFIG from the prototype) ─────────────────
 const ROLES = [
-  { key: 'admin',   icon: '🛡️', label: 'Super Admin',     sub: 'Full access' },
-  { key: 'manager', icon: '👔', label: 'Manager',          sub: 'Team lead'   },
-  { key: 'staff',   icon: '👤', label: 'Staff / Executive', sub: 'Field agent' },
-  { key: 'dsa',     icon: '🤝', label: 'DSA / Franchise',  sub: 'Partner'     },
+  { key: 'admin',     icon: '🛡️', label: 'Super Admin',     sub: 'Full access' },
+  { key: 'manager',   icon: '👔', label: 'Manager',          sub: 'Team lead'   },
+  { key: 'staff',     icon: '👤', label: 'Staff / Executive', sub: 'Field agent' },
+  { key: 'franchise', icon: '🤝', label: 'Franchise Partner',sub: 'Partner'     },
+  { key: 'client',    icon: '📱', label: 'Client',          sub: 'Customer'    },
 ]
 
 // ── Demo credentials (mirrors DEMO_USERS from the prototype) ──────────────────
@@ -38,7 +38,7 @@ const DEMO_ACCOUNTS = [
 ]
 
 export default function Login() {
-  const { login } = useAuth()
+  const { login, loginWithBiometric } = useAuth()
 
   // ── Form state ─────────────────────────────────────────────────────────────
   const [selectedRole, setSelectedRole] = useState('admin')
@@ -48,17 +48,24 @@ export default function Login() {
   const [error,        setError]        = useState('')
   const [isLoading,    setIsLoading]    = useState(false)
 
+  // ── Biometric state ────────────────────────────────────────────────────────
+  const [biometricReady, setBiometricReady] = useState(false)
+  const [bioLoading,     setBioLoading]     = useState(false)
+
+  // Check biometric availability on mount
+  useEffect(() => {
+    ;(async () => {
+      const available = await isBiometricAvailable()
+      const enrolled  = await isBiometricEnrolled()
+      setBiometricReady(available && enrolled)
+    })()
+  }, [])
+
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  /**
-   * selectRole — mirrors selectRole() from the prototype.
-   * Clicking a role card highlights it AND pre-fills the matching demo credential.
-   */
   function handleRoleSelect(roleKey) {
     setSelectedRole(roleKey)
     setError('')
-
-    // Auto-fill the matching demo account so the user can sign in immediately
     const demo = DEMO_ACCOUNTS.find((d) => d.role === roleKey)
     if (demo) {
       setEmail(demo.email)
@@ -66,10 +73,6 @@ export default function Login() {
     }
   }
 
-  /**
-   * fillDemo — mirrors fillDemo() from the prototype.
-   * The "Use" link in the demo accounts panel fills email + password + role.
-   */
   function handleFillDemo(demo) {
     setSelectedRole(demo.role)
     setEmail(demo.email)
@@ -77,14 +80,7 @@ export default function Login() {
     setError('')
   }
 
-  /**
-   * doLogin — mirrors doLogin() from the prototype.
-   * Calls AuthContext.login() which POSTs to /api/auth/login.
-   * On success, AuthContext updates the user state and React Router
-   * navigates to /dashboard via the ProtectedRoute in App.jsx.
-   */
   async function handleSubmit(e) {
-    // Support both button click and Enter key (form submit)
     e?.preventDefault?.()
     if (isLoading) return
 
@@ -92,8 +88,7 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      await login(email.trim().toLowerCase(), password)
-      // Navigation is handled by App.jsx PublicRoute → redirect to /dashboard
+      await login(email.trim().toLowerCase(), password, selectedRole)
     } catch (err) {
       const msg =
         err.response?.data?.message ||
@@ -105,7 +100,28 @@ export default function Login() {
     }
   }
 
-  // Enter key in the password field submits the form
+  /**
+   * handleBiometricLogin — prompts fingerprint / Face ID
+   * Falls back to password form with error message on failure.
+   */
+  async function handleBiometricLogin() {
+    if (bioLoading) return
+    setBioLoading(true)
+    setError('')
+
+    try {
+      const result = await loginWithBiometric()
+      if (!result.success) {
+        setError(result.error || 'Biometric authentication failed. Use password.')
+      }
+      // On success, AuthContext updates user state → PublicRoute redirects to /dashboard
+    } catch {
+      setError('Biometric authentication failed. Please use your password.')
+    } finally {
+      setBioLoading(false)
+    }
+  }
+
   function handleKeyDown(e) {
     if (e.key === 'Enter') handleSubmit()
   }
@@ -128,20 +144,45 @@ export default function Login() {
         <div className="login-title">Welcome back 👋</div>
         <div className="login-sub">Select your role and sign in to continue</div>
 
-        {/* ── Role selector grid ── */}
-        <div className="login-role-grid" id="role-select-grid">
-          {ROLES.map((role) => (
-            <div
-              key={role.key}
-              className={`role-btn${selectedRole === role.key ? ' selected' : ''}`}
-              onClick={() => handleRoleSelect(role.key)}
-              data-role={role.key}
-            >
-              <div className="rb-icon">{role.icon}</div>
-              <div className="rb-label">{role.label}</div>
-              <div className="rb-sub">{role.sub}</div>
-            </div>
-          ))}
+        {/* ── Biometric unlock button (native only, enrolled) ── */}
+        {biometricReady && (
+          <button
+            id="biometric-login-btn"
+            className="btn btn-primary"
+            style={{
+              width: '100%',
+              padding: '13px',
+              fontSize: '15px',
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              background: 'linear-gradient(135deg, var(--accent2, #10b981), var(--accent, #2563eb))',
+              border: 'none',
+              borderRadius: 12,
+            }}
+            onClick={handleBiometricLogin}
+            disabled={bioLoading}
+          >
+            {bioLoading ? '🔐 Verifying…' : '🔐 Unlock with Biometric'}
+          </button>
+        )}
+
+        {/* ── Role selector dropdown ── */}
+        <div className="form-group">
+          <div className="form-label">Login as</div>
+          <select 
+            className="form-select"
+            value={selectedRole}
+            onChange={(e) => handleRoleSelect(e.target.value)}
+          >
+            {ROLES.map((role) => (
+              <option key={role.key} value={role.key}>
+                {role.icon} {role.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* ── Credentials ── */}
@@ -200,7 +241,7 @@ export default function Login() {
         {/* ── Submit ── */}
         <button
           className="btn btn-primary"
-          style={{ width: '100%', padding: '11px', fontSize: '14px' }}
+          style={{ width: '100%', padding: '11px', fontSize: '14px', fontFamily: 'Inter, sans-serif', backgroundColor: '#2563eb' }}
           onClick={handleSubmit}
           disabled={isLoading}
         >

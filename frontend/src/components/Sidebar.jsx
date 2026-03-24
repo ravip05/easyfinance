@@ -43,7 +43,8 @@ const ROLE_CONFIG = {
       { s: 'Team',       i: [{ p: 'employees',    ic: '👥', l: 'Employees' },
                               { p: 'franchise',    ic: '🏢', l: 'Franchise' }] },
       { s: 'Knowledge',  i: [{ p: 'lms',          ic: '🎓', l: 'Training & LMS', b: 'New', bc: 'nb-green' },
-                              { p: 'bankpolicies', ic: '🏦', l: 'Bank Policies' }] },
+                              { p: 'bankpolicies', ic: '🏦', l: 'Bank Policies' },
+                              { p: 'policy-management', ic: '🛠️', l: 'Policy Admin' }] },
       { s: 'Analytics',  i: [{ p: 'reports',      ic: '📋', l: 'Reports' }] },
       { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements', b: '', bc: 'nb-orange' }] },
       { s: 'HR & Ops',   i: [{ p: 'hr',           ic: '🏢', l: 'HR Module' },
@@ -133,6 +134,7 @@ const PAGE_ROUTES = {
   idcard:       '/idcard',
   myattendance: '/myattendance',
   tickets:      '/tickets',
+  'policy-management': '/policy-management',
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────

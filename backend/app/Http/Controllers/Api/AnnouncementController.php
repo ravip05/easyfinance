@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\AnnouncementRead;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -48,6 +49,28 @@ class AnnouncementController extends Controller
             'published_at' => now(),
             'created_by'   => $request->user()->id,
             'channel_app'  => true,
+        ]);
+
+        // --- Notification Dispatch ---
+        // Notify all users in the target group
+        $targetUsers = User::active();
+        if ($validated['target'] !== 'all') {
+            $targetUsers->where('role', $validated['target']);
+        }
+        
+        \Illuminate\Support\Facades\Notification::send(
+            $targetUsers->get(), 
+            new \App\Notifications\NewAnnouncementNotification($announcement)
+        );
+
+        // --- Audit Log ---
+        \App\Models\AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'created_announcement',
+            'model_type' => 'Announcement',
+            'model_id' => $announcement->id,
+            'new_values' => $announcement->toArray(),
+            'ip_address' => $request->ip(),
         ]);
 
         return response()->json([
