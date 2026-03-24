@@ -91,7 +91,7 @@ function RoleBanner({ user, scopeLabel }) {
       </div>
       {/* Text */}
       <div style={{ flex: 1 }}>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 800 }}>
+        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 15, fontWeight: 800 }}>
           Welcome back, {user.name?.split(' ')[0]}! {icon[role]}
         </div>
         <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2 }}>
@@ -103,7 +103,7 @@ function RoleBanner({ user, scopeLabel }) {
         background: 'rgba(255,255,255,0.15)',
         borderRadius: 8, padding: '6px 14px', textAlign: 'center', flexShrink: 0,
       }}>
-        <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800 }}>
+        <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800 }}>
           {scopeLabel}
         </div>
         <div style={{ fontSize: 10, opacity: 0.8 }}>Data Scope</div>
@@ -242,7 +242,7 @@ function DonutChart({ leads }) {
         </svg>
         {/* Center label */}
         <div className="donut-center">
-          <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 800 }}>
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800 }}>
             {leads.length}
           </span>
           <span style={{ fontSize: 10, color: 'var(--text3)' }}>Leads</span>

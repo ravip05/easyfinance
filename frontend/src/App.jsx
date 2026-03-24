@@ -72,7 +72,7 @@ function ProtectedRoute({ children }) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex',
                     alignItems: 'center', justifyContent: 'center', color: 'var(--text3)',
-                    fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
+                    fontSize: 13, fontFamily: "'Inter', sans-serif" }}>
         Loading…
       </div>
     )

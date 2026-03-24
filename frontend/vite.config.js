@@ -86,18 +86,18 @@ export default defineConfig(({ command }) => ({
             },
           },
           {
-            // google fonts for offline rendering
             urlPattern: /^https:\/\/fonts\.googleapis\.com/,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'google-fonts-stylesheets',
+              cacheName: 'google-fonts-stylesheets-v1.3',
+            },
             },
           },
           {
             urlPattern: /^https:\/\/fonts\.gstatic\.com/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts-webfonts',
+              cacheName: 'google-fonts-webfonts-v1.3',
               expiration: { maxEntries: 20, maxAgeSeconds: 31536000 },
             },
           },
