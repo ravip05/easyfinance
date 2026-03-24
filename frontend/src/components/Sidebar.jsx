@@ -176,7 +176,7 @@ export default function Sidebar({ isOpen, onClose }) {
       <div className="sidebar-logo">
         <div className="logo-icon">💰</div>
         <div className="logo-text">
-          EasyFinance <span>Loan CRM · v2.0</span>
+          EasyFinance CRM<span>Loan Consultancy · v2.0</span>
         </div>
       </div>
 
