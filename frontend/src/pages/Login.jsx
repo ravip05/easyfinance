@@ -158,8 +158,6 @@ export default function Login() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
-              background: 'linear-gradient(135deg, var(--accent2, #10b981), var(--accent, #2563eb))',
-              border: 'none',
               borderRadius: 12,
             }}
             onClick={handleBiometricLogin}
@@ -241,7 +239,7 @@ export default function Login() {
         {/* ── Submit ── */}
         <button
           className="btn btn-primary"
-          style={{ width: '100%', padding: '11px', fontSize: '14px', fontFamily: 'Inter, sans-serif', backgroundColor: '#2563eb' }}
+          style={{ width: '100%', padding: '11px', fontSize: '14px', backgroundColor: '#2563eb' }}
           onClick={handleSubmit}
           disabled={isLoading}
         >
