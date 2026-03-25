@@ -201,14 +201,19 @@ export function LeadsProvider({ children }) {
   const deleteLead = useCallback(async (id, name) => {
     try {
       await leadsApi.destroy(id)
-      setLeads((prev) => prev.filter((l) => l.id !== id))
+      // Optimistic local update
+      setLeads((prev) => prev.filter((l) => Number(l.id) !== Number(id)))
       toast.success(`Lead "${name}" archived.`)
+      
+      // Safety sync after a short delay to ensure DB commit is visible to next fetch
+      setTimeout(() => fetchLeads(), 1000)
+      
       return { ok: true }
     } catch (err) {
       toast.error(err.response?.data?.message ?? 'Failed to delete lead.')
       return { ok: false }
     }
-  }, [toast])
+  }, [toast, fetchLeads])
 
   const value = {
     leads,

@@ -76,9 +76,32 @@ export default function Topbar({
   const navigate  = useNavigate()
   const [search, setSearch] = useState('')
   const [showNotif, setShowNotif] = useState(false)
+  const [announcements, setAnnouncements] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
 
   const role       = user?.role ?? 'staff'
   const activePage = location.pathname.replace(/^\//, '').split('/')[0] || 'dashboard'
+
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      const { announcementsApi } = await import('../api/announcements')
+      const res = await announcementsApi.list({ per_page: 5 })
+      const list = res.data.data || []
+      setAnnouncements(list)
+      // Simple heuristic: if we had a way to check unread, we'd use it. 
+      // For now, we'll just show the latest 5 as unread if they are recent.
+      setUnreadCount(list.length > 0 ? list.length : 0)
+    } catch (e) {
+      console.error('Failed to fetch notifications', e)
+    }
+  }
+
+  useState(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 60000) // update every minute
+    return () => clearInterval(interval)
+  }, [])
 
   // Derive the topbar title from the route
   const rawTitle = PAGE_TITLES[activePage] ?? activePage
@@ -111,6 +134,8 @@ export default function Topbar({
     await logout()
     navigate('/login', { replace: true })
   }
+
+  const displayNotifCount = notifCount > 0 ? notifCount : unreadCount
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -234,11 +259,36 @@ export default function Topbar({
                 </span>
               </div>
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                {/* Empty State for now */}
-                <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text3)', fontSize: '13px' }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📭</div>
-                  No new notifications.
-                </div>
+                {announcements.length === 0 ? (
+                  <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text3)', fontSize: '13px' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '8px' }}>📭</div>
+                    No new notifications.
+                  </div>
+                ) : (
+                  announcements.map((ann) => (
+                    <div 
+                      key={ann.id}
+                      className="notif-item"
+                      onClick={() => { setShowNotif(false); navigate('/announcements'); }}
+                      style={{ 
+                        padding: '12px 16px', 
+                        borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, fontSize: '12px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{ann.title}</span>
+                        <span style={{ fontSize: '10px', color: 'var(--text3)', fontWeight: 400 }}>
+                          {new Date(ann.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {ann.message}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

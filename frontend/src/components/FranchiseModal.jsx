@@ -87,9 +87,12 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess, initialData
       }
       onSuccess?.()
     } catch (e) {
+      console.error('Franchise save error:', e)
       const body = e.response?.data
       if (body?.errors) setErrors(body.errors)
-      toast?.('error', body?.message || 'Failed to create franchise')
+      
+      const errMsg = body?.message || (e.response?.status === 422 ? 'Validation failed. Check the form.' : 'Failed to save franchise')
+      toast?.('error', errMsg)
     } finally {
       setIsLoading(false)
     }

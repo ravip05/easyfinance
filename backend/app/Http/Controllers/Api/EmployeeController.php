@@ -119,11 +119,19 @@ class EmployeeController extends Controller
             'password'        => ['nullable', 'string', 'min:6'],
         ]);
 
-        // Auto-generate sequential emp_code
-        $lastCode = User::where('emp_code', 'like', 'EF-%')
-                        ->orderByRaw('CAST(SUBSTRING(emp_code, 4) AS INTEGER) DESC')
+        // Auto-generate sequential emp_code (e.g. EF-001, EF-002 ...)
+        // We filter for 'EF-' followed by digits to avoid CAST failures on codes like 'EF-DSA-001'
+        $lastCode = User::where('emp_code', 'regexp', '^EF-[0-9]+$')
+                        ->orderByRaw('CAST(SUBSTRING(emp_code, 4) AS UNSIGNED) DESC')
                         ->value('emp_code');
-        $nextNum  = $lastCode ? ((int) substr($lastCode, 3)) + 1 : 1;
+        
+        $nextNum  = 1;
+        if ($lastCode) {
+            $numPart = substr($lastCode, 3);
+            if (is_numeric($numPart)) {
+                $nextNum = (int)$numPart + 1;
+            }
+        }
         $validated['emp_code'] = 'EF-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 
         // Default password = phone number
@@ -352,7 +360,7 @@ class EmployeeController extends Controller
             'role'            => $employee->role,
             'department'      => $employee->department,
             'status'          => $employee->status,
-            'joining_date'    => $employee->joining_date?->toDateString(),
+            'joining_date'    => $employee->joining_date ? $employee->joining_date->format('Y-m-d') : null,
             'commission_rate' => $employee->commission_rate,
             'commission_display' => $employee->commission_rate_display, // '0.25%'
             'initials'        => $employee->initials,
