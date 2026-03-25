@@ -1,31 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Preferences } from '@capacitor/preferences'
 import { Capacitor } from '@capacitor/core'
 import apiClient from '../api/client'
 
 const isNative = Capacitor.isNativePlatform()
-
-const s = {
-  page: { minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', sans-serif", paddingBottom: 80 },
-  inner: { maxWidth: 800, margin: '0 auto', padding: '40px 24px 0' },
-  heading: { fontSize: 30, fontWeight: 800, color: '#0f172a', marginBottom: 4, letterSpacing: -0.5 },
-  sub: { fontSize: 15, color: '#64748b', marginBottom: 40 },
-  card: { background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', padding: '28px 32px', marginBottom: 20 },
-  cardHeader: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #f1f5f9' },
-  iconBox: (gradient) => ({ width: 48, height: 48, borderRadius: 14, background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }),
-  cardTitle: { fontSize: 17, fontWeight: 700, color: '#0f172a', marginBottom: 2 },
-  cardDesc: { fontSize: 13, color: '#64748b' },
-  grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
-  fullCol: { gridColumn: '1 / -1' },
-  label: { display: 'block', fontSize: 11, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 },
-  input: { width: '100%', boxSizing: 'border-box', padding: '12px 16px', border: '1.5px solid #e2e8f0', borderRadius: 12, fontSize: 15, color: '#0f172a', background: '#f8fafc', outline: 'none', transition: 'border-color 0.2s' },
-  btn: { display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px', background: 'linear-gradient(135deg, #2563eb, #4f46e5)', color: 'white', border: 'none', borderRadius: 12, fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' },
-  footer: { display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: 20, marginTop: 24 },
-  row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid #f1f5f9' },
-  toggle: (on) => ({ position: 'relative', display: 'inline-block', width: 52, height: 28, borderRadius: 14, background: on ? '#2563eb' : '#d1d5db', transition: 'background 0.3s', cursor: 'pointer', flexShrink: 0 }),
-  thumb: (on) => ({ position: 'absolute', top: 3, left: on ? 27 : 3, width: 22, height: 22, borderRadius: '50%', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', transition: 'left 0.3s' }),
-  alert: (type) => ({ padding: '14px 18px', borderRadius: 12, marginBottom: 20, fontSize: 14, fontWeight: 600, background: type === 'success' ? '#ecfdf5' : '#fef2f2', color: type === 'success' ? '#059669' : '#dc2626', border: `1px solid ${type === 'success' ? '#a7f3d0' : '#fecaca'}` }),
-}
 
 export default function Settings() {
   const [profile, setProfile] = useState({ name: '', phone: '', password: '' })
@@ -33,13 +11,50 @@ export default function Settings() {
   const [biometricEnabled, setBiometricEnabled] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [profilePic, setProfilePic] = useState(null)
+  const [picUploading, setPicUploading] = useState(false)
+  const fileInputRef = useRef(null)
+
+  // Dark mode colors
+  const dm = darkMode
+  const bg = dm ? '#0f172a' : '#f8fafc'
+  const cardBg = dm ? '#1e293b' : 'white'
+  const textPrimary = dm ? '#f1f5f9' : '#0f172a'
+  const textSecondary = dm ? '#94a3b8' : '#64748b'
+  const borderColor = dm ? '#334155' : '#e2e8f0'
+  const inputBg = dm ? '#0f172a' : '#f8fafc'
+  const rowBorder = dm ? '#1e293b' : '#f1f5f9'
+  const iconCircleBg = dm ? '#1e293b' : '#f1f5f9'
+
+  const s = {
+    page: { minHeight: '100vh', background: bg, fontFamily: "'Inter', sans-serif", paddingBottom: 80, transition: 'background 0.3s' },
+    inner: { maxWidth: 800, margin: '0 auto', padding: '40px 24px 0' },
+    heading: { fontSize: 30, fontWeight: 800, color: textPrimary, marginBottom: 4, letterSpacing: -0.5 },
+    sub: { fontSize: 15, color: textSecondary, marginBottom: 40 },
+    card: { background: cardBg, borderRadius: 20, border: `1px solid ${borderColor}`, boxShadow: dm ? '0 4px 24px rgba(0,0,0,0.3)' : '0 4px 24px rgba(0,0,0,0.06)', padding: '28px 32px', marginBottom: 20, transition: 'background 0.3s' },
+    cardHeader: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${borderColor}` },
+    iconBox: (gradient) => ({ width: 48, height: 48, borderRadius: 14, background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }),
+    cardTitle: { fontSize: 17, fontWeight: 700, color: textPrimary, marginBottom: 2 },
+    cardDesc: { fontSize: 13, color: textSecondary },
+    grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
+    fullCol: { gridColumn: '1 / -1' },
+    label: { display: 'block', fontSize: 11, fontWeight: 700, color: dm ? '#64748b' : '#9ca3af', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 },
+    input: { width: '100%', boxSizing: 'border-box', padding: '12px 16px', border: `1.5px solid ${borderColor}`, borderRadius: 12, fontSize: 15, color: textPrimary, background: inputBg, outline: 'none', transition: 'border-color 0.2s' },
+    btn: { display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px', background: 'linear-gradient(135deg, #2563eb, #4f46e5)', color: 'white', border: 'none', borderRadius: 12, fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' },
+    footer: { display: 'flex', justifyContent: 'flex-end', borderTop: `1px solid ${borderColor}`, paddingTop: 20, marginTop: 24 },
+    row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: `1px solid ${rowBorder}` },
+    toggle: (on) => ({ position: 'relative', display: 'inline-block', width: 52, height: 28, borderRadius: 14, background: on ? '#2563eb' : (dm ? '#334155' : '#d1d5db'), transition: 'background 0.3s', cursor: 'pointer', flexShrink: 0 }),
+    thumb: (on) => ({ position: 'absolute', top: 3, left: on ? 27 : 3, width: 22, height: 22, borderRadius: '50%', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', transition: 'left 0.3s' }),
+    alert: (type) => ({ padding: '14px 18px', borderRadius: 12, marginBottom: 20, fontSize: 14, fontWeight: 600, background: type === 'success' ? '#ecfdf5' : '#fef2f2', color: type === 'success' ? '#059669' : '#dc2626', border: `1px solid ${type === 'success' ? '#a7f3d0' : '#fecaca'}` }),
+  }
 
   useEffect(() => { loadPreferences() }, [])
 
   const loadPreferences = async () => {
     try {
       const themePref = await Preferences.get({ key: 'darkMode' })
-      setDarkMode(themePref.value === 'true')
+      const isDark = themePref.value === 'true'
+      setDarkMode(isDark)
       if (isNative) {
         const bioPref = await Preferences.get({ key: 'biometric_enrolled' })
         setBiometricEnabled(bioPref.value === 'true')
@@ -47,6 +62,9 @@ export default function Settings() {
       const { data } = await apiClient.get('/api/user/settings')
       if (data?.user) setProfile(p => ({ ...p, name: data.user.name || '', phone: data.user.phone || '' }))
     } catch (err) { console.error(err) }
+    // Load saved profile picture
+    const saved = localStorage.getItem('profilePicture')
+    if (saved) setProfilePic(saved)
   }
 
   const handleProfileUpdate = async (e) => {
@@ -68,13 +86,43 @@ export default function Settings() {
     const v = !darkMode
     setDarkMode(v)
     await Preferences.set({ key: 'darkMode', value: String(v) })
-    document.documentElement.classList.toggle('dark', v)
+    // Apply to root element for app-wide dark mode
+    document.documentElement.style.colorScheme = v ? 'dark' : 'light'
+    document.body.style.background = v ? '#0f172a' : ''
   }
 
   const toggleBiometric = async () => {
     const v = !biometricEnabled
     setBiometricEnabled(v)
     await Preferences.set({ key: 'biometric_enrolled', value: String(v) })
+  }
+
+  const handlePicChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage({ type: 'error', text: '✗ Image must be less than 2MB.' })
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+      return
+    }
+    setPicUploading(true)
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result
+      setProfilePic(dataUrl)
+      localStorage.setItem('profilePicture', dataUrl)
+      setPicUploading(false)
+      setMessage({ type: 'success', text: '✓ Profile picture updated! It will now appear on your ID Card.' })
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removePic = () => {
+    setProfilePic(null)
+    localStorage.removeItem('profilePicture')
+    setMessage({ type: 'success', text: '✓ Profile picture removed.' })
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000)
   }
 
   return (
@@ -85,7 +133,79 @@ export default function Settings() {
 
         {message.text && <div style={s.alert(message.type)}>{message.text}</div>}
 
-        {/* Profile Card */}
+        {/* Profile Picture Card */}
+        <div style={s.card}>
+          <div style={s.cardHeader}>
+            <div style={s.iconBox('linear-gradient(135deg, #0891b2, #0e7490)')}>
+              <svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </div>
+            <div>
+              <div style={s.cardTitle}>Profile Picture</div>
+              <div style={s.cardDesc}>Upload a photo for your ID Card</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+            {/* Avatar preview */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              {profilePic ? (
+                <img
+                  src={profilePic}
+                  alt="Profile"
+                  style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: `3px solid #2563eb`, boxShadow: '0 4px 16px rgba(37,99,235,0.2)' }}
+                />
+              ) : (
+                <div style={{
+                  width: 96, height: 96, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 32, fontWeight: 900, color: 'white',
+                  border: `3px solid ${borderColor}`,
+                }}>
+                  {profile.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'EF'}
+                </div>
+              )}
+              {picUploading && (
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <div style={{ width: 24, height: 24, border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                </div>
+              )}
+            </div>
+
+            {/* Upload actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handlePicChange}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: 'linear-gradient(135deg, #2563eb, #4f46e5)', color: 'white', border: 'none', borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+              >
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                {profilePic ? 'Change Photo' : 'Upload Photo'}
+              </button>
+              {profilePic && (
+                <button
+                  onClick={removePic}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: dm ? '#1e293b' : 'white', color: '#dc2626', border: '1px solid #fecaca', borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  Remove Photo
+                </button>
+              )}
+              <div style={{ fontSize: 12, color: textSecondary }}>JPG, PNG or GIF · Max 2MB<br />This photo will appear on your Employee ID Card.</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Information Card */}
         <div style={s.card}>
           <div style={s.cardHeader}>
             <div style={s.iconBox('linear-gradient(135deg, #2563eb, #4f46e5)')}>
@@ -108,7 +228,7 @@ export default function Settings() {
                   onChange={e => setProfile({ ...profile, name: e.target.value })}
                   required
                   onFocus={e => e.target.style.borderColor = '#2563eb'}
-                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                  onBlur={e => e.target.style.borderColor = borderColor}
                 />
               </div>
               <div>
@@ -120,7 +240,7 @@ export default function Settings() {
                   onChange={e => setProfile({ ...profile, phone: e.target.value })}
                   required
                   onFocus={e => e.target.style.borderColor = '#2563eb'}
-                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                  onBlur={e => e.target.style.borderColor = borderColor}
                 />
               </div>
               <div style={s.fullCol}>
@@ -132,7 +252,7 @@ export default function Settings() {
                   placeholder="Enter new password"
                   onChange={e => setProfile({ ...profile, password: e.target.value })}
                   onFocus={e => e.target.style.borderColor = '#2563eb'}
-                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                  onBlur={e => e.target.style.borderColor = borderColor}
                 />
               </div>
             </div>
@@ -168,15 +288,20 @@ export default function Settings() {
               onClick={toggleDarkMode}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: iconCircleBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
                   {darkMode ? '🌙' : '☀️'}
                 </div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Dark Mode</div>
-                  <div style={{ fontSize: 13, color: '#64748b' }}>Switch between light and dark theme</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>Dark Mode</div>
+                  <div style={{ fontSize: 13, color: textSecondary }}>
+                    {darkMode ? 'Dark theme is active' : 'Switch to dark theme'}
+                  </div>
                 </div>
               </div>
-              <div style={s.toggle(darkMode)} onClick={e => { e.stopPropagation(); toggleDarkMode() }}>
+              <div
+                style={s.toggle(darkMode)}
+                onClick={e => { e.stopPropagation(); toggleDarkMode() }}
+              >
                 <div style={s.thumb(darkMode)} />
               </div>
             </div>
@@ -187,12 +312,12 @@ export default function Settings() {
                 onClick={toggleBiometric}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: iconCircleBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
                     {biometricEnabled ? '🛡️' : '🔓'}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>Biometric Login</div>
-                    <div style={{ fontSize: 13, color: '#64748b' }}>Use Face ID or Fingerprint to unlock</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>Biometric Login</div>
+                    <div style={{ fontSize: 13, color: textSecondary }}>Use Face ID or Fingerprint to unlock</div>
                   </div>
                 </div>
                 <div style={s.toggle(biometricEnabled)} onClick={e => { e.stopPropagation(); toggleBiometric() }}>

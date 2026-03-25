@@ -14,6 +14,9 @@ export default function IDCard() {
 
   const empId = `EF-${String(user?.id || 1).padStart(5, '0')}`
 
+  // Load profile picture from localStorage (set via Settings page)
+  const profilePic = localStorage.getItem('profilePicture') || null
+
   const roleColors = {
     admin: { bg: '#7c3aed', light: '#ede9fe', text: '#4c1d95' },
     manager: { bg: '#0369a1', light: '#e0f2fe', text: '#0c4a6e' },
@@ -64,10 +67,10 @@ export default function IDCard() {
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
           }}>
-            {/* Header band */}
+            {/* Header band — fixed height so avatar doesn't overlap text */}
             <div style={{
               background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #1e40af 100%)',
-              padding: '20px 24px 16px',
+              padding: '20px 24px 20px',
               position: 'relative',
               overflow: 'hidden',
             }}>
@@ -96,35 +99,52 @@ export default function IDCard() {
               </div>
             </div>
 
-            {/* White body */}
-            <div style={{ background: 'white', padding: '0 24px 24px' }}>
+            {/* Accent strip below header */}
+            <div style={{ height: 6, background: `linear-gradient(90deg, ${roleColor.bg}, ${roleColor.bg}99)` }} />
 
-              {/* Avatar overlapping header */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: -44 }}>
+            {/* White body — avatar sits INSIDE the white area, not overlapping header */}
+            <div style={{ background: 'white', padding: '24px 24px 24px' }}>
+
+              {/* Avatar — centered, no negative margin */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                 <div style={{ position: 'relative' }}>
-                  <div style={{
-                    width: 88, height: 88,
-                    borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${roleColor.bg} 0%, ${roleColor.bg}cc 100%)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 28, fontWeight: 900, color: 'white',
-                    border: '4px solid white',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                  }}>
-                    {initials}
-                  </div>
+                  {profilePic ? (
+                    <img
+                      src={profilePic}
+                      alt="Profile"
+                      style={{
+                        width: 80, height: 80,
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: `3px solid ${roleColor.bg}`,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: 80, height: 80,
+                      borderRadius: '50%',
+                      background: `linear-gradient(135deg, ${roleColor.bg} 0%, ${roleColor.bg}cc 100%)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 26, fontWeight: 900, color: 'white',
+                      border: `3px solid ${roleColor.bg}30`,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    }}>
+                      {initials}
+                    </div>
+                  )}
                   {/* Online dot */}
                   <div style={{
                     position: 'absolute', bottom: 4, right: 4,
-                    width: 16, height: 16, borderRadius: '50%',
+                    width: 14, height: 14, borderRadius: '50%',
                     background: '#22c55e',
-                    border: '3px solid white',
+                    border: '2px solid white',
                   }} />
                 </div>
               </div>
 
               {/* Name & Role */}
-              <div style={{ textAlign: 'center', marginTop: 12, marginBottom: 20 }}>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 6, letterSpacing: -0.3 }}>
                   {user?.name || 'Admin User'}
                 </h2>
