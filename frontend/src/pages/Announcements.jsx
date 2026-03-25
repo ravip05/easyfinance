@@ -20,7 +20,7 @@ export default function Announcements() {
     title: '',
     message: '',
     target: 'all',
-    priority: 'medium',
+    priority: 'normal',
   })
   const [submitting, setSubmitting] = useState(false)
   const [submitMsg, setSubmitMsg] = useState('')
@@ -47,7 +47,7 @@ export default function Announcements() {
       const res = await apiClient.post('/announcements', form)
       if (res.data?.success) {
         setSubmitMsg('✅ Announcement broadcast successfully!')
-        setForm({ title: '', message: '', target: 'all', priority: 'medium' })
+        setForm({ title: '', message: '', target: 'all', priority: 'normal' })
         fetchAnnouncements()
       }
     } catch (error) {
@@ -64,7 +64,7 @@ export default function Announcements() {
     return diffDays <= 3
   }
 
-  const priorityColor = { low: 'var(--green)', medium: 'var(--gold)', high: 'var(--orange)', urgent: 'var(--red)' }
+  const priorityColor = { normal: 'var(--green)', important: 'var(--gold)', urgent: 'var(--red)' }
 
   return (
     <div id="page-announcements" className="page active">
@@ -118,9 +118,8 @@ export default function Announcements() {
                   value={form.priority}
                   onChange={(e) => setForm({ ...form, priority: e.target.value })}
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  <option value="normal">Normal</option>
+                  <option value="important">Important</option>
                   <option value="urgent">Urgent</option>
                 </select>
               </div>

@@ -104,6 +104,7 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess, initialData 
         toast?.('success', res.data?.message || 'Employee created successfully')
       }
       onSuccess?.()
+      onClose?.()
     } catch (e) {
       const status = e.response?.status
       const body = e.response?.data

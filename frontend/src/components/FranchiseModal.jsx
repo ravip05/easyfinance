@@ -86,6 +86,7 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess, initialData
         toast?.('success', res.data?.message || 'Franchise created successfully')
       }
       onSuccess?.()
+      onClose?.()
     } catch (e) {
       console.error('Franchise save error:', e)
       const body = e.response?.data

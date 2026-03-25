@@ -152,11 +152,21 @@ export default function LeadModal({ isOpen, onClose, onSuccess, initialData }) {
   }, [isOpen, onClose])
 
   // ── Field change handler ───────────────────────────────────────────────────
+  // ── Field change handler ───────────────────────────────────────────────────
   function handleChange(e) {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
   }
+
+  // Clear validation errors when name or phone changes
+  useEffect(() => {
+    if (form.name && errors.name) setErrors(prev => ({ ...prev, name: '' }))
+    if (form.phone && errors.phone) {
+        const phone = form.phone.replace(/[^0-9]/g, '')
+        if (phone.length === 10) setErrors(prev => ({ ...prev, phone: '' }))
+    }
+  }, [form.name, form.phone]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Validation ─────────────────────────────────────────────────────────────
   function validate() {
