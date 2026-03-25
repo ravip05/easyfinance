@@ -68,7 +68,7 @@ class FranchiseController extends Controller
         $query->withCount('leads as total_leads')
               ->withCount(['leads as converted_leads' => fn ($q) => $q->where('stage', 'Disbursed')]);
 
-        $franchises = $query->orderBy('name')
+        $franchises = $query->orderBy('id', 'desc')
                             ->paginate(min((int) $request->input('per_page', 20), 100));
 
         return response()->json([

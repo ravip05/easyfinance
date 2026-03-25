@@ -78,7 +78,7 @@ class EmployeeController extends Controller
             'assignedLeads as converted_leads' => fn ($q) => $q->where('stage', 'Disbursed'),
         ]);
 
-        $employees = $query->orderBy('name')->paginate(
+        $employees = $query->orderBy('id', 'desc')->paginate(
             min((int) $request->input('per_page', 50), 100)
         );
 
@@ -120,18 +120,12 @@ class EmployeeController extends Controller
         ]);
 
         // Auto-generate sequential emp_code (e.g. EF-001, EF-002 ...)
-        // We filter for 'EF-' followed by digits to avoid CAST failures on codes like 'EF-DSA-001'
-        $lastCode = User::where('emp_code', 'regexp', '^EF-[0-9]+$')
-                        ->orderByRaw('CAST(SUBSTRING(emp_code, 4) AS UNSIGNED) DESC')
-                        ->value('emp_code');
+        // We handle this in PHP to ensure portability across different DB engines (MySQL/Postgres/SQLite)
+        $allCodes = User::where('emp_code', 'like', 'EF-%')->pluck('emp_code');
+        $nextNum  = $allCodes->filter(fn($c) => preg_match('/^EF-\d+$/', $c))
+                             ->map(fn($c) => (int) substr($c, 3))
+                             ->max() + 1 ?: 1;
         
-        $nextNum  = 1;
-        if ($lastCode) {
-            $numPart = substr($lastCode, 3);
-            if (is_numeric($numPart)) {
-                $nextNum = (int)$numPart + 1;
-            }
-        }
         $validated['emp_code'] = 'EF-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 
         // Default password = phone number
