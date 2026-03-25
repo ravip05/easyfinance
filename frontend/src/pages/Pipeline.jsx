@@ -1,33 +1,27 @@
 /**
  * pages/Pipeline.jsx
  *
- * Full React port of #page-pipeline and renderPipeline() from LoanCRM_v9.html.
+ * Full drag-and-drop Kanban board for loan pipeline management.
+ * Uses HTML5 Drag & Drop API (zero external dependencies).
+ * Stage updates are dispatched through LeadsContext.updateStage()
+ * which performs optimistic updates with automatic rollback on failure.
  *
- * Features preserved from the prototype:
+ * Features:
  *   ✓ 7 stage columns: New → Contacted → Docs Pending → Login →
  *       Processing → Sanctioned → Disbursed
- *   ✓ Per-column pipeline-header with colour class + card count badge
- *   ✓ Loan-type chip filters (All Loans / Home Loan / Business / Personal / Insurance)
- *   ✓ Pipeline cards: name, phone, type · amount, assignee first-name, follow-up
+ *   ✓ Full drag-and-drop between columns with visual drop indicators
+ *   ✓ Loan-type chip filters
+ *   ✓ "Add Lead" tray at bottom of each column
  *   ✓ Overdue card highlight (red left-border)
- *   ✓ Inline "+ Add Lead" tray at the bottom of each column (non-dsa)
- *   ✓ Optimistic stage updates via LeadsContext (same as table view)
- *   ✓ Admin toolbar (collapsed placeholder ready for Step 5 drag-drop)
+ *   ✓ Admin toolbar with total lead count
  *   ✓ Loading skeleton with ghost columns
- *   ✓ Empty-column state
- *   ✓ Reads from the same LeadsContext as LeadsList — zero double-fetch
- *   ✓ All original CSS class names preserved
- *
- * The LeadModal is rendered here too so the "+ Add Lead" column tray
- * opens the same modal as the Topbar button.
  */
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLeads } from '../context/LeadsContext'
 import LeadModal from '../components/LeadModal'
 
 // ── Stage configuration ───────────────────────────────────────────────────────
-// Mirrors the `stages` array + `ph` map inside renderPipeline()
 const PIPELINE_STAGES = [
   { key: 'New',          cls: 'ph-new'        },
   { key: 'Contacted',    cls: 'ph-contacted'  },
@@ -42,33 +36,75 @@ const CHIP_TYPES = ['All Loans', 'Home Loan', 'Business Loan', 'Personal Loan', 
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function Pipeline() {
-  const { user }               = useAuth()
-  const { leads, isLoading }   = useLeads()
+  const { user }             = useAuth()
+  const { leads, isLoading, updateStage } = useLeads()
   const role = user?.role ?? 'staff'
 
   const [loanFilter,   setLoanFilter]   = useState('All Loans')
   const [modalOpen,    setModalOpen]    = useState(false)
   const [defaultStage, setDefaultStage] = useState('New')
+  const [dragOverCol,  setDragOverCol]  = useState(null)
+  const dragRef = useRef(null)
 
   const canAddLead = role !== 'dsa'
   const isAdmin    = role === 'admin'
 
-  // ── Filter leads by loan type chip ────────────────────────────────────────
+  // Filter leads by loan type chip
   const visibleLeads = loanFilter === 'All Loans'
     ? leads
     : leads.filter((l) => l.type === loanFilter)
 
-  // ── Open modal pre-selecting a stage ─────────────────────────────────────
+  // Open modal pre-selecting a stage
   function openAddLead(stage) {
     setDefaultStage(stage)
     setModalOpen(true)
+  }
+
+  // ── Drag handlers ──────────────────────────────────────────────────────────
+  function handleDragStart(e, lead) {
+    dragRef.current = lead
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', lead.id)
+    // Make the dragged card semi-transparent
+    requestAnimationFrame(() => {
+      e.target.style.opacity = '0.5'
+    })
+  }
+
+  function handleDragEnd(e) {
+    e.target.style.opacity = '1'
+    dragRef.current = null
+    setDragOverCol(null)
+  }
+
+  function handleDragOver(e, stageKey) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverCol(stageKey)
+  }
+
+  function handleDragLeave(e, stageKey) {
+    // Only clear if truly leaving the column (not entering a child)
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverCol(null)
+    }
+  }
+
+  function handleDrop(e, stageKey) {
+    e.preventDefault()
+    setDragOverCol(null)
+    const lead = dragRef.current
+    if (lead && lead.stage !== stageKey) {
+      updateStage(lead.id, stageKey)
+    }
+    dragRef.current = null
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div id="page-pipeline" className="page active">
 
-      {/* ── Admin toolbar (placeholder — drag-drop management in Step 5) ── */}
+      {/* Admin toolbar */}
       {isAdmin && (
         <div style={{
           display: 'flex', background: 'linear-gradient(135deg,#eff6ff,#e0f2fe)',
@@ -76,15 +112,15 @@ export default function Pipeline() {
           marginBottom: 16, flexWrap: 'wrap', gap: 8, alignItems: 'center',
         }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#1e40af' }}>
-            ⚙️ Admin: Pipeline View
+            ⚙️ Admin: Drag & Drop Pipeline
           </span>
           <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text3)' }}>
-            {PIPELINE_STAGES.length} stages · {leads.length} total leads
+            {PIPELINE_STAGES.length} stages · {leads.length} total leads · Drag cards between columns to update stage
           </div>
         </div>
       )}
 
-      {/* ── Loan-type chip filter bar ── */}
+      {/* Loan-type chip filter bar */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {CHIP_TYPES.map((t) => (
           <div
@@ -100,7 +136,7 @@ export default function Pipeline() {
         ))}
       </div>
 
-      {/* ── Kanban board ── */}
+      {/* Kanban board */}
       <div className="pipeline-wrap">
         <div className="pipeline" id="pipeline-board">
 
@@ -108,14 +144,77 @@ export default function Pipeline() {
             ? PIPELINE_STAGES.map((s) => <SkeletonColumn key={s.key} stage={s} />)
             : PIPELINE_STAGES.map((stage) => {
                 const colLeads = visibleLeads.filter((l) => l.stage === stage.key)
+                const isOver = dragOverCol === stage.key
                 return (
-                  <PipelineColumn
+                  <div
                     key={stage.key}
-                    stage={stage}
-                    leads={colLeads}
-                    canAddLead={canAddLead}
-                    onAddLead={() => openAddLead(stage.key)}
-                  />
+                    className="pipeline-col"
+                    onDragOver={(e) => handleDragOver(e, stage.key)}
+                    onDragLeave={(e) => handleDragLeave(e, stage.key)}
+                    onDrop={(e) => handleDrop(e, stage.key)}
+                    style={{
+                      transition: 'background 0.2s, border-color 0.2s',
+                      background: isOver ? 'var(--accent-light)' : 'transparent',
+                      borderRadius: isOver ? 10 : 0,
+                      border: isOver ? '2px dashed var(--accent)' : '2px dashed transparent',
+                      padding: isOver ? 4 : 0,
+                    }}
+                  >
+                    {/* Column header */}
+                    <div className={`pipeline-header ${stage.cls}`}>
+                      <span>{stage.key}</span>
+                      <span style={{ background: 'rgba(0,0,0,0.1)', borderRadius: 10, padding: '1px 7px' }}>
+                        {colLeads.length}
+                      </span>
+                    </div>
+
+                    {/* Cards */}
+                    {colLeads.length === 0 && (
+                      <div style={{
+                        textAlign: 'center', padding: '20px 12px',
+                        fontSize: 12, color: 'var(--text4)',
+                        border: '1px dashed var(--border)', borderRadius: 8,
+                        marginBottom: 8,
+                      }}>
+                        {isOver ? '⬇️ Drop here' : 'No leads'}
+                      </div>
+                    )}
+
+                    {colLeads.map((lead) => (
+                      <PipelineCard
+                        key={lead.id}
+                        lead={lead}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                      />
+                    ))}
+
+                    {/* "+ Add Lead" tray */}
+                    {canAddLead && (
+                      <div
+                        style={{
+                          textAlign: 'center', padding: '10px 0', fontSize: 12,
+                          color: 'var(--text3)', cursor: 'pointer',
+                          border: '2px dashed var(--border)', borderRadius: 8,
+                          marginTop: 4, transition: 'all 0.15s',
+                        }}
+                        onClick={() => openAddLead(stage.key)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && openAddLead(stage.key)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--accent)'
+                          e.currentTarget.style.color = 'var(--accent)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--border)'
+                          e.currentTarget.style.color = 'var(--text3)'
+                        }}
+                      >
+                        + Add Lead
+                      </div>
+                    )}
+                  </div>
                 )
               })
           }
@@ -123,7 +222,7 @@ export default function Pipeline() {
         </div>
       </div>
 
-      {/* ── Add Lead modal (shared across all columns) ── */}
+      {/* Add Lead modal */}
       <LeadModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -134,74 +233,21 @@ export default function Pipeline() {
   )
 }
 
-// ── PipelineColumn ────────────────────────────────────────────────────────────
-function PipelineColumn({ stage, leads, canAddLead, onAddLead }) {
-  return (
-    <div className="pipeline-col">
-
-      {/* Column header with stage colour + count */}
-      <div className={`pipeline-header ${stage.cls}`}>
-        <span>{stage.key}</span>
-        <span style={{ background: 'rgba(0,0,0,0.1)', borderRadius: 10, padding: '1px 7px' }}>
-          {leads.length}
-        </span>
-      </div>
-
-      {/* Cards */}
-      {leads.length === 0 && (
-        <div style={{
-          textAlign: 'center', padding: '20px 12px',
-          fontSize: 12, color: 'var(--text4)',
-          border: '1px dashed var(--border)', borderRadius: 8,
-          marginBottom: 8,
-        }}>
-          No leads
-        </div>
-      )}
-
-      {leads.map((lead) => (
-        <PipelineCard key={lead.id} lead={lead} />
-      ))}
-
-      {/* "+ Add Lead" tray at column bottom */}
-      {canAddLead && (
-        <div
-          style={{
-            textAlign: 'center', padding: '10px 0', fontSize: 12,
-            color: 'var(--text3)', cursor: 'pointer',
-            border: '2px dashed var(--border)', borderRadius: 8,
-            marginTop: 4, transition: 'all 0.15s',
-          }}
-          onClick={onAddLead}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && onAddLead()}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'var(--accent)'
-            e.currentTarget.style.color = 'var(--accent)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border)'
-            e.currentTarget.style.color = 'var(--text3)'
-          }}
-        >
-          + Add Lead
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── PipelineCard ──────────────────────────────────────────────────────────────
-// Mirrors the template literal inside renderPipeline().map()
-function PipelineCard({ lead }) {
+// ── PipelineCard (Draggable) ──────────────────────────────────────────────────
+function PipelineCard({ lead, onDragStart, onDragEnd }) {
   const assignedFirst = (lead.assigned ?? 'Unassigned').split(' ')[0]
 
   return (
     <div
       className="pipeline-card"
-      style={lead.isOverdue ? { borderLeft: '3px solid var(--red)' } : undefined}
-      title={lead.isOverdue ? 'Follow-up overdue' : undefined}
+      draggable="true"
+      onDragStart={(e) => onDragStart(e, lead)}
+      onDragEnd={onDragEnd}
+      style={{
+        ...(lead.isOverdue ? { borderLeft: '3px solid var(--red)' } : {}),
+        cursor: 'grab',
+      }}
+      title={lead.isOverdue ? 'Follow-up overdue — drag to update stage' : 'Drag to move between stages'}
     >
       <div className="pc-name">{lead.name}</div>
       <div className="pc-meta">{lead.phone}</div>
@@ -219,7 +265,6 @@ function PipelineCard({ lead }) {
 }
 
 // ── SkeletonColumn ────────────────────────────────────────────────────────────
-// Ghost column shown while loading — matches the column count so layout doesn't jump.
 function SkeletonColumn({ stage }) {
   return (
     <div className="pipeline-col">

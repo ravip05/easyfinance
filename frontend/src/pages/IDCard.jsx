@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 
 export default function IDCard() {
@@ -49,6 +49,7 @@ export default function IDCard() {
       <div
         style={{ perspective: '1000px', cursor: 'pointer' }}
         onClick={() => setShowBack(b => !b)}
+        data-idcard
       >
         <div style={{
           width: 320,
@@ -300,13 +301,35 @@ export default function IDCard() {
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
+      <div style={{ display: 'flex', gap: 12, marginTop: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
         <button
           onClick={() => window.print()}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 12, background: 'white', border: '1px solid #e2e8f0', color: '#374151', fontWeight: 600, fontSize: 14, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
           Print ID Card
+        </button>
+        <button
+          onClick={() => {
+            // Download as image using canvas
+            const card = document.querySelector('[data-idcard]')
+            if (!card) return
+            import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.esm.js')
+              .then(mod => mod.default(card, { scale: 2, backgroundColor: null, useCORS: true }))
+              .then(canvas => {
+                const link = document.createElement('a')
+                link.download = `IDCard_${empId}.png`
+                link.href = canvas.toDataURL('image/png')
+                link.click()
+              })
+              .catch(() => {
+                // Fallback: use window.print
+                window.print()
+              })
+          }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 12, background: 'linear-gradient(135deg, #059669, #10b981)', border: 'none', color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer', boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}
+        >
+          📥 Download as Image
         </button>
         <button
           onClick={async () => { try { await navigator.clipboard.writeText(window.location.href); alert('Link copied!') } catch(e) {} }}

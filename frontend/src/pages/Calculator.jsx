@@ -197,6 +197,47 @@ function EmiTab() {
           <CalcRow label="Total Payment"  value={fmtINR(totalPayment)} />
           <CalcRow label="Monthly EMI"    value={fmtINR(emi)} accent />
         </div>
+
+        {/* Visual breakdown donut */}
+        {principal > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16, flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
+              <svg width="100" height="100" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="60" cy="60" r="48" fill="none" stroke="#e2e8f0" strokeWidth="16" />
+                <circle
+                  cx="60" cy="60" r="48" fill="none"
+                  stroke="var(--accent)" strokeWidth="16"
+                  strokeDasharray={`${(principal / (totalPayment || 1)) * (2 * Math.PI * 48)} ${2 * Math.PI * 48}`}
+                />
+                <circle
+                  cx="60" cy="60" r="48" fill="none"
+                  stroke="var(--gold)" strokeWidth="16"
+                  strokeDasharray={`${(totalInterest / (totalPayment || 1)) * (2 * Math.PI * 48)} ${2 * Math.PI * 48}`}
+                  strokeDashoffset={`${-(principal / (totalPayment || 1)) * (2 * Math.PI * 48)}`}
+                />
+              </svg>
+              <div style={{
+                position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+              }}>
+                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 800 }}>
+                  {totalPayment > 0 ? Math.round((principal / totalPayment) * 100) : 0}%
+                </span>
+                <span style={{ fontSize: 9, color: 'var(--text3)' }}>Principal</span>
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 80 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--accent)', display: 'inline-block' }} />
+                <span style={{ fontSize: 12, color: 'var(--text2)' }}>Principal: {fmtINR(principal)}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--gold)', display: 'inline-block' }} />
+                <span style={{ fontSize: 12, color: 'var(--text2)' }}>Interest: {fmtINR(totalInterest)}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Right: bank comparison ── */}

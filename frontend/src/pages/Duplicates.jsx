@@ -28,7 +28,7 @@ export default function Duplicates() {
     const duplicates = sortedLeads.map(l => l.id);
 
     try {
-      const res = await apiClient.post('/api/leads/merge', {
+      const res = await apiClient.post('/leads/merge', {
         master_id: master.id,
         duplicate_ids: duplicates
       });
@@ -50,7 +50,7 @@ export default function Duplicates() {
     const duplicates = sortedLeads.map(l => l.id);
 
     try {
-      const res = await apiClient.post('/api/leads/merge', {
+      const res = await apiClient.post('/leads/merge', {
         master_id: master.id,
         duplicate_ids: duplicates
       });

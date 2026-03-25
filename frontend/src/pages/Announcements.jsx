@@ -1,191 +1,202 @@
-import React, { useState, useEffect } from 'react';
-import apiClient from '../api/client';
+/**
+ * pages/Announcements.jsx
+ *
+ * Notice board with admin broadcast form.
+ * Fixed: field mapping to match AnnouncementController expectations,
+ * user source from sessionStorage, and API path without double /api/ prefix.
+ */
+import { useState, useEffect } from 'react'
+import { useAuth } from '../context/AuthContext'
+import apiClient from '../api/client'
 
 export default function Announcements() {
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  const user = JSON.parse(localStorage.getItem('crm_user') || '{}');
-  const isAdmin = user?.role === 'admin';
+  const { user } = useAuth()
+  const [announcements, setAnnouncements] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'manager'
 
   const [form, setForm] = useState({
     title: '',
-    content: '',
-    target_role: 'all',
-    expires_at: ''
-  });
-  const [submitting, setSubmitting] = useState(false);
+    message: '',
+    target: 'all',
+    priority: 'medium',
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [submitMsg, setSubmitMsg] = useState('')
 
-  useEffect(() => {
-    fetchAnnouncements();
-  }, []);
+  useEffect(() => { fetchAnnouncements() }, [])
 
   const fetchAnnouncements = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const { data } = await apiClient.get('/api/announcements');
-      if (data?.data) {
-        setAnnouncements(data.data);
-      }
+      const { data } = await apiClient.get('/announcements')
+      setAnnouncements(data?.data ?? [])
     } catch (error) {
-      console.error('Failed to fetch announcements:', error);
+      console.error('Failed to fetch announcements:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
+    e.preventDefault()
+    setSubmitting(true)
+    setSubmitMsg('')
     try {
-      await apiClient.post('/api/announcements', form);
-      setForm({ title: '', content: '', target_role: 'all', expires_at: '' });
-      fetchAnnouncements();
+      const res = await apiClient.post('/announcements', form)
+      if (res.data?.success) {
+        setSubmitMsg('✅ Announcement broadcast successfully!')
+        setForm({ title: '', message: '', target: 'all', priority: 'medium' })
+        fetchAnnouncements()
+      }
     } catch (error) {
-      console.error('Failed to create announcement:', error);
+      const msg = error.response?.data?.message || error.response?.data?.errors?.title?.[0] || 'Failed to create announcement.'
+      setSubmitMsg(`❌ ${msg}`)
+      console.error('Failed to create announcement:', error)
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   const isNew = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-    return diffDays <= 3;
-  };
+    const diffDays = Math.ceil(Math.abs(new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24))
+    return diffDays <= 3
+  }
+
+  const priorityColor = { low: 'var(--green)', medium: 'var(--gold)', high: 'var(--orange)', urgent: 'var(--red)' }
 
   return (
-    <div className="page-container fade-in" style={{ paddingBottom: '80px' }}>
-      <header className="page-header mb-5" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.05), rgba(220,38,38,0.05))', padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.5)' }}>
-        <h1 className="page-title" style={{ fontSize: '2rem', fontWeight: 800, background: 'linear-gradient(90deg, #d97706, #dc2626)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Notice Board
-        </h1>
-        <p className="text-muted mt-2" style={{ fontSize: '1.1rem' }}>Internal broadcasts, important updates, and announcements.</p>
-      </header>
-
+    <div id="page-announcements" className="page active">
+      {/* Admin/Manager Broadcast Form */}
       {isAdmin && (
-        <section className="card shadow-sm border-0 mb-5" style={{ borderRadius: '16px', overflow: 'hidden' }}>
-          <div className="card-header border-bottom-0" style={{ background: 'linear-gradient(90deg, #1e293b, #334155)', padding: '20px 24px' }}>
-            <h2 className="h6 mb-0 text-white d-flex align-items-center gap-2">
-              <span style={{ fontSize: '1.2rem' }}>📢</span> Broadcast New Announcement
-            </h2>
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="card-header">
+            <div className="card-title">📢 Broadcast New Announcement</div>
           </div>
-          <div className="card-body p-4 bg-white">
-            <form onSubmit={handleSubmit}>
-              <div className="row g-4">
-                <div className="col-12">
-                  <label className="form-label text-muted small fw-bold">Announcement Title</label>
-                  <input 
-                    type="text" 
-                    className="form-control"
-                    placeholder="Enter a clear, descriptive title..."
-                    value={form.title} 
-                    onChange={(e) => setForm({...form, title: e.target.value})}
-                    required 
-                    style={{ minHeight: '54px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
-                  />
-                </div>
-                <div className="col-12">
-                  <label className="form-label text-muted small fw-bold">Message Content</label>
-                  <textarea 
-                    className="form-control"
-                    rows="4"
-                    placeholder="Draft your announcement here. Markdown is not supported yet."
-                    value={form.content} 
-                    onChange={(e) => setForm({...form, content: e.target.value})}
-                    required 
-                    style={{ fontSize: '16px', padding: '16px', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
-                  />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label text-muted small fw-bold">Target Audience</label>
-                  <select 
-                    className="form-select"
-                    value={form.target_role}
-                    onChange={(e) => setForm({...form, target_role: e.target.value})}
-                    style={{ minHeight: '54px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', cursor: 'pointer' }}
-                  >
-                    <option value="all">Broadcast to All</option>
-                    <option value="staff">Staff Only</option>
-                    <option value="manager">Managers Only</option>
-                    <option value="franchise">Franchise Only</option>
-                  </select>
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label text-muted small fw-bold">Expires At (Optional)</label>
-                  <input 
-                    type="date" 
-                    className="form-control"
-                    value={form.expires_at}
-                    onChange={(e) => setForm({...form, expires_at: e.target.value})}
-                    style={{ minHeight: '54px', fontSize: '16px', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
-                  />
-                </div>
-                <div className="col-12 mt-4 pt-2 border-top">
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary px-5 fw-bold" 
-                    disabled={submitting} 
-                    style={{ minHeight: '54px', borderRadius: '10px', background: 'linear-gradient(90deg, #2563eb, #3b82f6)', border: 'none' }}
-                  >
-                    {submitting ? 'Broadcasting...' : 'Publish Announcement'}
-                  </button>
-                </div>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <div className="form-label">Title <span className="req">*</span></div>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="Enter announcement title…"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <div className="form-label">Message <span className="req">*</span></div>
+              <textarea
+                className="form-textarea"
+                rows="4"
+                placeholder="Write your announcement message here…"
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <div className="form-label">Target Audience</div>
+                <select
+                  className="form-select"
+                  value={form.target}
+                  onChange={(e) => setForm({ ...form, target: e.target.value })}
+                >
+                  <option value="all">Everyone</option>
+                  <option value="staff">Staff Only</option>
+                  <option value="manager">Managers Only</option>
+                  <option value="dsa">DSA Partners Only</option>
+                </select>
               </div>
-            </form>
-          </div>
-        </section>
+              <div className="form-group">
+                <div className="form-label">Priority</div>
+                <select
+                  className="form-select"
+                  value={form.priority}
+                  onChange={(e) => setForm({ ...form, priority: e.target.value })}
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+            {submitMsg && (
+              <div style={{
+                padding: '8px 12px', borderRadius: 8, marginBottom: 12, fontSize: 13,
+                background: submitMsg.startsWith('✅') ? 'var(--green-light)' : 'var(--red-light)',
+                color: submitMsg.startsWith('✅') ? 'var(--green)' : 'var(--red)',
+                border: `1px solid ${submitMsg.startsWith('✅') ? '#a7f3d0' : '#fecaca'}`,
+              }}>
+                {submitMsg}
+              </div>
+            )}
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={submitting}
+              style={{ marginTop: 4 }}
+            >
+              {submitting ? '📡 Broadcasting…' : '📢 Publish Announcement'}
+            </button>
+          </form>
+        </div>
       )}
 
-      <section className="feed-section position-relative">
-        <div style={{ position: 'absolute', left: '28px', top: '0', bottom: '0', width: '2px', background: '#e2e8f0', zIndex: 0 }}></div>
+      {/* Announcements Feed */}
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">📋 Announcements Feed</div>
+          <button className="btn btn-sm btn-ghost" onClick={fetchAnnouncements}>↻ Refresh</button>
+        </div>
+
         {loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)' }}>Loading announcements…</div>
         ) : announcements.length === 0 ? (
-          <div className="card border-0 shadow-sm text-center py-5" style={{ borderRadius: '16px', background: '#f8fafc' }}>
-            <span style={{ fontSize: '3rem', opacity: 0.5 }}>📭</span>
-            <h4 className="mt-3 text-muted">No active announcements right now.</h4>
+          <div className="empty">
+            <div className="empty-icon">📭</div>
+            <div className="empty-text">No announcements yet.</div>
           </div>
         ) : (
-          <div className="d-flex flex-column gap-4 position-relative z-1">
+          <div>
             {announcements.map(ann => (
-              <div key={ann.id} className="card border-0 shadow-sm" style={{ borderRadius: '16px', marginLeft: '60px', transition: 'transform 0.2s', cursor: 'default' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
-                <div 
-                  className="position-absolute" 
-                  style={{ left: '-46px', top: '24px', width: '32px', height: '32px', borderRadius: '50%', background: isNew(ann.created_at) ? '#ef4444' : '#94a3b8', border: '4px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 2 }}
-                />
-                
-                <div className="card-body p-4">
-                  <div className="d-flex justify-content-between align-items-start mb-3 border-bottom pb-3">
-                    <div>
-                      <h3 className="h5 mb-1 font-weight-bold d-flex align-items-center gap-2" style={{ color: '#0f172a' }}>
-                        {ann.title}
-                        {isNew(ann.created_at) && (
-                          <span className="badge bg-danger rounded-pill px-2 py-1" style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}>NEW</span>
-                        )}
-                      </h3>
-                      <span className="text-muted small d-flex align-items-center gap-1">
-                        📅 {new Date(ann.created_at).toLocaleDateString(undefined, { 
-                          weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
-                        })}
-                      </span>
+              <div key={ann.id} style={{
+                padding: '14px 0', borderBottom: '1px solid var(--border)',
+                display: 'flex', gap: 12, alignItems: 'flex-start',
+              }}>
+                {/* Priority dot */}
+                <div style={{
+                  width: 10, height: 10, borderRadius: '50%', marginTop: 5, flexShrink: 0,
+                  background: priorityColor[ann.priority] || 'var(--text3)',
+                }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
+                      {ann.title}
+                      {isNew(ann.created_at || ann.published_at) && (
+                        <span className="badge badge-new" style={{ marginLeft: 8, fontSize: 9 }}>NEW</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text3)', flexShrink: 0 }}>
+                      {new Date(ann.created_at || ann.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                     </div>
                   </div>
-                  <p className="card-text text-secondary mb-0" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                    {ann.content}
-                  </p>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
+                    {ann.message || ann.content}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+                    Target: {ann.target === 'all' ? 'Everyone' : ann.target} · Priority: {ann.priority}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </section>
+      </div>
     </div>
-  );
+  )
 }
