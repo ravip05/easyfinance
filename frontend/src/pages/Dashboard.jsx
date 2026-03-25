@@ -112,10 +112,10 @@ function RoleBanner({ user, scopeLabel }) {
   )
 }
 
-/** StatCard — KPI tile */
-function StatCard({ icon, label, value, sub, subUp, iconClass = 'blue' }) {
+/** StatCard — KPI tile (with optional glassmorphism variant) */
+function StatCard({ icon, label, value, sub, subUp, iconClass = 'blue', glass = '' }) {
   return (
-    <div className="stat-card">
+    <div className={`stat-card${glass ? ` ${glass}` : ''}`}>
       <div className="stat-card-top">
         <div>
           <div className="stat-label">{label}</div>
@@ -126,6 +126,58 @@ function StatCard({ icon, label, value, sub, subUp, iconClass = 'blue' }) {
         </div>
         <div className={`stat-icon-wrap ${iconClass}`}>{icon}</div>
       </div>
+    </div>
+  )
+}
+
+/** ActivityFeed — real-time action log (replaces the demo's activity feed) */
+function ActivityFeed({ leads }) {
+  // Generate activity entries from leads data
+  const activities = useMemo(() => {
+    const items = []
+    const sorted = [...leads].sort((a, b) => {
+      const da = a.updated_at || a.created_at || ''
+      const db = b.updated_at || b.created_at || ''
+      return db.localeCompare(da)
+    })
+
+    sorted.slice(0, 8).forEach((lead) => {
+      const name = lead.name || 'Unknown'
+      const assigned = lead.assigned || 'Unassigned'
+      const stage = lead.stage || 'New'
+
+      if (stage === 'Disbursed') {
+        items.push({ text: `<strong>${name}</strong> — Loan disbursed successfully`, dot: 'green', time: lead.updated_at || lead.created_at })
+      } else if (stage === 'Sanctioned') {
+        items.push({ text: `<strong>${name}</strong> — Loan sanctioned by bank`, dot: 'purple', time: lead.updated_at || lead.created_at })
+      } else if (stage === 'Processing') {
+        items.push({ text: `<strong>${name}</strong> — Under processing (${assigned})`, dot: 'gold', time: lead.updated_at || lead.created_at })
+      } else if (stage === 'New') {
+        items.push({ text: `<strong>${name}</strong> — New lead added`, dot: 'blue', time: lead.created_at })
+      } else if (lead.isOverdue) {
+        items.push({ text: `<strong>${name}</strong> — Follow-up overdue!`, dot: 'red', time: lead.followup })
+      } else {
+        items.push({ text: `<strong>${name}</strong> — Moved to ${stage}`, dot: 'blue', time: lead.updated_at || lead.created_at })
+      }
+    })
+    return items
+  }, [leads])
+
+  if (!activities.length) {
+    return <div style={{ padding: 16, textAlign: 'center', color: 'var(--text3)', fontSize: 12 }}>No recent activity</div>
+  }
+
+  return (
+    <div className="activity-feed">
+      {activities.map((item, i) => (
+        <div className="activity-item" key={i}>
+          <div className={`activity-dot ${item.dot}`} />
+          <div className="activity-body">
+            <div className="activity-text" dangerouslySetInnerHTML={{ __html: item.text }} />
+            <div className="activity-time">{item.time ? new Date(item.time).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</div>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -429,12 +481,12 @@ function AdminDashboard({ leads, clients, employees, onViewLeads }) {
 
   return (
     <>
-      {/* Row 1 — 4 primary KPIs */}
+      {/* Row 1 — 4 primary KPIs (Premium Glassmorphism) */}
       <div className="stats-grid">
-        <StatCard icon="🎯" label="Total Leads"       value={totalLeads}          sub="↑ 18 this week"           subUp  iconClass="blue"   />
-        <StatCard icon="💰" label="Disbursed (Month)" value={fmtCr(disbursed)}    sub="↑ 12% vs last month"      subUp  iconClass="green"  />
-        <StatCard icon="📁" label="Active Files"       value={activeFiles}         sub={`${docsPending} pending docs`}   iconClass="gold"   />
-        <StatCard icon="📊" label="Conversion Rate"    value={`${convRate}%`}      sub="↑ 5% this quarter"        subUp  iconClass="purple" />
+        <StatCard icon="🎯" label="Total Leads"       value={totalLeads}          sub="↑ 18 this week"           subUp  iconClass="blue"   glass="glass-blue"  />
+        <StatCard icon="💰" label="Disbursed (Month)" value={fmtCr(disbursed)}    sub="↑ 12% vs last month"      subUp  iconClass="green"  glass="glass-green" />
+        <StatCard icon="📁" label="Active Files"       value={activeFiles}         sub={`${docsPending} pending docs`}   iconClass="gold"   glass="glass-gold"  />
+        <StatCard icon="📊" label="Conversion Rate"    value={`${convRate}%`}      sub="↑ 5% this quarter"        subUp  iconClass="purple" glass="glass-purple"/>
       </div>
 
       {/* Row 2 — 4 secondary KPIs */}
@@ -443,6 +495,15 @@ function AdminDashboard({ leads, clients, employees, onViewLeads }) {
         <StatCard icon="🏢" label="Franchises"       value="—"                 sub="Active partners"   iconClass="green"  />
         <StatCard icon="👤" label="Total Clients"    value={clients.length}    sub="Active clients"    iconClass="gold"   />
         <StatCard icon="🏦" label="Banks Onboarded"  value={6}                 sub="Active tie-ups"    iconClass="purple" />
+      </div>
+
+      {/* Activity Feed — real-time action log */}
+      <div className="card" style={{ marginTop: 16 }}>
+        <div className="card-header">
+          <div className="card-title">⚡ Recent Activity</div>
+          <span className="badge badge-active">Live</span>
+        </div>
+        <ActivityFeed leads={leads} />
       </div>
 
       {/* Charts row */}

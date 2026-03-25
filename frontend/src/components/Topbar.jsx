@@ -113,8 +113,8 @@ export default function Topbar({
   // Role pill
   const pillConfig = ROLE_PILL_CONFIG[role] ?? ROLE_PILL_CONFIG.staff
 
-  // Only show "+ New Lead" button when on the Leads page
-  const showNewLead = activePage === 'leads'
+  // Show "+ New Lead" for staff/manager/admin on all pages (matching demo)
+  const showNewLead = !['dsa', 'client'].includes(role)
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   function handleSearchChange(e) {
