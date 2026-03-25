@@ -40,8 +40,8 @@ class AnnouncementController extends Controller
         $validated = $request->validate([
             'title'    => 'required|string|max:255',
             'message'  => 'required|string',
-            'target'   => 'required|in:all,staff,manager,dsa',
-            'priority' => 'required|in:low,medium,high,urgent',
+            'target'   => 'required|in:all,staff,manager,dsa,franchise_all',
+            'priority' => 'required|in:normal,important,urgent',
         ]);
 
         $announcement = Announcement::create([

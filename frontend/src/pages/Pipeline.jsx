@@ -243,11 +243,8 @@ function PipelineCard({ lead, onDragStart, onDragEnd }) {
       draggable="true"
       onDragStart={(e) => onDragStart(e, lead)}
       onDragEnd={onDragEnd}
-      style={{
-        ...(lead.isOverdue ? { borderLeft: '3px solid var(--red)' } : {}),
-        cursor: 'grab',
-      }}
-      title={lead.isOverdue ? 'Follow-up overdue — drag to update stage' : 'Drag to move between stages'}
+      style={{ cursor: 'grab' }}
+      title={lead.isOverdue ? 'Follow-up overdue' : 'Drag to move between stages'}
     >
       <div className="pc-name">{lead.name}</div>
       <div className="pc-meta">{lead.phone}</div>

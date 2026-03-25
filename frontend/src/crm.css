@@ -280,7 +280,7 @@ img { max-width: 100%; }
 .nav-section {
   padding: 16px 18px 6px;
   font-size: 10px; font-weight: 700;
-  color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text3); text-transform: uppercase !important; letter-spacing: 0.1em;
   opacity: 0.8;
 }
 .nav-item {
@@ -662,7 +662,8 @@ tbody tr:hover { background: #f8fafc; }
   background: rgba(0,0,0,0.06); color: currentColor;
 }
 .pipeline-card {
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface); border: 1px solid var(--border) !important;
+  border-left: 1px solid var(--border) !important;
   border-radius: 12px; padding: 14px; margin-bottom: 12px;
   cursor: grab; transition: all 0.2s ease-out; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
