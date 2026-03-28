@@ -15,7 +15,13 @@ export const hrApi = {
   listPolicies: () => apiClient.get('/company-policies'),
   createPolicy: (data) => apiClient.post('/company-policies', data),
   
-  // Push Notifications
-  registerPush: (data) => apiClient.post('/push-subscriptions', data),
-  unregisterPush: (data) => apiClient.delete('/push-subscriptions', { data }),
+  // Attendance
+  getAttendance: (params = {}) => apiClient.get('/attendance', { params }),
+  getAttendanceSummary: (params = {}) => apiClient.get('/attendance/summary', { params }),
+  checkIn: (data) => apiClient.post('/attendance/check-in', data),
+  checkOut: (data) => apiClient.post('/attendance/check-out', data),
+
+  // Payroll
+  getPayrollSummary: () => apiClient.get('/payroll/summary'),
+  processPayroll: (data) => apiClient.post('/payroll/process', data),
 }

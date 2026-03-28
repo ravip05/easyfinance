@@ -53,8 +53,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
 
     // ── Settings ─────────────────────────────────────────────────────────────
+    Route::get('settings/public', [App\Http\Controllers\Api\SettingsController::class, 'publicSettings']);
     Route::get('user/settings', [AuthController::class, 'me']); // Alias for frontend
     Route::post('settings/profile', [AuthController::class, 'updateProfile']);
+    Route::post('auth/impersonate', [AuthController::class, 'impersonate'])->middleware('role:admin');
+
+    // Admin Settings (System-wide)
+    Route::prefix('admin')->middleware('role:admin')->group(function () {
+        Route::get('settings', [App\Http\Controllers\Api\SettingsController::class, 'index']);
+        Route::post('settings', [App\Http\Controllers\Api\SettingsController::class, 'update']);
+        Route::get('users', [App\Http\Controllers\Api\SettingsController::class, 'users']);
+        Route::post('users', [App\Http\Controllers\Api\SettingsController::class, 'createUser']);
+        Route::patch('users/{id}', [App\Http\Controllers\Api\SettingsController::class, 'updateUser']);
+        Route::delete('users/{id}', [App\Http\Controllers\Api\SettingsController::class, 'deleteUser']);
+        Route::post('users/{id}/restore', [App\Http\Controllers\Api\SettingsController::class, 'restoreUser']);
+        Route::patch('users/{id}/status', [App\Http\Controllers\Api\SettingsController::class, 'blockUser']);
+        Route::get('departments', [App\Http\Controllers\Api\SettingsController::class, 'departments']);
+        Route::post('departments', [App\Http\Controllers\Api\SettingsController::class, 'addDepartment']);
+        Route::delete('departments/{id}', [App\Http\Controllers\Api\SettingsController::class, 'deleteDepartment']);
+        Route::get('pipeline-stages', [App\Http\Controllers\Api\SettingsController::class, 'pipelineStages']);
+        Route::post('pipeline-stages', [App\Http\Controllers\Api\SettingsController::class, 'updatePipelineStages']);
+        Route::get('audit-logs', [App\Http\Controllers\Api\SettingsController::class, 'auditLog']);
+        Route::get('commission-slabs', [App\Http\Controllers\Api\SettingsController::class, 'commissionSlabs']);
+    });
 
     // ── Leads ─────────────────────────────────────────────────────────────────
     // NOTE: Named extra routes MUST come before apiResource() so Laravel

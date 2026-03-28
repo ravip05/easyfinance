@@ -94,4 +94,52 @@ class AttendanceController extends Controller
             'data' => $attendance
         ]);
     }
+
+    /**
+     * GET /api/attendance
+     * List attendance for current user or all (if admin)
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $query = Attendance::where('user_id', $request->user()->id);
+        
+        if ($request->has('month')) {
+            $query->whereMonth('check_in_at', $request->month);
+        }
+        if ($request->has('year')) {
+            $query->whereYear('check_in_at', $request->year);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->latest('check_in_at')->get()
+        ]);
+    }
+
+    /**
+     * GET /api/attendance/summary
+     */
+    public function summary(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $month = $request->query('month', now()->month);
+        $year = $request->query('year', now()->year);
+
+        $stats = Attendance::where('user_id', $user->id)
+            ->whereMonth('check_in_at', $month)
+            ->whereYear('check_in_at', $year)
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'present' => $stats['present'] ?? 0,
+                'late' => $stats['late'] ?? 0,
+                'on-leave' => $stats['on-leave'] ?? 0,
+                'absent' => 0, // Placeholder
+            ]
+        ]);
+    }
 }

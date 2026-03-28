@@ -156,6 +156,37 @@ class AuthController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
+     * POST /api/auth/impersonate
+     *
+     * Admin generates a token for another user to "Login As" them.
+     */
+    public function impersonate(Request $request): JsonResponse
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Only admins can impersonate users.'], 403);
+        }
+
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+
+        $targetUser = User::findOrFail($request->user_id);
+
+        if ($targetUser->role === 'admin') {
+            return response()->json(['success' => false, 'message' => 'Cannot impersonate another admin.'], 403);
+        }
+
+        // Create a token for the target user
+        $token = $targetUser->createToken("crm-impersonate-{$targetUser->role}-session")->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'token'   => $token,
+            'user'    => $this->formatUser($targetUser),
+        ]);
+    }
+
+    /**
      * Builds the standardised user payload returned by login() and me().
      *
      * Designed to replace the prototype's combined DEMO_USERS + ALL_STAFF shape:

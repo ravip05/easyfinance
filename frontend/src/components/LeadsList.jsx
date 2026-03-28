@@ -54,7 +54,7 @@ const ROLE_TITLE = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 // Stages that are convertible to a client
-const CONVERTIBLE_STAGES = ['Login', 'Sanctioned']
+const CONVERTIBLE_STAGES = ['Docs Received', 'Login', 'Processing', 'Sanctioned']
 
 export default function LeadsList({ onAddLead, onEditLead, filters: externalFilters }) {
   const { user }                        = useAuth()

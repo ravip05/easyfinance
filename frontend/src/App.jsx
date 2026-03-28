@@ -49,8 +49,9 @@ import LMS             from './pages/LMS'
 import BankPolicies    from './pages/BankPolicies'
 import Announcements   from './pages/Announcements'
 import CibilChecker    from './pages/CibilChecker'
-import Settings        from './pages/Settings'
-import Duplicates        from './pages/Duplicates'
+import AdminSettings   from './pages/AdminSettings'
+import UserSettings    from './pages/UserSettings'
+import Duplicates      from './pages/Duplicates'
 import MyAttendance      from './pages/MyAttendance'
 import PolicyManagement  from './pages/PolicyManagement'
 import Profile           from './pages/Profile'
@@ -161,14 +162,14 @@ export default function App() {
         <Route path="announcements" element={<Announcements />} />
         <Route path="calculator"    element={<Calculator />} />
         <Route path="cibil"         element={<CibilChecker />} />
-        <Route path="settings"      element={<Settings />} />
+        <Route path="settings"      element={<AdminSettings />} />
         <Route path="hr"            element={<HR />} />
         <Route path="duplicates"       element={<Duplicates />} />
         <Route path="idcard"           element={<IDCard />} />
         <Route path="myattendance"     element={<MyAttendance />} />
         <Route path="tickets"          element={<Tickets />} />
         <Route path="policy-management" element={<PolicyManagement />} />
-        <Route path="profile"          element={<Profile />} />
+        <Route path="profile"          element={<UserSettings />} />
 
         {/* Catch-all within the layout → 404 inside the shell */}
         <Route

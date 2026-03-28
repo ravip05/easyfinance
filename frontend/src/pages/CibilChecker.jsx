@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
 
 // Scoring bands
@@ -24,6 +24,13 @@ export default function CibilChecker() {
   const [syncing, setSyncing]   = useState(false);
   const [error, setError]       = useState('');
   const [synced, setSynced]     = useState(false);
+  const [links, setLinks]       = useState({ link1: '', link2: '' });
+
+  useEffect(() => {
+    apiClient.get('/settings/public')
+      .then(res => setLinks({ link1: res.data.cibil_link_1, link2: res.data.cibil_link_2 }))
+      .catch(() => {});
+  }, []);
 
   async function handleCheck(e) {
     e.preventDefault();
@@ -95,6 +102,26 @@ export default function CibilChecker() {
               </form>
             </div>
           </div>
+
+          {(links.link1 || links.link2) && (
+            <div className="card shadow-sm border-0 mb-4">
+              <div className="card-body p-4">
+                <h5 className="mb-3 fw-bold" style={{ fontSize: '15px', color: '#1e293b' }}>External Bureau Integrations</h5>
+                <div className="d-flex flex-column gap-2">
+                  {links.link1 && (
+                    <a href={links.link1} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary text-start fw-semibold py-3" style={{ border: '1.5px solid #2563eb', color: '#2563eb', background: '#eff6ff' }}>
+                      🔗 Official CIBIL Portal
+                    </a>
+                  )}
+                  {links.link2 && (
+                    <a href={links.link2} target="_blank" rel="noopener noreferrer" className="btn btn-outline-secondary text-start fw-semibold py-3" style={{ border: '1.5px solid #64748b', color: '#475569', background: '#f8fafc' }}>
+                      🔗 Secondary Bureau (Equifax / Experian)
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Result Card */}
           {result && (

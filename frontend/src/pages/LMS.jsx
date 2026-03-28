@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import apiClient from '../api/client'
 import { useToast } from '../context/ToastContext'
 
 export default function LMS() {
@@ -18,26 +18,13 @@ export default function LMS() {
   const fetchLMSData = async () => {
     setLoading(true)
     try {
-      // Mock data if migration failed
-      const courseRes = await axios.get('/api/lms/courses').catch(() => ({
-        data: { data: [
-          { id: 1, title: 'Personal Loan Mastery', category: 'loans', level: 'beginner', duration_minutes: 45, lesson_count: 5, thumbnail: '💰', progress: 0 },
-          { id: 2, title: 'Compliance & Ethics 2024', category: 'compliance', level: 'intermediate', duration_minutes: 30, lesson_count: 3, thumbnail: '⚖️', progress: 100 },
-          { id: 3, title: 'Elite Sales Techniques', category: 'sales', level: 'advanced', duration_minutes: 60, lesson_count: 8, thumbnail: '🪜', progress: 45 },
-          { id: 4, title: 'Insurance Fundamentals', category: 'insurance', level: 'beginner', duration_minutes: 90, lesson_count: 12, thumbnail: '🏥', progress: 0 }
-        ]}
-      }))
-      const materialRes = await axios.get('/api/lms/materials').catch(() => ({
-        data: { data: [
-          { id: 1, title: 'Loan Product Guide.pdf', category: 'Product', type: 'PDF', size: '2.4MB' },
-          { id: 2, title: 'Commission Structure Q2.xlsx', category: 'Finance', type: 'XLSX', size: '1.2MB' },
-          { id: 3, title: 'Sales Presentation Prep.pptx', category: 'Sales', type: 'PPTX', size: '5.8MB' }
-        ]}
-      }))
-      setCourses(courseRes.data.data)
-      setMaterials(materialRes.data.data)
+      const courseRes = await apiClient.get('/lms/courses')
+      const materialRes = await apiClient.get('/lms/materials')
+      
+      setCourses(courseRes.data || [])
+      setMaterials(materialRes.data || [])
     } catch (err) {
-      toast('error', 'Failed to load LMS content')
+      toast?.('error', 'Failed to load LMS content')
     } finally {
       setLoading(false)
     }
@@ -88,16 +75,21 @@ export default function LMS() {
           </div>
 
           <div className="lms-grid">
-            {filteredCourses.map(course => (
+            {filteredCourses.length === 0 ? (
+              <div className="empty" style={{ gridColumn: '1 / -1' }}>
+                <div className="empty-icon">📂</div>
+                <div className="empty-text">No courses available in this category.</div>
+              </div>
+            ) : filteredCourses.map(course => (
               <div key={course.id} className="course-card" onClick={() => setSelectedCourse(course)}>
                 <div className="course-thumb" style={{ backgroundColor: 'var(--bg2)', color: 'var(--accent)' }}>
-                  {course.thumbnail}
+                  {course.thumbnail || '🎓'}
                 </div>
                 <div className="course-body">
                   <div className="course-title">{course.title}</div>
                   <div className="course-meta">
-                    <span>⏱ {course.duration_minutes}m</span>
-                    <span>📚 {course.lesson_count} Lessons</span>
+                    <span>⏱ {course.duration_minutes || 0}m</span>
+                    <span>📚 {course.lesson_count || 0} Lessons</span>
                   </div>
                   {course.progress > 0 && (
                     <div className="course-progress">
@@ -105,8 +97,8 @@ export default function LMS() {
                     </div>
                   )}
                   <div className="course-footer">
-                    <span className={`course-badge cb-${course.level}`}>{course.level.toUpperCase()}</span>
-                    <span style={{ fontSize: 10, color: 'var(--text3)' }}>{course.progress}% done</span>
+                    <span className={`course-badge cb-${course.level || 'beginner'}`}>{(course.level || 'beginner').toUpperCase()}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text3)' }}>{course.progress || 0}% done</span>
                   </div>
                 </div>
               </div>
@@ -129,14 +121,22 @@ export default function LMS() {
                 </tr>
               </thead>
               <tbody>
-                {(materials || []).map(m => (
+                {materials?.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: 'center', padding: '32px' }}>
+                      <div className="empty" style={{ margin: 0 }}>
+                        <div className="empty-text">No materials available yet.</div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (materials || []).map(m => (
                   <tr key={m.id}>
                     <td><strong>{m.title}</strong></td>
                     <td><span className="badge">{m.category}</span></td>
                     <td><span style={{ fontSize: 11, fontWeight: 700 }}>{m.type}</span></td>
-                    <td>{m.size}</td>
+                    <td>{m.size || m.file_size || 'N/A'}</td>
                     <td>
-                      <button className="btn btn-secondary btn-sm">⬇ Download</button>
+                      <a href={`http://localhost:8000/storage/${m.file_path}`} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>⬇ Download</a>
                     </td>
                   </tr>
                 ))}

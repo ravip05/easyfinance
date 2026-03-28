@@ -129,4 +129,74 @@ class ReportController extends Controller {
             'Content-Disposition' => 'attachment; filename="leads_export.csv"'
         ]);
     }
+
+    /**
+     * GET /api/reports/summary
+     * Combined KPI data for dashboard cards.
+     */
+    public function summary(Request $request) {
+        $from = $request->from; $to = $request->to;
+        $q = Lead::query();
+        if ($from) $q->whereDate('created_at', '>=', $from);
+        if ($to)   $q->whereDate('created_at', '<=', $to);
+
+        $totalLeads = (clone $q)->count();
+        $disbursedLeads = (clone $q)->where('stage', 'Disbursed')->count();
+        $totalRevenue = (clone $q)->where('stage', 'Disbursed')->sum('amount');
+        $conversionRate = $totalLeads > 0 ? round(($disbursedLeads / $totalLeads) * 100, 1) : 0;
+        
+        // Avg TAT calculation (Lead Creation to Disbursed)
+        $avgTat = DB::table('lead_timelines as t1')
+            ->join('lead_timelines as t2', 't1.lead_id', '=', 't2.lead_id')
+            ->where('t1.to_stage', 'New') // conceptually first stage
+            ->where('t2.to_stage', 'Disbursed')
+            ->select(DB::raw('avg(timestampdiff(HOUR, t1.created_at, t2.created_at)) as avg_hours'))
+            ->value('avg_hours');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_leads' => $totalLeads,
+                'conversions' => $disbursedLeads,
+                'conversion_rate' => $conversionRate,
+                'revenue' => '₹' . number_format($totalRevenue),
+                'avg_tat' => round($avgTat / 24, 1) . ' days',
+                'active_employees' => \App\Models\User::where('status', 'active')->count(),
+            ]
+        ]);
+    }
+
+    /**
+     * GET /api/reports/revenue-trends
+     */
+    public function revenueTrends() {
+        $trends = Lead::where('stage', 'Disbursed')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->select(DB::raw("date_format(created_at, '%b %Y') as month"), DB::raw("sum(amount) as revenue"))
+            ->groupBy('month')
+            ->orderBy('created_at')
+            ->get();
+            
+        return response()->json(['success' => true, 'data' => $trends]);
+    }
+
+    /**
+     * GET /api/reports/branch-performance
+     */
+    public function branchPerformance() {
+        $perf = DB::table('franchises as f')
+            ->leftJoin('leads as l', 'f.id', '=', 'l.franchise_id')
+            ->select('f.name', 
+                DB::raw('count(l.id) as total_leads'), 
+                DB::raw("count(case when l.stage = 'Disbursed' then 1 end) as converted")
+            )
+            ->groupBy('f.id', 'f.name')
+            ->get()
+            ->map(function($b) {
+                $b->rate = $b->total_leads > 0 ? round(($b->converted / $b->total_leads) * 100, 1) : 0;
+                return $b;
+            });
+
+        return response()->json(['success' => true, 'data' => $perf]);
+    }
 }

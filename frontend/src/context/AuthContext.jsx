@@ -180,7 +180,15 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const value = { user, token, isLoading, login, loginWithBiometric, logout }
+  const impersonate = useCallback(async (userId) => {
+    const { data } = await apiClient.post('/auth/impersonate', { user_id: userId })
+    sessionStorage.setItem('crm_token', data.token)
+    sessionStorage.setItem('crm_user',  JSON.stringify(data.user))
+    setToken(data.token)
+    setUser(data.user)
+  }, [])
+
+  const value = { user, token, isLoading, login, loginWithBiometric, impersonate, logout }
 
   return (
     <AuthContext.Provider value={value}>

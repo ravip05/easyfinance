@@ -76,6 +76,7 @@ export default function Topbar({
   const navigate  = useNavigate()
   const [search, setSearch] = useState('')
   const [showNotif, setShowNotif] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [announcements, setAnnouncements] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
 
@@ -202,7 +203,7 @@ export default function Topbar({
             className="icon-btn notif-btn"
             id="bell-btn-1"
             title="Notifications"
-            onClick={() => setShowNotif(!showNotif)}
+            onClick={() => { setShowNotif(!showNotif); setShowProfileMenu(false); }}
             aria-label={`Notifications${notifCount > 0 ? ` (${notifCount} unread)` : ''}`}
             style={{ position: 'relative' }}
           >
@@ -294,16 +295,67 @@ export default function Topbar({
           )}
         </div>
 
-        {/* My Account Button */}
-        <button
-          className="icon-btn"
-          id="topbar-profile-btn"
-          onClick={() => navigate('/profile')}
-          title="My Account"
-          aria-label="My Account"
-        >
-          👤
-        </button>
+        {/* My Account Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <button
+            className="icon-btn"
+            id="topbar-profile-btn"
+            onClick={() => { setShowProfileMenu(!showProfileMenu); setShowNotif(false); }}
+            title="My Account"
+            aria-label="My Account"
+          >
+            👤
+          </button>
+          
+          {showProfileMenu && (
+            <div 
+              style={{
+                position: 'absolute', top: '100%', right: 0, marginTop: '8px',
+                width: '220px', background: 'var(--bg)', borderRadius: '12px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border)',
+                zIndex: 1000, overflow: 'hidden'
+              }}
+            >
+              <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)' }}>
+                <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text)' }}>
+                  {user?.name || 'User'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '2px' }}>
+                  {user?.email || role.toUpperCase()}
+                </div>
+              </div>
+              <div style={{ padding: '8px 0' }}>
+                <div 
+                  onClick={() => { setShowProfileMenu(false); navigate('/profile'); }}
+                  style={{ padding: '10px 16px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text)' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span style={{ fontSize: '15px' }}>👤</span> My Profile
+                </div>
+                {role === 'admin' && (
+                  <div 
+                    onClick={() => { setShowProfileMenu(false); navigate('/settings'); }}
+                    style={{ padding: '10px 16px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text)' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg2)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <span style={{ fontSize: '15px' }}>⚙️</span> Admin Settings
+                  </div>
+                )}
+                <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+                <div 
+                  onClick={() => { setShowProfileMenu(false); handleLogout(); }}
+                  style={{ padding: '10px 16px', cursor: 'pointer', fontSize: '13px', color: 'var(--red)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg2)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span style={{ fontSize: '15px' }}>🚪</span> Sign Out
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* "+ New Lead" — only on the Leads page */}
         {showNewLead && (
@@ -317,18 +369,6 @@ export default function Topbar({
             <span>New Lead</span>
           </button>
         )}
-
-        {/* Logout */}
-        <button
-          className="btn btn-ghost btn-sm"
-          id="topbar-logout-btn"
-          onClick={handleLogout}
-          title="Sign out"
-          aria-label="Sign out"
-          style={{ padding: '7px 8px' }}
-        >
-          🚪
-        </button>
 
       </div>
     </div>

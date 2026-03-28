@@ -6,13 +6,15 @@
  * dsa: sees own franchise dashboard (same as manager)
  */
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import apiClient from '../api/client'
 import FranchiseModal from '../components/FranchiseModal'
 
 export default function Franchise() {
-  const { user } = useAuth()
+  const { user, impersonate } = useAuth()
+  const navigate = useNavigate()
   const toast = useToast()
   const role = user?.role ?? 'staff'
   const [franchises, setFranchises] = useState([])
@@ -45,6 +47,27 @@ export default function Franchise() {
       fetchFranchises()
     } catch (e) {
       toast?.('error', e.response?.data?.message || 'Failed to delete franchise')
+    }
+  }
+
+  async function handleView(fr) {
+    setSelected(fr)
+    try {
+      const res = await apiClient.get(`/franchises/${fr.id}`)
+      setSelected(res.data.data)
+    } catch (e) {
+      toast?.('error', 'Failed to fetch franchise details')
+    }
+  }
+
+  async function handleLoginAs(userId) {
+    if (!window.confirm("Switch to this user's account? You will need to log out to return to Admin.")) return
+    try {
+      await impersonate(userId)
+      toast?.('success', 'Switched account successfully.')
+      navigate('/')
+    } catch (e) {
+      toast?.('error', e.response?.data?.message || 'Failed to switch account.')
     }
   }
 
@@ -106,7 +129,7 @@ export default function Franchise() {
         )}
 
         {!isLoading && franchises.map((fr) => (
-          <div key={fr.id} className="fr-card" onClick={() => setSelected(fr)} style={{ cursor: 'pointer' }}>
+          <div key={fr.id} className="fr-card" onClick={() => handleView(fr)} style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <div className="user-avatar" style={{ width: 42, height: 42, fontSize: 14, background: 'linear-gradient(135deg, var(--gold), var(--orange))' }}>
                 {fr.code?.substring(0, 2) || 'FR'}
@@ -191,6 +214,26 @@ export default function Franchise() {
                   <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Commission</td><td>{selected.commission_rate || '—'}</td></tr>
                 </tbody>
               </table>
+              {selected.users?.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ fontWeight: 600, marginBottom: 8 }}>DSA Contacts</div>
+                  {selected.users.map(u => (
+                    <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6, marginBottom: 6 }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{u.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text3)' }}>{u.emp_code} • {u.status}</div>
+                      </div>
+                      <button 
+                        className="btn btn-secondary btn-xs"
+                        onClick={() => handleLoginAs(u.id)}
+                        disabled={u.status === 'Inactive'}
+                      >
+                        🔑 Login As
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
