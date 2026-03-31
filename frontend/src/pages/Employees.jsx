@@ -8,6 +8,7 @@
  */
 import { useEffect, useState, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { useToast } from '../context/ToastContext'
 import apiClient from '../api/client'
 import EmployeeModal from '../components/EmployeeModal'
@@ -18,7 +19,8 @@ const STATUS_BADGE = { Active: 'badge-active', 'On Leave': 'badge-med', Inactive
 const ROLE_BADGE = { admin: 'badge-high', manager: 'badge-new', staff: 'badge-contacted' }
 
 export default function Employees() {
-  const { user } = useAuth()
+  const { user, impersonate } = useAuth()
+  const navigate = useNavigate()
   const toast = useToast()
   const role = user?.role ?? 'staff'
   const isAdmin = role === 'admin'
@@ -71,6 +73,18 @@ export default function Employees() {
       fetchEmployees()
     } catch (e) {
       toast?.('error', e.response?.data?.message || 'Failed')
+    }
+  }
+
+  // login as
+  async function handleLoginAs(userId) {
+    if (!window.confirm("Switch to this user's account? You will need to log out to return to Admin.")) return
+    try {
+      await impersonate(userId)
+      toast?.('success', 'Switched account successfully.')
+      navigate('/')
+    } catch (e) {
+      toast?.('error', e.response?.data?.message || 'Failed to switch account.')
     }
   }
 
@@ -231,6 +245,21 @@ export default function Employees() {
                   )}
                 </tbody>
               </table>
+
+              {isAdmin && selected.id !== user.id && (
+                <div style={{ marginTop: 24, borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ width: '100%', borderRadius: 12, height: 44, fontWeight: 700 }}
+                    onClick={() => handleLoginAs(selected.id)}
+                  >
+                    🔑 Impersonate User
+                  </button>
+                  <p style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 8 }}>
+                    Allows you to view the system exactly as this employee does.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

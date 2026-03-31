@@ -24,6 +24,7 @@ export default function Franchise() {
   const [editingFranchise, setEditingFranchise] = useState(null)
   const [activeDetailTab, setActiveDetailTab] = useState('info')
   const [detailData, setDetailData] = useState({ leads: [], clients: [] })
+  const [isDetailsLoading, setIsDetailsLoading] = useState(false)
 
   useEffect(() => {
     fetchFranchises()
@@ -54,19 +55,24 @@ export default function Franchise() {
 
   async function handleView(fr) {
     setSelected(fr)
+    setIsDetailsLoading(true)
     setActiveDetailTab('info')
     try {
       const [details, business] = await Promise.all([
         apiClient.get(`/franchises/${fr.id}`),
         apiClient.get(`/franchises/${fr.id}/leads`)
       ])
-      setSelected(details.data.data)
+      // Safeguard: Only update if the user hasn't closed the modal or switched to another franchise
+      const fullData = details.data.data
+      setSelected(prev => (prev && prev.id === fr.id) ? fullData : prev)
       setDetailData({ 
-        leads: business.data.filter(l => l.stage !== 'Disbursed'),
-        clients: business.data.filter(l => l.stage === 'Disbursed')
+        leads: (business.data.data || []).filter(l => l.stage !== 'Disbursed'),
+        clients: (business.data.data || []).filter(l => l.stage === 'Disbursed')
       })
     } catch (e) {
       toast?.('error', 'Failed to fetch franchise details')
+    } finally {
+      setIsDetailsLoading(false)
     }
   }
 
@@ -256,7 +262,15 @@ export default function Franchise() {
                       </tbody>
                     </table>
 
-                    {selected.users?.length > 0 && (
+                    {isDetailsLoading && (
+                      <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text3)' }}>
+                        <div style={{ width: '24px', height: '24px', border: '3px solid #f3f3f3', borderTop: '3px solid #2563eb', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+                        <div style={{ fontSize: '12px', fontWeight: 600 }}>Syncing partner data...</div>
+                        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                      </div>
+                    )}
+
+                    {!isDetailsLoading && selected.users?.length > 0 && (
                       <div style={{ marginTop: 32 }}>
                         <div style={{ fontWeight: 800, fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 16, letterSpacing: '0.05em' }}>Franchise Partners</div>
                         {selected.users.map(u => (
@@ -267,7 +281,7 @@ export default function Franchise() {
                             </div>
                             <button 
                               className="btn btn-primary btn-xs"
-                              onClick={() => handleLoginAs(u.id)}
+                              onClick={(e) => { e.stopPropagation(); handleLoginAs(u.id); }}
                               disabled={u.status === 'Inactive'}
                               style={{ borderRadius: 8, fontSize: 10, padding: '7px 12px', flexShrink: 0, marginLeft: 12 }}
                             >
@@ -275,6 +289,13 @@ export default function Franchise() {
                             </button>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    
+                    {!isDetailsLoading && (!selected.users || selected.users.length === 0) && (
+                      <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text3)', border: '1px dashed var(--border)', borderRadius: 16, marginTop: 32 }}>
+                        <div style={{ fontSize: 24, marginBottom: 8 }}>👥</div>
+                        <div style={{ fontSize: 12 }}>No partners registered yet.</div>
                       </div>
                     )}
                   </>
