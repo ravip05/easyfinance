@@ -207,11 +207,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::group(['prefix' => 'lms'], function () {
         Route::get('courses', [LmsController::class, 'courses']);
         Route::get('courses/{id}', [LmsController::class, 'courseDetail']);
+        Route::post('courses', [LmsController::class, 'storeCourse'])->middleware('role:admin');
+        Route::patch('courses/{id}', [LmsController::class, 'updateCourse'])->middleware('role:admin');
+        Route::delete('courses/{id}', [LmsController::class, 'deleteCourse'])->middleware('role:admin');
         Route::post('courses/{id}/enroll', [LmsController::class, 'enroll']);
         Route::post('courses/{id}/progress', [LmsController::class, 'updateProgress']);
         
         Route::get('materials', [LmsController::class, 'materials']);
-        Route::post('materials', [LmsController::class, 'uploadMaterial']);
+        Route::post('materials', [LmsController::class, 'uploadMaterial'])->middleware('role:admin');
+        Route::patch('materials/{id}', [LmsController::class, 'updateMaterial'])->middleware('role:admin');
+        Route::delete('materials/{id}', [LmsController::class, 'deleteMaterial'])->middleware('role:admin');
         
         Route::get('quizzes', [LmsController::class, 'quizzes']);
         Route::post('quizzes/{id}/submit', [LmsController::class, 'submitQuiz']);

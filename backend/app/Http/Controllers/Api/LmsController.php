@@ -12,12 +12,26 @@ use Illuminate\Http\Request;
 class LmsController extends Controller {
     public function courses(Request $request) {
         $user = $request->user();
-        $courses = LmsCourse::where('is_active',true)->orderBy('sort_order')->get()
-            ->map(function($c) use($user) {
-                $enrollment = CourseEnrollment::where('user_id',$user->id)->where('course_id',$c->id)->first();
-                return array_merge($c->toArray(),['progress'=>$enrollment?->progress ?? 0,'enrolled'=>(bool)$enrollment]);
-            });
-        return response()->json($courses);
+        $q = LmsCourse::query();
+        if ($user->role !== 'admin') $q->where('is_active', true);
+        return response()->json($q->orderBy('sort_order')->get()->map(function($c) use($user) {
+            $enrollment = CourseEnrollment::where('user_id',$user->id)->where('course_id',$c->id)->first();
+            return array_merge((array)$c,['progress'=>$enrollment?->progress ?? 0,'enrolled'=>(bool)$enrollment]);
+        }));
+    }
+    public function storeCourse(Request $request) {
+        $request->validate(['title'=>'required','category'=>'required']);
+        $course = LmsCourse::create($request->all());
+        return response()->json($course, 201);
+    }
+    public function updateCourse(Request $request, $id) {
+        $course = LmsCourse::findOrFail($id);
+        $course->update($request->all());
+        return response()->json($course);
+    }
+    public function deleteCourse($id) {
+        LmsCourse::findOrFail($id)->delete();
+        return response()->json(['message'=>'Course deleted']);
     }
     public function courseDetail($id) {
         return response()->json(LmsCourse::with('lessons')->findOrFail($id));
@@ -45,11 +59,20 @@ class LmsController extends Controller {
         $mat  = LmsMaterial::create(['title'=>$request->title,'category'=>$request->category,'type'=>strtoupper($request->file('file')->extension()),'file_path'=>$path,'file_size'=>round($request->file('file')->getSize()/1024,1).' KB','uploaded_by'=>$request->user()->id]);
         return response()->json($mat,201);
     }
+    public function updateMaterial(Request $request, $id) {
+        $mat = LmsMaterial::findOrFail($id);
+        $mat->update($request->all());
+        return response()->json($mat);
+    }
+    public function deleteMaterial($id) {
+        LmsMaterial::findOrFail($id)->delete();
+        return response()->json(['message'=>'Material deleted']);
+    }
     public function quizzes(Request $request) {
         $quizzes = Quiz::where('is_active',true)->withCount('questions')->get()
             ->map(function($q) use($request) {
                 $best = QuizAttempt::where('user_id',$request->user()->id)->where('quiz_id',$q->id)->max('score');
-                return array_merge($q->toArray(),['best_score'=>$best,'attempted'=>(bool)$best]);
+                return array_merge((array)$q,['best_score'=>$best,'attempted'=>(bool)$best]);
             });
         return response()->json($quizzes);
     }

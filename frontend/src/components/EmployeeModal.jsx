@@ -98,10 +98,10 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess, initialData 
       let res;
       if (initialData) {
         res = await employeesApi.update(initialData.id, payload)
-        toast?.('success', res.data?.message || 'Employee updated successfully')
+        toast.success(res.data?.message || 'Employee updated successfully')
       } else {
         res = await employeesApi.create(payload)
-        toast?.('success', res.data?.message || 'Employee created successfully')
+        toast.success(res.data?.message || 'Employee created successfully')
       }
       onSuccess?.()
       onClose?.()
@@ -112,9 +112,9 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess, initialData 
       if (status === 422 && body.errors) {
         setErrors(body.errors)
         const first = Object.values(body.errors)[0]
-        toast?.('error', Array.isArray(first) ? first[0] : first)
+        toast.error(Array.isArray(first) ? first[0] : first)
       } else {
-        toast?.('error', body?.message || 'Failed to create employee')
+        toast.error(body?.message || 'Failed to create employee')
       }
     } finally {
       setIsLoading(false)

@@ -34,7 +34,7 @@ export default function Tickets() {
       }))
       setTickets(res.data.data || [])
     } catch (err) {
-      toast('error', 'Failed to load tickets')
+      toast.error('Failed to load tickets')
     } finally {
       setLoading(false)
     }
@@ -44,12 +44,12 @@ export default function Tickets() {
     e.preventDefault()
     try {
       await axios.post('/api/tickets', newTicket)
-      toast('success', 'Ticket created successfully')
+      toast.success('Ticket created successfully')
       setShowModal(false)
       fetchTickets()
       setNewTicket({ subject: '', category: 'Technical', priority: 'Medium', description: '' })
     } catch (err) {
-      toast('error', 'Failed to create ticket')
+      toast.error('Failed to create ticket')
     }
   }
 
@@ -63,7 +63,7 @@ export default function Tickets() {
       setSelectedTicket(res.data.data)
       fetchTickets()
     } catch (err) {
-      toast('error', 'Failed to send reply')
+      toast.error('Failed to send reply')
     }
   }
 

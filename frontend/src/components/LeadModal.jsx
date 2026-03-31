@@ -181,11 +181,15 @@ export default function LeadModal({ isOpen, onClose, onSuccess, initialData }) {
   // ── Submit ─────────────────────────────────────────────────────────────────
   async function handleSubmit() {
     const errs = validate()
-    if (Object.keys(errs).length) { setErrors(errs); return }
+    if (Object.keys(errs).length) { 
+      setErrors(errs); 
+      return 
+    }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     const payload = {
+
       name:            form.name.trim(),
       phone:           form.phone.replace(/[^0-9]/g, ''),
       email:           form.email.trim() || undefined,
@@ -541,6 +545,22 @@ export default function LeadModal({ isOpen, onClose, onSuccess, initialData }) {
 
         {/* ── Footer ── */}
         <div className="modal-footer">
+          <div style={{ flex: 1, display: 'flex', gap: 8 }}>
+            {initialData && ['Docs Received', 'Login', 'Processing', 'Sanctioned'].includes(initialData.stage) && (
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  onClose();
+                  // We'll need a way to trigger the conversion modal from here.
+                  // For now, let's assume the parent Handles this or we provide a callback.
+                  window.dispatchEvent(new CustomEvent('open-convert-modal', { detail: initialData }));
+                }}
+                style={{ background: '#f0f9ff', color: '#0369a1', borderColor: '#bae6fd' }}
+              >
+                🚀 Convert to Client
+              </button>
+            )}
+          </div>
           <button className="btn btn-ghost" onClick={onClose} disabled={isLoading}>
             Cancel
           </button>

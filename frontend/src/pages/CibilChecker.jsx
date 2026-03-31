@@ -104,19 +104,70 @@ export default function CibilChecker() {
           </div>
 
           {(links.link1 || links.link2) && (
-            <div className="card shadow-sm border-0 mb-4">
+            <div className="card shadow-lg border-0 mb-4" style={{ 
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+              borderRadius: '24px',
+              overflow: 'hidden'
+            }}>
               <div className="card-body p-4">
-                <h5 className="mb-3 fw-bold" style={{ fontSize: '15px', color: '#1e293b' }}>External Bureau Integrations</h5>
-                <div className="d-flex flex-column gap-2">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                  <div style={{ width: 8, height: 24, background: 'var(--accent)', borderRadius: 4 }}></div>
+                  <h5 className="mb-0 fw-bold" style={{ fontSize: '16px', color: '#1e293b', letterSpacing: '-0.02em' }}>External Bureau Integrations</h5>
+                </div>
+                
+                <div className="row g-4">
                   {links.link1 && (
-                    <a href={links.link1} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary text-start fw-semibold py-3" style={{ border: '1.5px solid #2563eb', color: '#2563eb', background: '#eff6ff' }}>
-                      🔗 Official CIBIL Portal
-                    </a>
+                    <div className="col-12 col-md-6">
+                      <a href={links.link1} target="_blank" rel="noopener noreferrer" 
+                         className="premium-bureau-card"
+                         style={{ 
+                           display: 'block', textDecoration: 'none', position: 'relative',
+                           background: 'rgba(37, 99, 235, 0.03)',
+                           border: '1px solid rgba(37, 99, 235, 0.12)',
+                           padding: '24px', borderRadius: '20px', transition: 'all 0.3s ease',
+                           height: '100%'
+                         }}
+                      >
+                        <div style={{ 
+                          width: 48, height: 48, background: '#eff6ff', borderRadius: '14px', 
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px',
+                          marginBottom: '16px', border: '1px solid rgba(37, 99, 235, 0.1)'
+                        }}>🏦</div>
+                        <div style={{ fontWeight: 800, color: '#1e40af', fontSize: '15px', marginBottom: '4px' }}>Official CIBIL Portal</div>
+                        <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 500 }}>Direct API Access ↗</div>
+                        
+                        <style>{`
+                          .premium-bureau-card:hover {
+                            transform: translateY(-5px);
+                            background: rgba(37, 99, 235, 0.05) !important;
+                            border-color: #3b82f6 !important;
+                            box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.1);
+                          }
+                        `}</style>
+                      </a>
+                    </div>
                   )}
                   {links.link2 && (
-                    <a href={links.link2} target="_blank" rel="noopener noreferrer" className="btn btn-outline-secondary text-start fw-semibold py-3" style={{ border: '1.5px solid #64748b', color: '#475569', background: '#f8fafc' }}>
-                      🔗 Secondary Bureau (Equifax / Experian)
-                    </a>
+                    <div className="col-12 col-md-6">
+                      <a href={links.link2} target="_blank" rel="noopener noreferrer" 
+                         className="premium-bureau-card secondary"
+                         style={{ 
+                           display: 'block', textDecoration: 'none', position: 'relative',
+                           background: 'rgba(71, 85, 105, 0.03)',
+                           border: '1px solid rgba(71, 85, 105, 0.12)',
+                           padding: '24px', borderRadius: '20px', transition: 'all 0.3s ease',
+                           height: '100%'
+                         }}
+                      >
+                        <div style={{ 
+                          width: 48, height: 48, background: '#f8fafc', borderRadius: '14px', 
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px',
+                          marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.1)'
+                        }}>🛡️</div>
+                        <div style={{ fontWeight: 800, color: '#334155', fontSize: '15px', marginBottom: '4px' }}>Secondary Bureau</div>
+                        <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 500 }}>Equifax Integration ↗</div>
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>

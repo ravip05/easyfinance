@@ -298,22 +298,33 @@ export default function Topbar({
         {/* My Account Dropdown */}
         <div style={{ position: 'relative' }}>
           <button
-            className="icon-btn"
             id="topbar-profile-btn"
             onClick={() => { setShowProfileMenu(!showProfileMenu); setShowNotif(false); }}
             title="My Account"
             aria-label="My Account"
+            style={{
+              width: '38px', height: '38px', borderRadius: '50%',
+              background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+              color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 800, fontSize: '13px', border: 'none', cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(59,130,246,0.3)', transition: 'transform 0.2s',
+              border: '2px solid white'
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           >
-            👤
+            {user?.initials ?? user?.name?.slice(0, 2).toUpperCase() ?? 'ME'}
           </button>
           
           {showProfileMenu && (
             <div 
               style={{
-                position: 'absolute', top: '100%', right: 0, marginTop: '8px',
-                width: '220px', background: 'var(--bg)', borderRadius: '12px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid var(--border)',
-                zIndex: 1000, overflow: 'hidden'
+                position: 'absolute', top: '100%', right: 0, marginTop: '12px',
+                width: '240px', background: 'var(--bg)', borderRadius: '16px',
+                boxShadow: '0 12px 32px -4px rgba(0,0,0,0.15), 0 4px 12px -2px rgba(0,0,0,0.08)', 
+                border: '1px solid var(--border)',
+                zIndex: 1000, overflow: 'hidden',
+                animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
             >
               <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', background: 'var(--bg2)' }}>

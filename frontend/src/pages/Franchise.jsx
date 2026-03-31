@@ -22,6 +22,8 @@ export default function Franchise() {
   const [selected, setSelected] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [editingFranchise, setEditingFranchise] = useState(null)
+  const [activeDetailTab, setActiveDetailTab] = useState('info')
+  const [detailData, setDetailData] = useState({ leads: [], clients: [] })
 
   useEffect(() => {
     fetchFranchises()
@@ -52,9 +54,17 @@ export default function Franchise() {
 
   async function handleView(fr) {
     setSelected(fr)
+    setActiveDetailTab('info')
     try {
-      const res = await apiClient.get(`/franchises/${fr.id}`)
-      setSelected(res.data.data)
+      const [details, business] = await Promise.all([
+        apiClient.get(`/franchises/${fr.id}`),
+        apiClient.get(`/franchises/${fr.id}/leads`)
+      ])
+      setSelected(details.data.data)
+      setDetailData({ 
+        leads: business.data.filter(l => l.stage !== 'Disbursed'),
+        clients: business.data.filter(l => l.stage === 'Disbursed')
+      })
     } catch (e) {
       toast?.('error', 'Failed to fetch franchise details')
     }
@@ -193,47 +203,91 @@ export default function Franchise() {
       {/* detail modal */}
       {selected && (
         <div className="modal-overlay open" onClick={() => setSelected(null)}>
-          <div className="modal" style={{ maxWidth: 480 }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: 560, width: '95%' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-title">🤝 {selected.name}</div>
               <button className="modal-close" onClick={() => setSelected(null)}>✕</button>
             </div>
-            <div className="modal-body">
-              <div className="kpi-row">
-                <div className="kpi"><div className="kpi-val">{selected.total_leads ?? 0}</div><div className="kpi-lbl">Total Leads</div></div>
-                <div className="kpi"><div className="kpi-val">{selected.converted ?? 0}</div><div className="kpi-lbl">Converted</div></div>
-                <div className="kpi"><div className="kpi-val">{selected.members_count ?? 0}</div><div className="kpi-lbl">Members</div></div>
+            <div className="modal-body" style={{ padding: 0 }}>
+              <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', position: 'relative', overflowX: 'auto' }}>
+                {['info', 'leads', 'clients'].map(t => (
+                  <button 
+                    key={t}
+                    onClick={() => setActiveDetailTab(t)}
+                    style={{ 
+                      flex: 1, padding: '14px 20px', border: 'none', background: 'none', 
+                      fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em',
+                      color: activeDetailTab === t ? 'var(--accent)' : 'var(--text3)',
+                      borderBottom: activeDetailTab === t ? '2.5px solid var(--accent)' : '2.5px solid transparent',
+                      cursor: 'pointer', transition: 'all 0.2s ease', whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
-              <table style={{ width: '100%', fontSize: 12 }}>
-                <tbody>
-                  <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Code</td><td style={{ fontWeight: 600 }}>{selected.code}</td></tr>
-                  <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Owner</td><td>{selected.owner_name || '—'}</td></tr>
-                  <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>City</td><td>{selected.city || '—'}</td></tr>
-                  <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Phone</td><td>{selected.phone || '—'}</td></tr>
-                  <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Email</td><td>{selected.email || '—'}</td></tr>
-                  <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Commission</td><td>{selected.commission_rate || '—'}</td></tr>
-                </tbody>
-              </table>
-              {selected.users?.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 8 }}>DSA Contacts</div>
-                  {selected.users.map(u => (
-                    <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6, marginBottom: 6 }}>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 13 }}>{u.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text3)' }}>{u.emp_code} • {u.status}</div>
+
+              <div style={{ padding: '24px 32px', maxHeight: '65vh', overflowY: 'auto', animation: 'fadeIn 0.3s ease-out' }}>
+                {activeDetailTab === 'info' && (
+                  <>
+                    <div className="kpi-row" style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                      <div className="kpi" style={{ background: 'var(--bg2)', padding: 12, borderRadius: 12, textAlign: 'center' }}>
+                        <div className="kpi-val" style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)' }}>{selected.total_leads ?? 0}</div>
+                        <div className="kpi-lbl" style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase' }}>Leads</div>
                       </div>
-                      <button 
-                        className="btn btn-secondary btn-xs"
-                        onClick={() => handleLoginAs(u.id)}
-                        disabled={u.status === 'Inactive'}
-                      >
-                        🔑 Login As
-                      </button>
+                      <div className="kpi" style={{ background: 'var(--bg2)', padding: 12, borderRadius: 12, textAlign: 'center' }}>
+                        <div className="kpi-val" style={{ fontSize: 18, fontWeight: 800, color: 'var(--green)' }}>{selected.converted ?? 0}</div>
+                        <div className="kpi-lbl" style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase' }}>Converted</div>
+                      </div>
+                      <div className="kpi" style={{ background: 'var(--bg2)', padding: 12, borderRadius: 12, textAlign: 'center' }}>
+                        <div className="kpi-val" style={{ fontSize: 18, fontWeight: 800, color: 'var(--gold)' }}>{selected.members_count ?? 0}</div>
+                        <div className="kpi-lbl" style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase' }}>Members</div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    
+                    <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
+                      <tbody>
+                        <InfoRow label="Code" val={selected.code} />
+                        <InfoRow label="Owner" val={selected.owner_name} />
+                        <InfoRow label="City" val={selected.city} />
+                        <InfoRow label="Phone" val={selected.phone} />
+                        <InfoRow label="Email" val={selected.email} />
+                        <InfoRow label="Commission" val={selected.commission_rate} />
+                      </tbody>
+                    </table>
+
+                    {selected.users?.length > 0 && (
+                      <div style={{ marginTop: 32 }}>
+                        <div style={{ fontWeight: 800, fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 16, letterSpacing: '0.05em' }}>Franchise Partners</div>
+                        {selected.users.map(u => (
+                          <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', background: 'var(--bg2)', borderRadius: 14, marginBottom: 10, border: '1px solid var(--border)', transition: 'transform 0.2s ease' }}>
+                            <div style={{ overflow: 'hidden' }}>
+                              <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{u.emp_code} • {u.status}</div>
+                            </div>
+                            <button 
+                              className="btn btn-primary btn-xs"
+                              onClick={() => handleLoginAs(u.id)}
+                              disabled={u.status === 'Inactive'}
+                              style={{ borderRadius: 8, fontSize: 10, padding: '7px 12px', flexShrink: 0, marginLeft: 12 }}
+                            >
+                              🔑 Impersonate
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {activeDetailTab === 'leads' && (
+                  <BusinessList data={detailData.leads} type="Leads" />
+                )}
+
+                {activeDetailTab === 'clients' && (
+                  <BusinessList data={detailData.clients} type="Clients" />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -248,4 +302,43 @@ export default function Franchise() {
       />
     </div>
   )
+}
+function InfoRow({ label, val }) {
+  return (
+    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+      <td style={{ color: 'var(--text3)', padding: '14px 0', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', width: '40%', verticalAlign: 'top' }}>{label}</td>
+      <td style={{ fontWeight: 700, textAlign: 'right', padding: '14px 0', color: 'var(--text1)', wordBreak: 'break-word' }}>{val || '—'}</td>
+    </tr>
+  )
+}
+
+function BusinessList({ data, type }) {
+  if (!data?.length) return (
+    <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)' }}>
+      No {type} found for this franchise.
+    </div>
+  )
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {data.map(item => (
+        <div key={item.id} style={{ padding: 12, background: 'white', border: '1.5px solid var(--border)', borderRadius: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>{item.name}</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent)' }}>₹{item.amount || item.loan_amount || '0'}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text2)' }}>
+            <span>{item.loan_type} · {item.phone}</span>
+            <span className={`badge ${STAGE_BADGE[item.stage] ?? 'badge-new'}`}>{item.stage}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const STAGE_BADGE = {
+  New:'badge-new', Contacted:'badge-contacted', 'Docs Pending':'badge-docs',
+  'Docs Received':'badge-docs', CIBIL:'badge-cibil', Login:'badge-login',
+  Processing:'badge-processing', Sanctioned:'badge-sanction',
+  Disbursed:'badge-disbursed', Closed:'badge-closed',
 }

@@ -80,10 +80,10 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess, initialData
       let res;
       if (initialData) {
         res = await franchiseApi.update(initialData.id, form)
-        toast?.('success', res.data?.message || 'Franchise updated successfully')
+        toast.success(res.data?.message || 'Franchise updated successfully')
       } else {
         res = await franchiseApi.create(form)
-        toast?.('success', res.data?.message || 'Franchise created successfully')
+        toast.success(res.data?.message || 'Franchise created successfully')
       }
       onSuccess?.()
       onClose?.()
@@ -93,7 +93,7 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess, initialData
       if (body?.errors) setErrors(body.errors)
       
       const errMsg = body?.message || (e.response?.status === 422 ? 'Validation failed. Check the form.' : 'Failed to save franchise')
-      toast?.('error', errMsg)
+      toast.error(errMsg)
     } finally {
       setIsLoading(false)
     }

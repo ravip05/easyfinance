@@ -109,6 +109,7 @@ export default function Clients() {
                 <th style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Client</th>
                 <th style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Loan Details</th>
                 <th style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Bank / CIBIL</th>
+                <th style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>EMI Details</th>
                 <th style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Stage</th>
                 <th style={{ padding: '12px 16px', fontSize: 12, fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Actions</th>
               </tr>
@@ -116,14 +117,14 @@ export default function Clients() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
+                  <td colSpan="6" style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
                     <div className="spinner" style={{ margin: '0 auto 12px' }} />
                     Loading clients...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ padding: 60, textAlign: 'center' }}>
+                  <td colSpan="6" style={{ padding: 60, textAlign: 'center' }}>
                     <div style={{ fontSize: 40, marginBottom: 12 }}>👤</div>
                     <div style={{ fontWeight: 600, color: '#0f172a' }}>No clients found</div>
                     <div style={{ fontSize: 13, color: '#64748b' }}>Try adjusting your filters or search query.</div>
@@ -151,8 +152,8 @@ export default function Clients() {
                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           {client.bank_policy ? (
                             <span style={{ 
-                              padding: '2px 8px', borderRadius: 4, background: client.bank_policy.brand_color + '15', 
-                              color: client.bank_policy.brand_color, fontSize: 11, fontWeight: 700, textTransform: 'uppercase'
+                              padding: '2px 8px', borderRadius: 4, background: (client.bank_policy.brand_color || '#2563eb') + '15', 
+                              color: client.bank_policy.brand_color || '#2563eb', fontSize: 11, fontWeight: 700, textTransform: 'uppercase'
                             }}>
                               {client.bank_policy.name}
                             </span>
@@ -164,9 +165,17 @@ export default function Clients() {
                             fontSize: 12, fontWeight: 700,
                             color: client.cibil_score >= 750 ? '#16a34a' : client.cibil_score >= 650 ? '#d97706' : '#dc2626'
                           }}>
-                            {client.cibil_score || 'N/A'}
+                            {client.cibil_score ?? 'N/A'}
                           </span>
                        </div>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                        <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                            {client.emi_amount ? `₹${parseFloat(client.emi_amount).toLocaleString()}` : 'TBD'}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                            {client.tenure_months ? `${client.tenure_months} Mo` : 'Tenure TBD'}
+                        </div>
                     </td>
                     <td style={{ padding: '16px' }}>
                       <span className={`badge badge-${client.stage?.toLowerCase().replace(' ', '-')}`} style={{ 
@@ -177,14 +186,15 @@ export default function Clients() {
                     </td>
                     <td style={{ padding: '16px' }}>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="btn btn-ghost btn-xs" title="View details">👁</button>
-                        {canEdit && <button className="btn btn-ghost btn-xs" title="Edit client">✏️</button>}
-                        {canDelete && <button className="btn btn-ghost btn-xs" title="Archive" style={{ color: '#dc2626' }}>🗑</button>}
+                        <button className="btn btn-ghost btn-xs" title="View details" onClick={() => alert('View Details coming soon!')}>👁</button>
+                        {canEdit && <button className="btn btn-ghost btn-xs" title="Edit client" onClick={() => alert('Edit Profile coming soon!')}>✏️</button>}
+                        {canDelete && <button className="btn btn-ghost btn-xs" title="Archive" style={{ color: '#dc2626' }} onClick={() => alert('Archive coming soon!')}>🗑</button>}
                       </div>
                     </td>
                   </tr>
                 ))
               )}
+
             </tbody>
           </table>
         </div>

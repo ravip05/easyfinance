@@ -123,7 +123,8 @@ class FranchiseController extends Controller
         $franchise->loadCount([
             'leads as total_leads',
             'leads as converted_leads' => fn ($q) => $q->where('stage', 'Disbursed'),
-        ])->load('users:id,name,emp_code,role,status');
+            'users as members_count',
+        ])->load('users:id,name,emp_code,role,status,franchise_id');
 
         return response()->json([
             'success' => true,
@@ -315,6 +316,7 @@ class FranchiseController extends Controller
             // Aggregates (from withCount)
             'total_leads'     => $franchise->total_leads ?? null,
             'converted_leads' => $franchise->converted_leads ?? null,
+            'members_count'   => $franchise->members_count ?? null,
             'created_at'      => $franchise->created_at->toDateTimeString(),
         ];
 

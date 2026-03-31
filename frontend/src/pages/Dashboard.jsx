@@ -741,8 +741,9 @@ export default function Dashboard() {
 
   // Scope the clients list (we approximate from leads for now)
   // Real implementation would fetch /api/clients — wired in Step 6
+  // "All people in leads are our clients" - User Requirement
   const clients = useMemo(() => {
-    return leads.filter((l) => ['Sanctioned', 'Disbursed'].includes(l.stage))
+    return leads
   }, [leads])
 
   const scopeLabels = { admin: 'All Data', manager: 'My Team', staff: 'My Data', dsa: 'My Franchise' }

@@ -51,7 +51,8 @@ class ClientController extends Controller
     {
         $user = $request->user();
 
-        $query = Client::query()
+        // 1. Get all formal clients
+        $clientsQuery = Client::query()
             ->forUser($user)
             ->with([
                 'manager:id,name,emp_code,role',
@@ -60,62 +61,70 @@ class ClientController extends Controller
                 'lead:id,stage,source,priority',
             ]);
 
-        // ── Filters ───────────────────────────────────────────────────────────
-
+        // 2. Filter logic for clients
         if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
+            $clientsQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('pan_number', 'like', "%{$search}%");
+                  ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
-        if ($stage = $request->input('stage')) {
-            $query->where('stage', $stage);
+        $clients = $clientsQuery->get();
+
+        // 3. Get all leads that are NOT yet formal clients
+        $clientLeadIds = $clients->pluck('lead_id')->filter()->toArray();
+        $leadsQuery = Lead::forUser($user)
+            ->whereNotIn('id', $clientLeadIds)
+            ->with(['assignedUser:id,name,emp_code', 'franchise:id,name,code']);
+
+        if ($search = $request->input('search')) {
+            $leadsQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
         }
 
-        if ($loanType = $request->input('loan_type')) {
-            $query->where('loan_type', $loanType);
-        }
+        $leads = $leadsQuery->get();
 
-        if ($cibilMin = $request->input('cibil_min')) {
-            $query->where('cibil_score', '>=', (int) $cibilMin);
-        }
+        // 4. Merge and format
+        $combined = $clients->map(fn($c) => $this->formatClient($c))
+            ->concat($leads->map(fn($l) => [
+                'id'             => 'lead-' . $l->id,
+                'lead_id'        => $l->id,
+                'name'           => $l->name,
+                'phone'          => $l->phone,
+                'email'          => $l->email,
+                'loan_type'      => $l->loan_type,
+                'amount'         => $l->amount,
+                'amount_display' => $l->amount_formatted,
+                'stage'          => $l->stage,
+                'cibil_score'    => $l->cibil_score,
+                'bank_policy'    => null, // leads don't have bank policies until conversion
+                'emi_amount'     => null,
+                'managed_by'     => $l->assigned_to,
+                'manager'        => $l->assignedUser,
+                'franchise'      => $l->franchise,
+                'is_formal'      => false,
+                'initials'       => $l->initials,
+                'created_at'     => $l->created_at->toDateTimeString(),
+            ]));
 
-        if ($cibilMax = $request->input('cibil_max')) {
-            $query->where('cibil_score', '<=', (int) $cibilMax);
-        }
+        // 5. Sort unified list
+        $combined = $combined->sortByDesc('created_at')->values();
 
-        if ($bankId = $request->input('bank_policy_id')) {
-            $query->where('bank_policy_id', $bankId);
-        }
-
-        if ($managedBy = $request->input('managed_by')) {
-            if (in_array($user->role, ['admin', 'manager'])) {
-                $query->where('managed_by', $managedBy);
-            }
-        }
-
-        // ── Sorting ───────────────────────────────────────────────────────────
-        $allowedSorts = ['created_at', 'name', 'amount', 'cibil_score', 'stage', 'disbursed_at'];
-        $sort         = in_array($request->input('sort'), $allowedSorts)
-                        ? $request->input('sort')
-                        : 'created_at';
-        $direction    = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
-        $query->orderBy($sort, $direction);
-
-        // ── Pagination ────────────────────────────────────────────────────────
+        // 6. Manual pagination
         $perPage = min((int) $request->input('per_page', 25), 100);
-        $results = $query->paginate($perPage);
+        $page = (int) $request->input('page', 1);
+        $pagedData = $combined->slice(($page - 1) * $perPage, $perPage)->values();
 
         return response()->json([
             'success' => true,
-            'data'    => $results->getCollection()->map(fn ($c) => $this->formatClient($c)),
+            'data'    => $pagedData,
             'meta'    => [
-                'current_page' => $results->currentPage(),
-                'last_page'    => $results->lastPage(),
-                'per_page'     => $results->perPage(),
-                'total'        => $results->total(),
+                'current_page' => $page,
+                'last_page'    => ceil($combined->count() / $perPage),
+                'per_page'     => $perPage,
+                'total'        => $combined->count(),
             ],
         ]);
     }
@@ -269,7 +278,7 @@ class ClientController extends Controller
             'data'           => [
                 'id'           => $client->id,
                 'stage'        => $client->stage,
-                'disbursed_at' => $client->disbursed_at?->toDateString(),
+                'disbursed_at' => $client->disbursed_at ? (string)$client->disbursed_at : null,
             ],
         ]);
     }
@@ -310,7 +319,10 @@ class ClientController extends Controller
             'notes'                 => ['nullable', 'string', 'max:2000'],
         ]);
 
+
         $client = DB::transaction(function () use ($lead, $extra, $request) {
+
+
 
             // Create client from lead data + any extra fields supplied
             $client = Client::create([
@@ -333,6 +345,15 @@ class ClientController extends Controller
 
             // Move the lead out of the active pipeline
             $lead->update(['stage' => 'Disbursed']);
+
+            // Create an audit log entry for this critical transition
+            \App\Models\AuditLog::create([
+                'user_id'    => $request->user()->id,
+                'action'     => "Converted lead #{$lead->id} ({$lead->name}) to formal client",
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'created_at' => now(),
+            ]);
 
             return $client;
         });
@@ -415,7 +436,7 @@ class ClientController extends Controller
      * Formats a Client model into the standard API response shape.
      * The shape mirrors the prototype's CLIENTS array entries.
      */
-    private function formatClient(Client $client): array
+    private function formatClient($client): array
     {
         return [
             'id'                    => $client->id,
@@ -430,7 +451,7 @@ class ClientController extends Controller
             'monthly_income'        => $client->monthly_income,
             'emi_amount'            => $client->emi_amount,
             'tenure_months'         => $client->tenure_months,
-            'disbursed_at'          => $client->disbursed_at?->toDateString(),
+            'disbursed_at'          => $client->disbursed_at ? (string)$client->disbursed_at : null,
             'cibil_score'           => $client->cibil_score,
             'cibil_category'        => $client->cibil_category,     // 'excellent'|'good'|'poor'
             'stage'                 => $client->stage,
@@ -456,8 +477,9 @@ class ClientController extends Controller
                 'name' => $client->franchise->name,
                 'code' => $client->franchise->code,
             ] : null,
-            'created_at'            => $client->created_at->toDateTimeString(),
-            'updated_at'            => $client->updated_at->toDateTimeString(),
+            'is_formal'             => true,
+            'created_at'            => (string)$client->created_at,
+            'updated_at'            => (string)$client->updated_at,
         ];
     }
 }

@@ -56,6 +56,7 @@ export default function ConvertLeadModal({ lead, isOpen, onClose, onSuccess }) {
       if (form.emi_amount)      payload.emi_amount       = parseFloat(form.emi_amount)
 
       await apiClient.post(`/clients/from-lead/${lead.id}`, payload)
+
       onSuccess?.()
       onClose?.()
     } catch (err) {
@@ -72,44 +73,48 @@ export default function ConvertLeadModal({ lead, isOpen, onClose, onSuccess }) {
   // ── Styles (inline — no extra CSS file needed) ────────────────────────────
   const S = {
     overlay: {
-      position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)',
+      position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       zIndex: 9999, padding: 16, fontFamily: 'Inter, sans-serif',
+      animation: 'fadeIn 0.2s ease-out',
     },
     card: {
-      background: 'var(--bg, #fff)', borderRadius: 16, width: '100%',
-      maxWidth: 440, boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
-      overflow: 'hidden',
+      background: 'var(--bg, #fff)', borderRadius: 20, width: '100%',
+      maxWidth: 440, boxShadow: '0 24px 48px -12px rgba(0,0,0,0.25)',
+      overflow: 'hidden', transform: 'translateY(0)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     },
     header: {
-      padding: '24px 24px 16px', borderBottom: '1px solid var(--border, #e2e8f0)',
+      padding: '24px 24px 20px', borderBottom: '1px solid var(--border, #e2e8f0)',
+      background: 'linear-gradient(to right, #ffffff, #f8fafc)',
     },
-    title: { margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text, #0f172a)' },
-    sub:   { margin: '4px 0 0', fontSize: 13, color: 'var(--text2, #64748b)' },
-    body:  { padding: 24, display: 'flex', flexDirection: 'column', gap: 16 },
-    label: { display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 500,
-             color: 'var(--text2, #64748b)', letterSpacing: '0.02em', textTransform: 'uppercase' },
+    title: { margin: 0, fontSize: 19, fontWeight: 700, color: 'var(--text, #0f172a)', letterSpacing: '-0.01em' },
+    sub:   { margin: '6px 0 0', fontSize: 13, color: 'var(--text2, #64748b)', lineHeight: 1.4 },
+    body:  { padding: 24, display: 'flex', flexDirection: 'column', gap: 20, background: '#fcfdfe' },
+    label: { display: 'block', marginBottom: 6, fontSize: 11, fontWeight: 700,
+             color: 'var(--text2, #64748b)', letterSpacing: '0.04em', textTransform: 'uppercase' },
     input: {
-      width: '100%', minHeight: 48, padding: '0 12px', boxSizing: 'border-box',
+      width: '100%', minHeight: 48, padding: '0 16px', boxSizing: 'border-box',
       fontSize: 14, fontFamily: 'Inter, sans-serif', border: '1.5px solid var(--border, #e2e8f0)',
-      borderRadius: 8, background: 'var(--bg, #fff)', color: 'var(--text, #0f172a)',
-      outline: 'none', transition: 'border-color 0.15s',
+      borderRadius: 12, background: 'var(--bg, #fff)', color: 'var(--text, #0f172a)',
+      outline: 'none', transition: 'all 0.2s ease', 
+      boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
     },
     footer: {
-      padding: '16px 24px', borderTop: '1px solid var(--border, #e2e8f0)',
-      display: 'flex', gap: 8, justifyContent: 'flex-end',
+      padding: '20px 24px', borderTop: '1px solid var(--border, #e2e8f0)',
+      display: 'flex', gap: 12, justifyContent: 'flex-end', background: '#fff',
     },
     btnCancel: {
-      minHeight: 48, padding: '0 20px', fontFamily: 'Inter, sans-serif',
-      fontSize: 14, fontWeight: 500, border: '1.5px solid var(--border, #e2e8f0)',
-      borderRadius: 8, background: 'transparent', cursor: 'pointer',
-      color: 'var(--text2, #64748b)',
+      minHeight: 44, padding: '0 20px', fontFamily: 'Inter, sans-serif',
+      fontSize: 14, fontWeight: 600, border: '1.5px solid var(--border, #e2e8f0)',
+      borderRadius: 10, background: 'transparent', cursor: 'pointer',
+      color: 'var(--text2, #64748b)', transition: 'all 0.2s',
     },
     btnSubmit: {
-      minHeight: 48, padding: '0 24px', fontFamily: 'Inter, sans-serif',
-      fontSize: 14, fontWeight: 600, border: 'none', borderRadius: 8,
-      background: '#2563eb', color: '#fff', cursor: 'pointer',
-      opacity: isLoading ? 0.7 : 1,
+      minHeight: 44, padding: '0 24px', fontFamily: 'Inter, sans-serif',
+      fontSize: 14, fontWeight: 600, border: 'none', borderRadius: 10,
+      background: 'linear-gradient(135deg, #2563eb, #3b82f6)', color: '#fff', 
+      cursor: 'pointer', opacity: isLoading ? 0.7 : 1, transition: 'all 0.2s',
+      boxShadow: '0 4px 6px -1px rgba(37,99,235,0.2), 0 2px 4px -1px rgba(37,99,235,0.1)',
     },
     error: {
       padding: '10px 14px', borderRadius: 8, background: '#fef2f2',

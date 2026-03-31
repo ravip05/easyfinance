@@ -20,7 +20,7 @@
  * Props:
  *   onAddLead  fn  — called when the user clicks "+ Add Lead" or the empty-state CTA
  */
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLeads } from '../context/LeadsContext'
 import ConvertLeadModal from './ConvertLeadModal'
@@ -54,7 +54,7 @@ const ROLE_TITLE = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 // Stages that are convertible to a client
-const CONVERTIBLE_STAGES = ['Docs Received', 'Login', 'Processing', 'Sanctioned']
+const CONVERTIBLE_STAGES = ['CIBIL', 'Docs Received', 'Login', 'Processing', 'Sanctioned', 'Disbursed']
 
 export default function LeadsList({ onAddLead, onEditLead, filters: externalFilters }) {
   const { user }                        = useAuth()
@@ -142,6 +142,16 @@ export default function LeadsList({ onAddLead, onEditLead, filters: externalFilt
     })
   }
   const allChecked = filtered.length > 0 && filtered.every((l) => selected.has(l.id))
+  
+  // ── Event listener for modal-initiated conversion ─────────────────────────
+  useEffect(() => {
+    const handler = (e) => {
+      const lead = e.detail
+      if (lead) setConvertLead(lead)
+    }
+    window.addEventListener('open-convert-modal', handler)
+    return () => window.removeEventListener('open-convert-modal', handler)
+  }, [])
 
   // ── CSV export (mirrors exportLeadsCSV()) ──────────────────────────────────
   function handleExport() {
@@ -411,12 +421,15 @@ function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConver
           )}
           {onConvert && (
             <button
-              className="btn btn-ghost btn-xs"
+              className="btn btn-primary btn-xs"
               title="Convert to client"
-              style={{ color: '#2563eb', fontWeight: 600 }}
+              style={{ 
+                background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe', 
+                fontWeight: 700, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px' 
+              }}
               onClick={onConvert}
             >
-              🚀
+              🚀 <span style={{ fontSize: '10px' }}>Convert</span>
             </button>
           )}
           {canDelete && (

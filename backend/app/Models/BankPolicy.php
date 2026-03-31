@@ -13,10 +13,14 @@ class BankPolicy extends Model
     // ── Mass Assignment ───────────────────────────────────────────────────────
     protected $fillable = [
         'name',
+        'short_code',
         'logo_code',
         'brand_color',
         'bg_color',
         'bank_type',
+        'category',
+        'description',
+        'policy_url',
         'hl_interest_rate',
         'hl_max_amount',
         'hl_max_tenure',
