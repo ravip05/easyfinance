@@ -16,7 +16,7 @@ export default function BankPolicies() {
   const fetchPolicies = async () => {
     setLoading(true);
     try {
-      const { data } = await apiClient.get('/api/bank-policies');
+      const { data } = await apiClient.get('/bank-policies');
       if (data?.data) {
         setPolicies(data.data);
       }

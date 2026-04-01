@@ -33,6 +33,7 @@ export default function Employees() {
   const [selected, setSelected] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState(null)
+  const [impersonatingId, setImpersonatingId] = useState(null)
 
   // fetch employees
   async function fetchEmployees() {
@@ -78,13 +79,20 @@ export default function Employees() {
 
   // login as
   async function handleLoginAs(userId) {
-    if (!window.confirm("Switch to this user's account? You will need to log out to return to Admin.")) return
+    if (impersonatingId) return;
+    
+    setImpersonatingId(userId);
+    toast.info('Switching account...');
+
     try {
-      await impersonate(userId)
-      toast.success('Switched account successfully.')
-      navigate('/')
+      await impersonate(userId);
+      toast.success('Switched account successfully.');
+      navigate('/');
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to switch account.')
+      console.error('Impersonation failed:', e);
+      toast.error(e.response?.data?.message || 'Failed to switch account.');
+    } finally {
+      setImpersonatingId(null);
     }
   }
 
@@ -252,8 +260,14 @@ export default function Employees() {
                     className="btn btn-primary" 
                     style={{ width: '100%', borderRadius: 12, height: 44, fontWeight: 700 }}
                     onClick={() => handleLoginAs(selected.id)}
+                    disabled={impersonatingId === selected.id}
                   >
-                    🔑 Impersonate User
+                    {impersonatingId === selected.id ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                        <div style={{ width: 14, height: 14, border: '2px solid #fff', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                        <span>Wait...</span>
+                      </div>
+                    ) : '🔑 Impersonate User'}
                   </button>
                   <p style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 8 }}>
                     Allows you to view the system exactly as this employee does.

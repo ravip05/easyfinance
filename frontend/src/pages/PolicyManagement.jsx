@@ -29,7 +29,7 @@ export default function PolicyManagement() {
   async function fetchPolicies() {
     setLoading(true);
     try {
-      const { data } = await apiClient.get('/api/bank-policies');
+      const { data } = await apiClient.get('/bank-policies');
       setPolicies(data?.data ?? []);
     } catch { setPolicies([]); }
     setLoading(false);
@@ -62,9 +62,9 @@ export default function PolicyManagement() {
     setError('');
     try {
       if (editingId) {
-        await apiClient.put(`/api/bank-policies/${editingId}`, form);
+        await apiClient.put(`/bank-policies/${editingId}`, form);
       } else {
-        await apiClient.post('/api/bank-policies', form);
+        await apiClient.post('/bank-policies', form);
       }
       setShowForm(false);
       fetchPolicies();
@@ -77,7 +77,7 @@ export default function PolicyManagement() {
   async function handleDelete(id, name) {
     if (!window.confirm(`Delete policy for "${name}"? This cannot be undone.`)) return;
     try {
-      await apiClient.delete(`/api/bank-policies/${id}`);
+      await apiClient.delete(`/bank-policies/${id}`);
       fetchPolicies();
     } catch {
       alert('Failed to delete policy.');

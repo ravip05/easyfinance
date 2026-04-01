@@ -25,6 +25,7 @@ export default function Franchise() {
   const [activeDetailTab, setActiveDetailTab] = useState('info')
   const [detailData, setDetailData] = useState({ leads: [], clients: [] })
   const [isDetailsLoading, setIsDetailsLoading] = useState(false)
+  const [impersonatingId, setImpersonatingId] = useState(null)
 
   useEffect(() => {
     fetchFranchises()
@@ -77,13 +78,22 @@ export default function Franchise() {
   }
 
   async function handleLoginAs(userId) {
-    if (!window.confirm("Switch to this user's account? You will need to log out to return to Admin.")) return
+    // If double-clicked or already in progress, ignore
+    if (impersonatingId) return;
+
+    // Use a toast for confirmation instead of window.confirm which can be blocked
+    setImpersonatingId(userId);
+    toast.info('Switching account...');
+
     try {
-      await impersonate(userId)
-      toast.success('Switched account successfully.')
-      navigate('/')
+      await impersonate(userId);
+      toast.success('Switched account successfully.');
+      navigate('/');
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to switch account.')
+      console.error('Impersonation failed:', e);
+      toast.error(e.response?.data?.message || 'Failed to switch account.');
+    } finally {
+      setImpersonatingId(null);
     }
   }
 
@@ -285,10 +295,15 @@ export default function Franchise() {
                                 e.stopPropagation(); 
                                 handleLoginAs(u.id); 
                               }}
-                              disabled={u.status === 'Inactive'}
-                              style={{ borderRadius: 8, fontSize: 10, padding: '7px 12px', flexShrink: 0, marginLeft: 12 }}
+                              disabled={u.status === 'Inactive' || impersonatingId === u.id}
+                              style={{ borderRadius: 8, fontSize: 10, padding: '7px 12px', flexShrink: 0, marginLeft: 12, minWidth: 100 }}
                             >
-                              🔑 Impersonate
+                              {impersonatingId === u.id ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <div style={{ width: 10, height: 10, border: '2px solid #fff', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                                  <span>Wait...</span>
+                                </div>
+                              ) : '🔑 Impersonate'}
                             </button>
                           </div>
                         ))}
