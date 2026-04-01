@@ -212,6 +212,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('courses/{id}', [LmsController::class, 'deleteCourse'])->middleware('role:admin');
         Route::post('courses/{id}/enroll', [LmsController::class, 'enroll']);
         Route::post('courses/{id}/progress', [LmsController::class, 'updateProgress']);
+        Route::post('courses/{courseId}/lessons', [LmsController::class, 'storeLesson'])->middleware('role:admin');
+        Route::delete('courses/{courseId}/lessons/{lessonId}', [LmsController::class, 'deleteLesson'])->middleware('role:admin');
         
         Route::get('materials', [LmsController::class, 'materials']);
         Route::post('materials', [LmsController::class, 'uploadMaterial'])->middleware('role:admin');
@@ -219,6 +221,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('materials/{id}', [LmsController::class, 'deleteMaterial'])->middleware('role:admin');
         
         Route::get('quizzes', [LmsController::class, 'quizzes']);
+        Route::post('quizzes', [LmsController::class, 'storeQuiz'])->middleware('role:admin');
         Route::post('quizzes/{id}/submit', [LmsController::class, 'submitQuiz']);
         
         Route::get('leaderboard', [LmsController::class, 'leaderboard']);

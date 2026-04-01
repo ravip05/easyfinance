@@ -2,8 +2,10 @@
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\LmsCourse;
+use App\Models\LmsLesson;
 use App\Models\LmsMaterial;
 use App\Models\Quiz;
+use App\Models\QuizQuestion;
 use App\Models\QuizAttempt;
 use App\Models\CourseEnrollment;
 use App\Models\Certificate;
@@ -16,7 +18,7 @@ class LmsController extends Controller {
         if ($user->role !== 'admin') $q->where('is_active', true);
         return response()->json($q->orderBy('sort_order')->get()->map(function($c) use($user) {
             $enrollment = CourseEnrollment::where('user_id',$user->id)->where('course_id',$c->id)->first();
-            return array_merge((array)$c,['progress'=>$enrollment?->progress ?? 0,'enrolled'=>(bool)$enrollment]);
+            return array_merge($c->toArray(),['progress'=>$enrollment?->progress ?? 0,'enrolled'=>(bool)$enrollment]);
         }));
     }
     public function storeCourse(Request $request) {
@@ -41,8 +43,12 @@ class LmsController extends Controller {
         return response()->json($enrollment,201);
     }
     public function updateProgress(Request $request, $id) {
-        $enrollment = CourseEnrollment::where('user_id',$request->user()->id)->where('course_id',$id)->firstOrFail();
-        $enrollment->update(['progress'=>$request->progress,'last_lesson_id'=>$request->last_lesson_id,'completed_at'=>$request->progress>=100?now():null]);
+        $enrollment = CourseEnrollment::where('user_id',$request->user()->id)->where('course_id',$id)->first();
+        if (!$enrollment) {
+            $enrollment = CourseEnrollment::create(['user_id'=>$request->user()->id,'course_id'=>$id,'progress'=>$request->progress,'last_lesson_id'=>$request->last_lesson_id]);
+        } else {
+            $enrollment->update(['progress'=>$request->progress,'last_lesson_id'=>$request->last_lesson_id,'completed_at'=>$request->progress>=100?now():null]);
+        }
         if ($request->progress >= 100) {
             Certificate::firstOrCreate(['user_id'=>$request->user()->id,'course_id'=>$id],['score'=>$request->score ?? 100,'issued_at'=>now()]);
         }
@@ -56,25 +62,71 @@ class LmsController extends Controller {
     public function uploadMaterial(Request $request) {
         $request->validate(['title'=>'required','file'=>'required|file|max:51200']);
         $path = $request->file('file')->store('lms-materials','public');
-        $mat  = LmsMaterial::create(['title'=>$request->title,'category'=>$request->category,'type'=>strtoupper($request->file('file')->extension()),'file_path'=>$path,'file_size'=>round($request->file('file')->getSize()/1024,1).' KB','uploaded_by'=>$request->user()->id]);
+        $size = $request->file('file')->getSize();
+        $sizeStr = $size > 1048576 ? round($size/1048576,1).' MB' : round($size/1024,1).' KB';
+        $mat  = LmsMaterial::create(['title'=>$request->title,'category'=>$request->category ?? 'General','type'=>strtoupper($request->file('file')->extension()),'file_path'=>$path,'file_size'=>$sizeStr,'uploaded_by'=>$request->user()->id]);
         return response()->json($mat,201);
     }
     public function updateMaterial(Request $request, $id) {
         $mat = LmsMaterial::findOrFail($id);
-        $mat->update($request->all());
+        $mat->update($request->only(['title','category']));
         return response()->json($mat);
     }
     public function deleteMaterial($id) {
         LmsMaterial::findOrFail($id)->delete();
         return response()->json(['message'=>'Material deleted']);
     }
+    // Lessons management (admin)
+    public function storeLesson(Request $request, $courseId) {
+        $request->validate(['title'=>'required','type'=>'required']);
+        $course = LmsCourse::findOrFail($courseId);
+        $maxOrder = LmsLesson::where('course_id',$courseId)->max('sort_order') ?? 0;
+        $lesson = LmsLesson::create(array_merge($request->all(),['course_id'=>$courseId,'sort_order'=>$maxOrder+1]));
+        $course->update(['lesson_count' => $course->lessons()->count()]);
+        return response()->json($lesson,201);
+    }
+    public function deleteLesson($courseId, $lessonId) {
+        $lesson = LmsLesson::where('course_id',$courseId)->findOrFail($lessonId);
+        $lesson->delete();
+        $course = LmsCourse::findOrFail($courseId);
+        $course->update(['lesson_count' => $course->lessons()->count()]);
+        return response()->json(['message'=>'Lesson deleted']);
+    }
+    // Quizzes — include questions so the frontend can render them
     public function quizzes(Request $request) {
-        $quizzes = Quiz::where('is_active',true)->withCount('questions')->get()
+        $quizzes = Quiz::where('is_active',true)->with('questions:id,quiz_id,question,options')->withCount('questions')->get()
             ->map(function($q) use($request) {
                 $best = QuizAttempt::where('user_id',$request->user()->id)->where('quiz_id',$q->id)->max('score');
-                return array_merge((array)$q,['best_score'=>$best,'attempted'=>(bool)$best]);
+                $arr = $q->toArray();
+                $arr['best_score'] = $best;
+                $arr['attempted'] = (bool)$best;
+                return $arr;
             });
         return response()->json($quizzes);
+    }
+    // Store quiz (admin)
+    public function storeQuiz(Request $request) {
+        $request->validate(['title'=>'required','passing_score'=>'required|integer']);
+        $quiz = Quiz::create([
+            'title' => $request->title,
+            'course_id' => $request->course_id,
+            'passing_score' => $request->passing_score,
+            'time_limit_minutes' => $request->time_limit_minutes ?? 10,
+            'is_active' => true,
+        ]);
+        // Add questions if provided
+        if ($request->questions && is_array($request->questions)) {
+            foreach ($request->questions as $qData) {
+                QuizQuestion::create([
+                    'quiz_id' => $quiz->id,
+                    'question' => $qData['question'],
+                    'options' => $qData['options'],
+                    'correct_answer' => $qData['correct_answer'],
+                    'explanation' => $qData['explanation'] ?? null,
+                ]);
+            }
+        }
+        return response()->json($quiz->load('questions'), 201);
     }
     public function submitQuiz(Request $request, $id) {
         $quiz    = Quiz::with('questions')->findOrFail($id);
@@ -93,7 +145,7 @@ class LmsController extends Controller {
     }
     public function leaderboard(Request $request) {
         $lb = QuizAttempt::select('user_id',\Illuminate\Support\Facades\DB::raw('count(*) as quizzes_taken'),\Illuminate\Support\Facades\DB::raw('avg(score) as avg_score'),\Illuminate\Support\Facades\DB::raw('max(score) as best_score'),\Illuminate\Support\Facades\DB::raw('sum(case when passed=1 then 1 else 0 end)*10 as points'))
-            ->with('user:id,name,initials')
+            ->with('user:id,name')
             ->groupBy('user_id')->orderByDesc('points')->limit(10)->get();
         return response()->json($lb);
     }

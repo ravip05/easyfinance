@@ -358,26 +358,41 @@ function LeadConfigSettings({ stages, onSave, saving }) {
 function LMSManagement() {
   const [courses, setCourses] = useState([])
   const [materials, setMaterials] = useState([])
+  const [quizzes, setQuizzes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showCourseModal, setShowCourseModal] = useState(false)
+  const [showMaterialModal, setShowMaterialModal] = useState(false)
+  const [showQuizModal, setShowQuizModal] = useState(false)
+  const [editingCourse, setEditingCourse] = useState(null)
   const toast = useToast()
 
-  useEffect(() => {
-    fetchData()
-  }, [])
+  useEffect(() => { fetchData() }, [])
 
   async function fetchData() {
     setIsLoading(true)
     try {
-      const [cRes, mRes] = await Promise.all([
+      const [cRes, mRes, qRes] = await Promise.all([
         apiClient.get('/lms/courses'),
-        apiClient.get('/lms/materials')
+        apiClient.get('/lms/materials'),
+        apiClient.get('/lms/quizzes'),
       ])
       setCourses(cRes.data || [])
       setMaterials(mRes.data || [])
+      setQuizzes(qRes.data || [])
     } catch (e) {
       toast.error('Failed to load LMS data')
     }
     setIsLoading(false)
+  }
+
+  async function handleDeleteCourse(id) {
+    if (!window.confirm('Delete this course?')) return
+    try { await apiClient.delete(`/lms/courses/${id}`); toast.success('Course deleted'); fetchData() } catch { toast.error('Delete failed') }
+  }
+
+  async function handleDeleteMaterial(id) {
+    if (!window.confirm('Delete this material?')) return
+    try { await apiClient.delete(`/lms/materials/${id}`); toast.success('Material deleted'); fetchData() } catch { toast.error('Delete failed') }
   }
 
   return (
@@ -385,12 +400,14 @@ function LMSManagement() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h3 style={{ margin: 0 }}>🎓 LMS & Training Management</h3>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button style={btnStyle}>+ Upload Material</button>
-          <button style={btnStyle}>+ Create Course</button>
+          <button style={btnStyle} onClick={() => setShowMaterialModal(true)}>+ Upload Material</button>
+          <button style={btnStyle} onClick={() => { setEditingCourse(null); setShowCourseModal(true) }}>+ Create Course</button>
+          <button style={{ ...btnStyle, background: '#7c3aed', borderColor: '#7c3aed' }} onClick={() => setShowQuizModal(true)}>+ Create Quiz</button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        {/* Courses List */}
         <div style={{ background: '#f8fafc', padding: 20, borderRadius: 12 }}>
           <div style={{ fontWeight: 700, marginBottom: 16 }}>Training Courses ({courses.length})</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -398,13 +415,18 @@ function LMSManagement() {
               <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: 'white', borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{c.title}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>{c.category} · {c.level}</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{c.category} · {c.level} · {c.lesson_count || 0} lessons</div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => { setEditingCourse(c); setShowCourseModal(true) }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: '#2563eb', fontWeight: 700 }}>Edit</button>
+                  <button onClick={() => handleDeleteCourse(c.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: '#dc2626', fontWeight: 700 }}>Delete</button>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Materials List */}
         <div style={{ background: '#f8fafc', padding: 20, borderRadius: 12 }}>
            <div style={{ fontWeight: 700, marginBottom: 16 }}>Study Materials ({materials.length})</div>
            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -412,11 +434,310 @@ function LMSManagement() {
               <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: 'white', borderRadius: 10, border: '1px solid #e2e8f0' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{m.title}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>{m.type} · {m.file_size}</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{m.type} · {m.file_size} · {m.uploader?.name || ''}</div>
                 </div>
+                <button onClick={() => handleDeleteMaterial(m.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: '#dc2626', fontWeight: 700 }}>Delete</button>
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Quizzes List */}
+      <div style={{ background: '#f8fafc', padding: 20, borderRadius: 12 }}>
+        <div style={{ fontWeight: 700, marginBottom: 16 }}>Quizzes ({quizzes.length})</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {quizzes.map(q => (
+            <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: 'white', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{q.title}</div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>{q.questions_count || 0} questions · Pass: {q.passing_score}% · {q.time_limit_minutes}min</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Course Modal */}
+      {showCourseModal && <CourseFormModal course={editingCourse} onClose={() => setShowCourseModal(false)} onSuccess={() => { setShowCourseModal(false); fetchData() }} />}
+      {/* Material Modal */}
+      {showMaterialModal && <MaterialUploadModal onClose={() => setShowMaterialModal(false)} onSuccess={() => { setShowMaterialModal(false); fetchData() }} />}
+      {/* Quiz Modal */}
+      {showQuizModal && <QuizBuilderModal courses={courses} onClose={() => setShowQuizModal(false)} onSuccess={() => { setShowQuizModal(false); fetchData() }} />}
+    </div>
+  )
+}
+
+// ── Course Create/Edit Modal ──
+function CourseFormModal({ course, onClose, onSuccess }) {
+  const toast = useToast()
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    title: course?.title || '',
+    category: course?.category || 'loans',
+    level: course?.level || 'beginner',
+    duration_minutes: course?.duration_minutes || 60,
+    thumbnail: course?.thumbnail || '📘',
+    is_active: course?.is_active !== false,
+  })
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!form.title.trim()) return toast.error('Title is required')
+    setSaving(true)
+    try {
+      if (course?.id) {
+        await apiClient.patch(`/lms/courses/${course.id}`, form)
+        toast.success('Course updated')
+      } else {
+        await apiClient.post('/lms/courses', form)
+        toast.success('Course created')
+      }
+      onSuccess()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save course')
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="modal-overlay open" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">{course ? '✏️ Edit Course' : '📘 Create Course'}</div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <div className="form-label">Course Title <span className="req">*</span></div>
+              <input className="form-input" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Home Loan Basics" />
+            </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <div className="form-label">Category</div>
+                <select className="form-select" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                  {['loans','insurance','sales','compliance','franchise'].map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <div className="form-label">Level</div>
+                <select className="form-select" value={form.level} onChange={e => setForm({ ...form, level: e.target.value })}>
+                  {['beginner','intermediate','advanced'].map(l => <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <div className="form-label">Duration (minutes)</div>
+                <input className="form-input" type="number" value={form.duration_minutes} onChange={e => setForm({ ...form, duration_minutes: parseInt(e.target.value) || 0 })} />
+              </div>
+              <div className="form-group">
+                <div className="form-label">Thumbnail Emoji</div>
+                <input className="form-input" value={form.thumbnail} onChange={e => setForm({ ...form, thumbnail: e.target.value })} placeholder="📘" />
+              </div>
+            </div>
+            <div className="modal-footer" style={{ padding: 0, paddingTop: 16, border: 'none' }}>
+              <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : (course ? 'Update Course' : 'Create Course')}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Material Upload Modal (Real file upload) ──
+function MaterialUploadModal({ onClose, onSuccess }) {
+  const toast = useToast()
+  const [saving, setSaving] = useState(false)
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState('Loans')
+  const [file, setFile] = useState(null)
+  const fileRef = React.useRef(null)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!title.trim()) return toast.error('Title is required')
+    if (!file) return toast.error('Please select a file')
+    setSaving(true)
+    try {
+      const formData = new FormData()
+      formData.append('title', title)
+      formData.append('category', category)
+      formData.append('file', file)
+      await apiClient.post('/lms/materials', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      toast.success('Material uploaded successfully')
+      onSuccess()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Upload failed')
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="modal-overlay open" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">📄 Upload Study Material</div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <div className="form-label">Material Title <span className="req">*</span></div>
+              <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Home Loan KYC Checklist" />
+            </div>
+            <div className="form-group">
+              <div className="form-label">Category</div>
+              <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+                {['Loans','Insurance','Sales','Compliance','HR Policies','General'].map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <div className="form-label">File <span className="req">*</span></div>
+              <div
+                onClick={() => fileRef.current?.click()}
+                style={{
+                  border: '2px dashed #e2e8f0', borderRadius: 12, padding: '32px 20px', textAlign: 'center', cursor: 'pointer',
+                  background: file ? '#ecfdf5' : '#f8fafc', transition: 'all 0.15s'
+                }}
+              >
+                <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.webm" style={{ display: 'none' }}
+                  onChange={e => setFile(e.target.files[0])} />
+                {file ? (
+                  <div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>📎</div>
+                    <div style={{ fontWeight: 700, color: '#059669' }}>{file.name}</div>
+                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 28, marginBottom: 8 }}>📁</div>
+                    <div style={{ fontWeight: 600, color: '#64748b' }}>Click to select a file</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>PDF, DOC, XLS, PPT, MP4 (max 50MB)</div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer" style={{ padding: 0, paddingTop: 16, border: 'none' }}>
+              <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Uploading...' : '⬆ Upload Material'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Quiz Builder Modal ──
+function QuizBuilderModal({ courses, onClose, onSuccess }) {
+  const toast = useToast()
+  const [saving, setSaving] = useState(false)
+  const [title, setTitle] = useState('')
+  const [courseId, setCourseId] = useState('')
+  const [passingScore, setPassingScore] = useState(70)
+  const [timeLimit, setTimeLimit] = useState(10)
+  const [questions, setQuestions] = useState([{ question: '', options: { A: '', B: '', C: '', D: '' }, correct_answer: 'A' }])
+
+  function addQuestion() {
+    setQuestions([...questions, { question: '', options: { A: '', B: '', C: '', D: '' }, correct_answer: 'A' }])
+  }
+
+  function updateQuestion(idx, field, value) {
+    const updated = [...questions]
+    if (field.startsWith('option_')) {
+      updated[idx].options[field.replace('option_', '')] = value
+    } else {
+      updated[idx][field] = value
+    }
+    setQuestions(updated)
+  }
+
+  function removeQuestion(idx) {
+    if (questions.length <= 1) return toast.error('At least one question is required')
+    setQuestions(questions.filter((_, i) => i !== idx))
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!title.trim()) return toast.error('Quiz title is required')
+    if (questions.some(q => !q.question.trim())) return toast.error('All questions must have text')
+    setSaving(true)
+    try {
+      await apiClient.post('/lms/quizzes', {
+        title, course_id: courseId || null, passing_score: passingScore,
+        time_limit_minutes: timeLimit, questions,
+      })
+      toast.success('Quiz created successfully')
+      onSuccess()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create quiz')
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="modal-overlay open" onClick={onClose}>
+      <div className="modal" style={{ maxWidth: 660 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">🧠 Create Quiz</div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <div className="form-label">Quiz Title <span className="req">*</span></div>
+              <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Home Loan KYC Quiz" />
+            </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <div className="form-label">Link to Course (optional)</div>
+                <select className="form-select" value={courseId} onChange={e => setCourseId(e.target.value)}>
+                  <option value="">None (Standalone)</option>
+                  {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <div className="form-label">Passing Score (%)</div>
+                <input className="form-input" type="number" min="1" max="100" value={passingScore} onChange={e => setPassingScore(parseInt(e.target.value) || 70)} />
+              </div>
+            </div>
+            <div className="form-group">
+              <div className="form-label">Time Limit (minutes)</div>
+              <input className="form-input" type="number" min="1" max="120" value={timeLimit} onChange={e => setTimeLimit(parseInt(e.target.value) || 10)} />
+            </div>
+
+            <hr style={{ border: 'none', borderTop: '1px dashed #cbd5e1', margin: '20px 0' }} />
+            <div style={{ fontWeight: 700, marginBottom: 12 }}>Questions ({questions.length})</div>
+
+            {questions.map((q, idx) => (
+              <div key={idx} style={{ background: '#f8fafc', borderRadius: 12, padding: 16, marginBottom: 14, border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ fontWeight: 700, fontSize: 13 }}>Q{idx + 1}</span>
+                  <button type="button" onClick={() => removeQuestion(idx)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: '#dc2626', fontWeight: 700 }}>Remove</button>
+                </div>
+                <input className="form-input" style={{ marginBottom: 10 }} value={q.question} onChange={e => updateQuestion(idx, 'question', e.target.value)} placeholder="Enter question text" />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {['A', 'B', 'C', 'D'].map(key => (
+                    <input key={key} className="form-input" value={q.options[key]} onChange={e => updateQuestion(idx, `option_${key}`, e.target.value)} placeholder={`Option ${key}`} />
+                  ))}
+                </div>
+                <div className="form-group" style={{ marginTop: 10, marginBottom: 0 }}>
+                  <div className="form-label">Correct Answer</div>
+                  <select className="form-select" value={q.correct_answer} onChange={e => updateQuestion(idx, 'correct_answer', e.target.value)}>
+                    {['A', 'B', 'C', 'D'].map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </div>
+              </div>
+            ))}
+
+            <button type="button" className="btn btn-secondary" style={{ width: '100%', marginBottom: 16 }} onClick={addQuestion}>+ Add Question</button>
+
+            <div className="modal-footer" style={{ padding: 0, paddingTop: 16, border: 'none' }}>
+              <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Creating...' : '✓ Create Quiz'}</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
