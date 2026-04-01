@@ -7,12 +7,16 @@ import { useEffect, useRef, useState } from 'react'
 import { useToast } from '../context/ToastContext'
 import { hrApi } from '../api/hr'
 
-const HOLIDAY_TYPES = ['Public Holiday', 'Company Holiday', 'Regional Holiday', 'Other']
+const HOLIDAY_TYPES = [
+  { label: 'Public Holiday', value: 'national' },
+  { label: 'Company Holiday', value: 'company' },
+  { label: 'Regional Holiday', value: 'regional' }
+]
 
 const EMPTY_FORM = () => ({
   title: '',
   date: new Date().toISOString().split('T')[0],
-  type: 'Public Holiday',
+  type: 'national',
   is_optional: false,
 })
 
@@ -53,7 +57,13 @@ export default function HolidayModal({ isOpen, onClose, onSuccess }) {
 
     setIsLoading(true)
     try {
-      await hrApi.createHoliday(form)
+      // Ensure specific fields are clean
+      const payload = { 
+        ...form,
+        is_optional: !!form.is_optional
+      }
+      
+      await hrApi.createHoliday(payload)
       toast.success('Holiday added successfully')
       onSuccess?.()
       onClose()
@@ -103,7 +113,7 @@ export default function HolidayModal({ isOpen, onClose, onSuccess }) {
           <div className="form-group">
             <div className="form-label">Type</div>
             <select className="form-select" name="type" value={form.type} onChange={handleChange}>
-              {HOLIDAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              {HOLIDAY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
 

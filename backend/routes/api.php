@@ -170,6 +170,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('push-subscriptions', [HRController::class, 'registerPushDevice'])->name('push.register');
     Route::delete('push-subscriptions', [HRController::class, 'unregisterPushDevice'])->name('push.unregister');
 
+    // ── Leave Management ─────────────────────────────────────────────────────
+    Route::get('leaves', [HRController::class, 'leaves'])->name('leaves.index');
+    Route::post('leaves', [HRController::class, 'applyLeave'])->name('leaves.store');
+    Route::patch('leaves/{leave}', [HRController::class, 'updateLeave'])->name('leaves.update');
+    Route::get('leaves/on-leave-today', [HRController::class, 'onLeaveToday'])->name('leaves.today');
+
+    // ── Attendance (listing) ─────────────────────────────────────────────────
+    Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('attendance/summary', [AttendanceController::class, 'summary'])->name('attendance.summary');
+
     // ── Payroll (admin, manager only) ────────────────────────────────────────
     Route::middleware('role:admin,manager')->group(function () {
         Route::get('payroll/summary',  [PayrollController::class, 'summary'])->name('payroll.summary');

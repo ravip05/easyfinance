@@ -1,7 +1,7 @@
 /**
  * api/hr.js
  * 
- * HR module APIs: Holidays, Policies, and Push Notifications.
+ * HR module APIs: Holidays, Policies, Leave Management, Attendance, Push.
  */
 import apiClient from './client'
 
@@ -21,7 +21,16 @@ export const hrApi = {
   checkIn: (data) => apiClient.post('/attendance/check-in', data),
   checkOut: (data) => apiClient.post('/attendance/check-out', data),
 
+  // Leave Management
+  listLeaves: (params = {}) => apiClient.get('/leaves', { params }),
+  applyLeave: (data) => apiClient.post('/leaves', data),
+  updateLeave: (id, data) => apiClient.patch(`/leaves/${id}`, data),
+  onLeaveToday: () => apiClient.get('/leaves/on-leave-today'),
+
   // Payroll
   getPayrollSummary: () => apiClient.get('/payroll/summary'),
   processPayroll: (data) => apiClient.post('/payroll/process', data),
+
+  // Staff self-view
+  getStaffPayouts: () => apiClient.get('/staff/payouts'),
 }

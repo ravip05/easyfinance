@@ -363,6 +363,7 @@ function LMSManagement() {
   const [showCourseModal, setShowCourseModal] = useState(false)
   const [showMaterialModal, setShowMaterialModal] = useState(false)
   const [showQuizModal, setShowQuizModal] = useState(false)
+  const [showLessonModal, setShowLessonModal] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
   const toast = useToast()
 
@@ -417,7 +418,8 @@ function LMSManagement() {
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{c.title}</div>
                   <div style={{ fontSize: 11, color: '#64748b' }}>{c.category} · {c.level} · {c.lesson_count || 0} lessons</div>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button onClick={() => { setEditingCourse(c); setShowLessonModal(true) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #2563eb', background: '#eff6ff', color: '#2563eb', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Manage Lessons</button>
                   <button onClick={() => { setEditingCourse(c); setShowCourseModal(true) }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: '#2563eb', fontWeight: 700 }}>Edit</button>
                   <button onClick={() => handleDeleteCourse(c.id)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: '#dc2626', fontWeight: 700 }}>Delete</button>
                 </div>
@@ -448,12 +450,15 @@ function LMSManagement() {
         <div style={{ fontWeight: 700, marginBottom: 16 }}>Quizzes ({quizzes.length})</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {quizzes.map(q => (
-            <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: 'white', borderRadius: 10, border: '1px solid #e2e8f0' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{q.title}</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>{q.questions_count || 0} questions · Pass: {q.passing_score}% · {q.time_limit_minutes}min</div>
+              <div key={q.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: 'white', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{q.title}</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{q.questions_count || 0} questions · Pass: {q.passing_score}% · {q.time_limit_minutes}min</div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={async () => { if(window.confirm('Delete quiz?')) { await apiClient.delete(`/lms/quizzes/${q.id}`); toast.success('Quiz deleted'); fetchData() } }} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, color: '#dc2626', fontWeight: 700 }}>Delete</button>
+                </div>
               </div>
-            </div>
           ))}
         </div>
       </div>
@@ -464,6 +469,8 @@ function LMSManagement() {
       {showMaterialModal && <MaterialUploadModal onClose={() => setShowMaterialModal(false)} onSuccess={() => { setShowMaterialModal(false); fetchData() }} />}
       {/* Quiz Modal */}
       {showQuizModal && <QuizBuilderModal courses={courses} onClose={() => setShowQuizModal(false)} onSuccess={() => { setShowQuizModal(false); fetchData() }} />}
+      {/* Lesson Modal */}
+      {showLessonModal && <LessonManagementModal course={editingCourse} onClose={() => setShowLessonModal(false)} onSuccess={() => { setShowLessonModal(false); fetchData() }} />}
     </div>
   )
 }
@@ -529,7 +536,7 @@ function CourseFormModal({ course, onClose, onSuccess }) {
             <div className="form-grid">
               <div className="form-group">
                 <div className="form-label">Duration (minutes)</div>
-                <input className="form-input" type="number" value={form.duration_minutes} onChange={e => setForm({ ...form, duration_minutes: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={form.duration_minutes} onChange={e => setForm({ ...form, duration_minutes: parseInt(e.target.value) || 0 })} onFocus={e => e.target.select()} />
               </div>
               <div className="form-group">
                 <div className="form-label">Thumbnail Emoji</div>
@@ -699,12 +706,12 @@ function QuizBuilderModal({ courses, onClose, onSuccess }) {
               </div>
               <div className="form-group">
                 <div className="form-label">Passing Score (%)</div>
-                <input className="form-input" type="number" min="1" max="100" value={passingScore} onChange={e => setPassingScore(parseInt(e.target.value) || 70)} />
+                <input className="form-input" type="number" min="1" max="100" value={passingScore} onChange={e => setPassingScore(parseInt(e.target.value) || 0)} onFocus={e => e.target.select()} />
               </div>
             </div>
             <div className="form-group">
               <div className="form-label">Time Limit (minutes)</div>
-              <input className="form-input" type="number" min="1" max="120" value={timeLimit} onChange={e => setTimeLimit(parseInt(e.target.value) || 10)} />
+              <input className="form-input" type="number" min="1" max="120" value={timeLimit} onChange={e => setTimeLimit(parseInt(e.target.value) || 0)} onFocus={e => e.target.select()} />
             </div>
 
             <hr style={{ border: 'none', borderTop: '1px dashed #cbd5e1', margin: '20px 0' }} />

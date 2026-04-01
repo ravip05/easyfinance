@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Holiday;
 use App\Models\CompanyPolicy;
 use App\Models\PushDevice;
+use App\Models\LeaveRequest;
+use App\Models\Announcement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,9 +18,8 @@ class HRController extends Controller
     | hrcontroller
     |--------------------------------------------------------------------------
     |
-    | manages holidays, company policies, and push device registration
-    | all authenticated users can view holidays and policies
-    | only admin can create/update/delete
+    | manages holidays, company policies, push device registration,
+    | and the full-proof leave management system
     |
     */
 
@@ -125,13 +126,174 @@ class HRController extends Controller
         ], 201);
     }
 
+    // ── leave management ─────────────────────────────────────────────────────
+
+    /**
+     * GET /api/leaves
+     *
+     * Lists leave requests scoped by role.
+     * Admin: all. Manager: own + team. Staff: own.
+     * ?status=Pending|Approved|Rejected
+     */
+    public function leaves(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $query = LeaveRequest::forUser($user)
+            ->with(['user:id,name,emp_code,department,role', 'approver:id,name'])
+            ->when($request->status, fn ($q, $s) => $q->where('status', $s))
+            ->orderBy('created_at', 'desc');
+
+        $leaves = $query->paginate(50);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $leaves->getCollection()->map(fn ($l) => [
+                'id'             => $l->id,
+                'user'           => $l->user ? [
+                    'id'         => $l->user->id,
+                    'name'       => $l->user->name,
+                    'emp_code'   => $l->user->emp_code,
+                    'department' => $l->user->department,
+                ] : null,
+                'type'           => $l->type,
+                'start_date'     => $l->start_date->format('Y-m-d'),
+                'end_date'       => $l->end_date->format('Y-m-d'),
+                'days'           => $l->days,
+                'reason'         => $l->reason,
+                'status'         => $l->status,
+                'rejection_note' => $l->rejection_note,
+                'approved_by'    => $l->approver?->name,
+                'actioned_at'    => $l->actioned_at?->toDateTimeString(),
+                'created_at'     => $l->created_at->toDateTimeString(),
+            ]),
+            'meta' => [
+                'total'        => $leaves->total(),
+                'current_page' => $leaves->currentPage(),
+                'last_page'    => $leaves->lastPage(),
+            ],
+        ]);
+    }
+
+    /**
+     * POST /api/leaves
+     *
+     * Apply for leave. Any authenticated user can apply.
+     */
+    public function applyLeave(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'type'       => ['required', 'string', 'in:Sick Leave,Casual Leave,Earned Leave,Maternity Leave,Paternity Leave,Unpaid Leave,Other'],
+            'start_date' => ['required', 'date', 'after_or_equal:today'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+            'reason'     => ['required', 'string', 'max:1000'],
+        ]);
+
+        $validated['user_id'] = $request->user()->id;
+
+        $leave = LeaveRequest::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Leave request submitted. You will be notified once it is reviewed.',
+            'data'    => [
+                'id'     => $leave->id,
+                'status' => $leave->status,
+                'days'   => $leave->days,
+            ],
+        ], 201);
+    }
+
+    /**
+     * PATCH /api/leaves/{leave}
+     *
+     * Approve or Reject a leave request. Admin/Manager only.
+     * Body: { "status": "Approved"|"Rejected", "rejection_note": "..." }
+     */
+    public function updateLeave(Request $request, LeaveRequest $leave): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!in_array($user->role, ['admin', 'manager'])) {
+            return response()->json(['success' => false, 'message' => 'Permission denied.'], 403);
+        }
+
+        // Managers can only action their team's leaves
+        if ($user->role === 'manager') {
+            $teamIds = $user->teamMembers()->pluck('id')->toArray();
+            if (!in_array($leave->user_id, $teamIds)) {
+                return response()->json(['success' => false, 'message' => 'You can only manage your team\'s leave requests.'], 403);
+            }
+        }
+
+        $validated = $request->validate([
+            'status'         => ['required', 'in:Approved,Rejected'],
+            'rejection_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $leave->update([
+            'status'         => $validated['status'],
+            'approved_by'    => $user->id,
+            'rejection_note' => $validated['rejection_note'] ?? null,
+            'actioned_at'    => now(),
+        ]);
+
+        // ── Auto-create announcement notification for the staff member ──
+        $statusEmoji = $validated['status'] === 'Approved' ? '✅' : '❌';
+        $note = $validated['rejection_note'] ? " Reason: {$validated['rejection_note']}" : '';
+
+        try {
+            Announcement::create([
+                'title'        => "{$statusEmoji} Leave {$validated['status']}",
+                'message'      => "{$leave->user->name}'s leave request ({$leave->type}) from {$leave->start_date->format('d M')} to {$leave->end_date->format('d M')} has been {$validated['status']} by {$user->name}.{$note}",
+                'target'       => 'staff',
+                'priority'     => 'normal',
+                'published_at' => now(),
+                'created_by'   => $user->id,
+            ]);
+        } catch (\Exception $e) {
+            // Non-critical: notification failure shouldn't block the action
+            \Log::warning('Failed to create leave announcement: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Leave request {$validated['status']}.",
+            'data'    => [
+                'id'     => $leave->id,
+                'status' => $leave->status,
+            ],
+        ]);
+    }
+
+    /**
+     * GET /api/leaves/on-leave-today
+     *
+     * Returns users who are on approved leave today.
+     */
+    public function onLeaveToday(): JsonResponse
+    {
+        $leaves = LeaveRequest::activeToday()
+            ->with('user:id,name,emp_code,department')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $leaves->map(fn ($l) => [
+                'id'         => $l->id,
+                'user_name'  => $l->user?->name,
+                'user_code'  => $l->user?->emp_code,
+                'department' => $l->user?->department,
+                'type'       => $l->type,
+                'end_date'   => $l->end_date->format('d M Y'),
+            ]),
+        ]);
+    }
+
     // ── push device registration ─────────────────────────────────────────────
 
     /**
      * POST /api/push-subscriptions
-     *
-     * registers a device token for push notifications
-     * handles android, ios, and web platforms
      */
     public function registerPushDevice(Request $request): JsonResponse
     {
@@ -144,7 +306,6 @@ class HRController extends Controller
 
         $tokenValue = $validated['token'] ?? json_encode($validated['subscription'] ?? []);
 
-        // upsert: update existing device or create new
         $device = PushDevice::updateOrCreate(
             [
                 'user_id'  => $request->user()->id,
@@ -169,8 +330,6 @@ class HRController extends Controller
 
     /**
      * DELETE /api/push-subscriptions
-     *
-     * unregisters the current device on logout
      */
     public function unregisterPushDevice(Request $request): JsonResponse
     {

@@ -108,15 +108,18 @@ class EmployeeController extends Controller
         }
 
         $validated = $request->validate([
-            'name'            => ['required', 'string', 'min:2', 'max:100'],
-            'email'           => ['required', 'email', 'unique:users,email'],
-            'phone'           => ['required', 'string', 'regex:/^[0-9]{10}$/'],
-            'role'            => ['required', Rule::in(['admin', 'manager', 'staff'])],
-            'department'      => ['nullable', 'string', 'max:100'],
-            'team_leader_id'  => ['nullable', 'integer', 'exists:users,id'],
-            'joining_date'    => ['nullable', 'date'],
-            'commission_rate' => ['nullable', 'numeric', 'min:0', 'max:1'],
-            'password'        => ['nullable', 'string', 'min:6'],
+            'name'             => ['required', 'string', 'min:2', 'max:100'],
+            'email'            => ['required', 'email', 'unique:users,email'],
+            'phone'            => ['required', 'string', 'regex:/^[0-9]{10}$/'],
+            'role'             => ['required', Rule::in(['admin', 'manager', 'staff'])],
+            'department'       => ['nullable', 'string', 'max:100'],
+            'team_leader_id'   => ['nullable', 'integer', 'exists:users,id'],
+            'joining_date'     => ['nullable', 'date'],
+            'commission_rate'  => ['nullable', 'numeric', 'min:0', 'max:1'],
+            'password'         => ['nullable', 'string', 'min:6'],
+            'experience_years' => ['nullable', 'integer', 'min:0', 'max:50'],
+            'seniority'        => ['nullable', 'string', 'in:Junior,Mid,Senior,Lead,Director'],
+            'reference'        => ['nullable', 'string', 'max:255'],
         ]);
 
         // Auto-generate sequential emp_code (e.g. EF-001, EF-002 ...)
@@ -127,6 +130,14 @@ class EmployeeController extends Controller
                              ->max() + 1 ?: 1;
         
         $validated['emp_code'] = 'EF-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+
+        // Auto-assign Virtual ID (e.g. EF-2026-001)
+        $year = date('Y');
+        $lastVid = User::where('virtual_id', 'like', "EF-{$year}-%")->pluck('virtual_id')
+                       ->filter(fn($v) => preg_match('/^EF-\d{4}-\d+$/', $v))
+                       ->map(fn($v) => (int) substr($v, strrpos($v, '-') + 1))
+                       ->max() ?? 0;
+        $validated['virtual_id'] = "EF-{$year}-" . str_pad($lastVid + 1, 3, '0', STR_PAD_LEFT);
 
         // Default password = phone number
         $validated['password'] = Hash::make($validated['password'] ?? $validated['phone']);
@@ -172,15 +183,18 @@ class EmployeeController extends Controller
         }
 
         $validated = $request->validate([
-            'name'            => ['sometimes', 'string', 'min:2', 'max:100'],
-            'email'           => ['sometimes', 'email', Rule::unique('users')->ignore($employee->id)],
-            'phone'           => ['sometimes', 'string', 'regex:/^[0-9]{10}$/'],
-            'role'            => ['sometimes', Rule::in(['admin', 'manager', 'staff'])],
-            'department'      => ['sometimes', 'nullable', 'string', 'max:100'],
-            'team_leader_id'  => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
-            'joining_date'    => ['sometimes', 'nullable', 'date'],
-            'commission_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:1'],
-            'password'        => ['sometimes', 'nullable', 'string', 'min:6'],
+            'name'             => ['sometimes', 'string', 'min:2', 'max:100'],
+            'email'            => ['sometimes', 'email', Rule::unique('users')->ignore($employee->id)],
+            'phone'            => ['sometimes', 'string', 'regex:/^[0-9]{10}$/'],
+            'role'             => ['sometimes', Rule::in(['admin', 'manager', 'staff'])],
+            'department'       => ['sometimes', 'nullable', 'string', 'max:100'],
+            'team_leader_id'   => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
+            'joining_date'     => ['sometimes', 'nullable', 'date'],
+            'commission_rate'  => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:1'],
+            'password'         => ['sometimes', 'nullable', 'string', 'min:6'],
+            'experience_years' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:50'],
+            'seniority'        => ['sometimes', 'nullable', 'string', 'in:Junior,Mid,Senior,Lead,Director'],
+            'reference'        => ['sometimes', 'nullable', 'string', 'max:255'],
         ]);
 
         if (isset($validated['password'])) {
@@ -356,15 +370,18 @@ class EmployeeController extends Controller
             'status'          => $employee->status,
             'joining_date'    => $employee->joining_date ? $employee->joining_date->format('Y-m-d') : null,
             'commission_rate' => $employee->commission_rate,
-            'commission_display' => $employee->commission_rate_display, // '0.25%'
+            'commission_display' => $employee->commission_rate_display,
             'initials'        => $employee->initials,
+            'virtual_id'      => $employee->virtual_id,
+            'experience_years'=> $employee->experience_years,
+            'seniority'       => $employee->seniority,
+            'reference'       => $employee->reference,
             'team_leader_id'  => $employee->team_leader_id,
             'team_leader'     => $employee->teamLeader ? [
                 'id'       => $employee->teamLeader->id,
                 'name'     => $employee->teamLeader->name,
                 'emp_code' => $employee->teamLeader->emp_code,
             ] : null,
-            // Aggregates (populated by withCount in index())
             'total_leads'     => $employee->total_leads ?? null,
             'converted_leads' => $employee->converted_leads ?? null,
         ];

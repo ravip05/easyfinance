@@ -159,7 +159,7 @@ export default function Employees() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{emp.name}</div>
                 <div style={{ fontSize: 11, color: 'var(--text3)' }}>
-                  {emp.emp_code} · {emp.department || 'General'}
+                  {emp.emp_code} {emp.virtual_id ? `(${emp.virtual_id})` : ''} · {emp.department || 'General'}
                 </div>
               </div>
               <span className={`badge ${STATUS_BADGE[emp.status] || 'badge-new'}`}>{emp.status}</span>
@@ -248,6 +248,18 @@ export default function Employees() {
                   <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Phone</td><td style={{ fontWeight: 600 }}>{selected.phone}</td></tr>
                   <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Status</td><td><span className={`badge ${STATUS_BADGE[selected.status]}`}>{selected.status}</span></td></tr>
                   <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Joined</td><td>{selected.joining_date || '—'}</td></tr>
+                  {selected.virtual_id && (
+                    <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Virtual ID</td><td style={{ fontWeight: 600 }}>{selected.virtual_id}</td></tr>
+                  )}
+                  {selected.seniority && (
+                    <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Seniority</td><td>{selected.seniority}</td></tr>
+                  )}
+                  {selected.experience_years > 0 && (
+                    <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Experience</td><td>{selected.experience_years} years</td></tr>
+                  )}
+                  {selected.reference && (
+                    <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Reference</td><td>{selected.reference}</td></tr>
+                  )}
                   {selected.team_leader && (
                     <tr><td style={{ color: 'var(--text3)', padding: '6px 0' }}>Reports To</td><td>{selected.team_leader.name} ({selected.team_leader.emp_code})</td></tr>
                   )}

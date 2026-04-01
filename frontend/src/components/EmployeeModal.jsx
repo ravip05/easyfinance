@@ -25,6 +25,9 @@ const EMPTY_FORM = () => ({
   team_leader_id: '',
   joining_date: new Date().toISOString().split('T')[0],
   commission_rate: 0,
+  experience_years: 0,
+  seniority: 'Junior',
+  reference: '',
 })
 
 export default function EmployeeModal({ isOpen, onClose, onSuccess, initialData }) {
@@ -58,6 +61,9 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess, initialData 
         team_leader_id: initialData.team_leader_id || '',
         joining_date: initialData.joining_date || new Date().toISOString().split('T')[0],
         commission_rate: initialData.commission_rate || 0,
+        experience_years: initialData.experience_years || 0,
+        seniority: initialData.seniority || 'Junior',
+        reference: initialData.reference || '',
       })
     } else {
       setForm(EMPTY_FORM())
@@ -92,7 +98,11 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess, initialData 
 
     setIsLoading(true)
     try {
-      const payload = { ...form }
+      const payload = { 
+        ...form,
+        experience_years: parseInt(form.experience_years) || 0,
+        commission_rate: parseFloat(form.commission_rate) || 0
+      }
       if (!payload.team_leader_id) delete payload.team_leader_id
       
       let res;
@@ -216,6 +226,37 @@ export default function EmployeeModal({ isOpen, onClose, onSuccess, initialData 
                 max="1"
                 value={form.commission_rate}
                 onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <div className="form-label">Experience (Years)</div>
+              <input 
+                className="form-input"
+                name="experience_years"
+                type="number"
+                min="0"
+                max="50"
+                value={form.experience_years}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <div className="form-label">Seniority</div>
+              <select className="form-select" name="seniority" value={form.seniority} onChange={handleChange}>
+                {['Junior', 'Mid', 'Senior', 'Lead', 'Director'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <div className="form-label">Reference / Referred By</div>
+              <input 
+                className="form-input"
+                name="reference"
+                value={form.reference}
+                onChange={handleChange}
+                placeholder="Who referred this employee?"
               />
             </div>
           </div>
