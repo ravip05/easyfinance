@@ -36,7 +36,7 @@ export default function Franchise() {
       const res = await apiClient.get('/franchises')
       setFranchises(res.data.data || [])
     } catch (e) {
-      toast?.('error', 'Failed to load franchises')
+      toast.error('Failed to load franchises')
       setFranchises([])
     }
     setIsLoading(false)
@@ -46,10 +46,10 @@ export default function Franchise() {
     if (!window.confirm(`Delete franchise "${fr.name}"?`)) return
     try {
       await apiClient.delete(`/franchises/${fr.id}`)
-      toast?.('success', `Franchise deleted`)
+      toast.success(`Franchise deleted`)
       fetchFranchises()
     } catch (e) {
-      toast?.('error', e.response?.data?.message || 'Failed to delete franchise')
+      toast.error(e.response?.data?.message || 'Failed to delete franchise')
     }
   }
 
@@ -70,7 +70,7 @@ export default function Franchise() {
         clients: (business.data.data || []).filter(l => l.stage === 'Disbursed')
       })
     } catch (e) {
-      toast?.('error', 'Failed to fetch franchise details')
+      toast.error('Failed to fetch franchise details')
     } finally {
       setIsDetailsLoading(false)
     }
@@ -80,10 +80,10 @@ export default function Franchise() {
     if (!window.confirm("Switch to this user's account? You will need to log out to return to Admin.")) return
     try {
       await impersonate(userId)
-      toast?.('success', 'Switched account successfully.')
+      toast.success('Switched account successfully.')
       navigate('/')
     } catch (e) {
-      toast?.('error', e.response?.data?.message || 'Failed to switch account.')
+      toast.error(e.response?.data?.message || 'Failed to switch account.')
     }
   }
 
@@ -281,7 +281,10 @@ export default function Franchise() {
                             </div>
                             <button 
                               className="btn btn-primary btn-xs"
-                              onClick={(e) => { e.stopPropagation(); handleLoginAs(u.id); }}
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                handleLoginAs(u.id); 
+                              }}
                               disabled={u.status === 'Inactive'}
                               style={{ borderRadius: 8, fontSize: 10, padding: '7px 12px', flexShrink: 0, marginLeft: 12 }}
                             >

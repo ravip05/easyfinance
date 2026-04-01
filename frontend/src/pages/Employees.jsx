@@ -46,7 +46,7 @@ export default function Employees() {
       const res = await apiClient.get(`/employees?${params}`)
       setEmployees(res.data.data || [])
     } catch (e) {
-      toast?.('error', 'Failed to load employees')
+      toast.error('Failed to load employees')
     }
     setIsLoading(false)
   }
@@ -56,11 +56,11 @@ export default function Employees() {
   // status toggle
   async function handleStatusChange(emp, newStatus) {
     try {
-      await apiClient.patch(`/employees/${emp.id}/status`, { status: newStatus })
-      toast?.('success', `${emp.name} set to ${newStatus}`)
+      await apiClient.patch(`/employees/${emp.id}`, { status: newStatus })
+      toast.success(`${emp.name} set to ${newStatus}`)
       fetchEmployees()
     } catch (e) {
-      toast?.('error', 'Failed to update status')
+      toast.error('Failed to update status')
     }
   }
 
@@ -69,10 +69,10 @@ export default function Employees() {
     if (!window.confirm(`Deactivate "${emp.name}"? Their leads will be preserved.`)) return
     try {
       await apiClient.delete(`/employees/${emp.id}`)
-      toast?.('success', `${emp.name} deactivated`)
+      toast.success(`${emp.name} deactivated`)
       fetchEmployees()
     } catch (e) {
-      toast?.('error', e.response?.data?.message || 'Failed')
+      toast.error(e.response?.data?.message || 'Failed')
     }
   }
 
@@ -81,10 +81,10 @@ export default function Employees() {
     if (!window.confirm("Switch to this user's account? You will need to log out to return to Admin.")) return
     try {
       await impersonate(userId)
-      toast?.('success', 'Switched account successfully.')
+      toast.success('Switched account successfully.')
       navigate('/')
     } catch (e) {
-      toast?.('error', e.response?.data?.message || 'Failed to switch account.')
+      toast.error(e.response?.data?.message || 'Failed to switch account.')
     }
   }
 

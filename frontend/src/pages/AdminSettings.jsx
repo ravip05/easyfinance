@@ -48,7 +48,7 @@ export default function AdminSettings() {
       setStages(Array.isArray(pRes.data) ? pRes.data : [])
       setLogs(Array.isArray(aRes.data) ? aRes.data : [])
     } catch (err) {
-      toast?.('error', 'Failed to load system settings')
+      toast.error('Failed to load system settings')
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -59,10 +59,10 @@ export default function AdminSettings() {
     setSaving(true)
     try {
       await apiClient.post('/admin/settings', groupData)
-      toast?.('success', 'Settings updated successfully')
+      toast.success('Settings updated successfully')
       setSettings(prev => ({ ...prev, ...groupData }))
     } catch (err) {
-      toast?.('error', 'Failed to save settings')
+      toast.error('Failed to save settings')
     } finally {
       setSaving(false)
     }
@@ -375,7 +375,7 @@ function LMSManagement() {
       setCourses(cRes.data || [])
       setMaterials(mRes.data || [])
     } catch (e) {
-      toast?.('error', 'Failed to load LMS data')
+      toast.error('Failed to load LMS data')
     }
     setIsLoading(false)
   }
@@ -501,16 +501,16 @@ function UsersManagement({ users, onReload }) {
 
     async function handleRegisterUser(e) {
         e.preventDefault()
-        if (!registerForm.name || !registerForm.email || !registerForm.phone) return toast?.('error', 'Please fill all required fields')
+        if (!registerForm.name || !registerForm.email || !registerForm.phone) return toast.error('Please fill all required fields')
         setUpdating(true)
         try {
             await apiClient.post('/admin/users', registerForm)
-            toast?.('success', 'User registered successfully')
+            toast.success('User registered successfully')
             setShowRegister(false)
             setRegisterForm({ name: '', email: '', phone: '', role: 'staff', department: '' })
             onReload()
         } catch (err) {
-            toast?.('error', err.response?.data?.message || 'Failed to register user')
+            toast.error(err.response?.data?.message || 'Failed to register user')
         } finally {
             setUpdating(false)
         }
@@ -521,11 +521,11 @@ function UsersManagement({ users, onReload }) {
         setUpdating(true)
         try {
             await apiClient.patch(`/admin/users/${selectedUser.id}`, editForm)
-            toast?.('success', 'Profile updated successfully')
+            toast.success('Profile updated successfully')
             onReload()
             setSelectedUser(null)
         } catch (err) {
-            toast?.('error', 'Failed to update profile')
+            toast.error('Failed to update profile')
         } finally {
             setUpdating(false)
         }
@@ -533,16 +533,16 @@ function UsersManagement({ users, onReload }) {
 
     async function handleUpdatePassword(e) {
         e.preventDefault()
-        if (!newPassword || newPassword.length < 6) return toast?.('error', 'Password must be at least 6 characters.')
+        if (!newPassword || newPassword.length < 6) return toast.error('Password must be at least 6 characters.')
         setUpdating(true)
         try {
             await apiClient.patch(`/admin/users/${selectedUser.id}`, { password: newPassword })
-            toast?.('success', 'Password updated successfully')
+            toast.success('Password updated successfully')
             setNewPassword('')
             onReload()
             setSelectedUser(null)
         } catch (err) {
-            toast?.('error', 'Failed to update password')
+            toast.error('Failed to update password')
         } finally {
             setUpdating(false)
         }
@@ -553,11 +553,11 @@ function UsersManagement({ users, onReload }) {
         if (!window.confirm(`Change status to ${newStatus}?`)) return
         try {
             await apiClient.patch(`/admin/users/${u.id}/status`, { status: newStatus })
-            toast?.('success', `User marked as ${newStatus}`)
+            toast.success(`User marked as ${newStatus}`)
             onReload()
             setSelectedUser(null)
         } catch (err) {
-            toast?.('error', 'Failed to update status')
+            toast.error('Failed to update status')
         }
     }
 
@@ -565,21 +565,21 @@ function UsersManagement({ users, onReload }) {
         if (!window.confirm('Are you sure you want to delete this user? This is a soft-delete.')) return
         try {
             await apiClient.delete(`/admin/users/${id}`)
-            toast?.('success', 'User soft-deleted successfully')
+            toast.success('User soft-deleted successfully')
             onReload()
             setSelectedUser(null)
         } catch (err) {
-            toast?.('error', 'Failed to delete user')
+            toast.error('Failed to delete user')
         }
     }
 
     async function handleRestoreUser(id) {
         try {
             await apiClient.post(`/admin/users/${id}/restore`)
-            toast?.('success', 'User restored successfully')
+            toast.success('User restored successfully')
             onReload()
         } catch (err) {
-            toast?.('error', 'Failed to restore user')
+            toast.error('Failed to restore user')
         }
     }
 
@@ -776,10 +776,10 @@ function PipelineStagesManagement({ stages, onReload }) {
         setLoading(true)
         try {
             await apiClient.post('/admin/pipeline-stages', { stages: stages.map(s => s.id === id ? { ...s, ...data } : s) })
-            toast?.('success', 'Stage updated')
+            toast.success('Stage updated')
             onReload()
         } catch (err) {
-            toast?.('error', 'Update failed')
+            toast.error('Update failed')
         } finally {
             setLoading(false)
         }
@@ -847,13 +847,13 @@ function BankPoliciesManagement({ onReload }) {
         try {
             if (editing) await apiClient.put(`/bank-policies/${editing.id}`, form)
             else await apiClient.post('/bank-policies', form)
-            toast?.('success', `Policy ${editing ? 'updated' : 'created'}`)
+            toast.success(`Policy ${editing ? 'updated' : 'created'}`)
             setShowModal(false)
             setEditing(null)
             load()
             onReload()
         } catch (err) {
-            toast?.('error', 'Operation failed')
+            toast.error('Operation failed')
         } finally { setLoading(false) }
     }
 

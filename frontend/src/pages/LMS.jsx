@@ -23,8 +23,8 @@ export default function LMS() {
       
       setCourses(courseRes.data || [])
       setMaterials(materialRes.data || [])
-    } catch (err) {
-      toast?.('error', 'Failed to load LMS content')
+    } catch (e) {
+      toast.error('Failed to load LMS content')
     } finally {
       setLoading(false)
     }

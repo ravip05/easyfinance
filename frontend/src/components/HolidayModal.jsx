@@ -54,13 +54,13 @@ export default function HolidayModal({ isOpen, onClose, onSuccess }) {
     setIsLoading(true)
     try {
       await hrApi.createHoliday(form)
-      toast?.('success', 'Holiday added successfully')
+      toast.success('Holiday added successfully')
       onSuccess?.()
       onClose()
     } catch (e) {
       const body = e.response?.data
-      toast?.('error', body?.message || 'Failed to add holiday')
-      if (body.errors) setErrors(body.errors)
+      toast.error(body?.message || 'Failed to add holiday')
+      if (body?.errors) setErrors(body.errors)
     } finally {
       setIsLoading(false)
     }

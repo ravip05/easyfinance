@@ -55,12 +55,12 @@ export default function PolicyModal({ isOpen, onClose, onSuccess }) {
     setIsLoading(true)
     try {
       await hrApi.createPolicy(form)
-      toast?.('success', 'Policy published successfully')
+      toast.success('Policy published successfully')
       onSuccess?.()
       onClose()
     } catch (e) {
       const body = e.response?.data
-      toast?.('error', body?.message || 'Failed to publish policy')
+      toast.error(body?.message || 'Failed to publish policy')
       if (body.errors) setErrors(body.errors)
     } finally {
       setIsLoading(false)

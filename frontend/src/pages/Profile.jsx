@@ -33,10 +33,10 @@ export default function Profile() {
     e.preventDefault()
     setIsLoading(true)
     try {
-      await apiClient.post('/settings/profile', form)
-      toast?.('success', 'Profile updated successfully.')
+      await apiClient.post('/profile', form)
+      toast.success('Profile updated successfully.')
     } catch (error) {
-      toast?.('error', error.response?.data?.message || 'Failed to update profile.')
+      toast.error(error.response?.data?.message || 'Failed to update profile.')
     } finally {
       setIsLoading(false)
     }
@@ -45,15 +45,15 @@ export default function Profile() {
   async function handlePasswordSubmit(e) {
     e.preventDefault()
     if (passwordForm.new_password !== passwordForm.new_password_confirmation) {
-      return toast?.('error', 'New passwords do not match')
+      return toast.error('New passwords do not match')
     }
     setIsLoading(true)
     try {
-      await apiClient.post('/settings/password', passwordForm)
-      toast?.('success', 'Password updated successfully.')
+      await apiClient.post('/profile/password', passwordForm)
+      toast.success('Password updated successfully.')
       setPasswordForm({ current_password: '', new_password: '', new_password_confirmation: '' })
     } catch (error) {
-      toast?.('error', error.response?.data?.message || 'Failed to update password.')
+      toast.error(error.response?.data?.message || 'Failed to update password.')
     } finally {
       setIsLoading(false)
     }
