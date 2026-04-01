@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pipeline_stages', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('color_class')->nullable();
+            $table->string('color')->nullable()->default('#2563eb');
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

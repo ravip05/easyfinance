@@ -8,6 +8,7 @@ class DatabaseSeeder extends Seeder {
             UserSeeder::class,
             LeadSeeder::class,
             BankPolicySeeder::class,
+            PipelineStageSeeder::class,
             SettingsSeeder::class,
         ]);
     }
