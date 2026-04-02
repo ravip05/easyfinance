@@ -114,6 +114,7 @@ export default function LMS() {
       setCertificates(certRes.data || [])
       setLeaderboard(lbRes.data || [])
     } catch (e) {
+      console.error('LMS fetch error detail:', e.response || e);
       toast.error('Failed to load LMS content')
     } finally {
       setLoading(false)
