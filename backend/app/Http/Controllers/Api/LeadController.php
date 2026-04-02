@@ -522,18 +522,19 @@ class LeadController extends Controller
 
         // --- phone duplicates (uses leads_phone_idx) ---
         $dupePhones = DB::table('leads')
-            ->select('phone', DB::raw('COUNT(*) as cnt'))
+            ->select('phone')
+            ->selectRaw('COUNT(*) as cnt')
             ->whereNull('deleted_at')
             ->whereNotNull('phone')
             ->where('phone', '!=', '')
             ->groupBy('phone')
-            ->having('cnt', '>', 1)
+            ->havingRaw('COUNT(*) > 1')
             ->orderByDesc('cnt')
             ->limit(50)
             ->get();
 
         foreach ($dupePhones as $row) {
-            $leads = Lead::forUser($user)
+            $leads = Lead::query()
                 ->where('phone', $row->phone)
                 ->with('assignedUser:id,name,emp_code')
                 ->get()
@@ -549,14 +550,14 @@ class LeadController extends Controller
             }
         }
 
-        // --- pan_number duplicates ---
         $dupePans = DB::table('leads')
-            ->select('pan_number', DB::raw('COUNT(*) as cnt'))
+            ->select('pan_number')
+            ->selectRaw('COUNT(*) as cnt')
             ->whereNull('deleted_at')
             ->whereNotNull('pan_number')
             ->where('pan_number', '!=', '')
             ->groupBy('pan_number')
-            ->having('cnt', '>', 1)
+            ->havingRaw('COUNT(*) > 1')
             ->orderByDesc('cnt')
             ->limit(50)
             ->get();

@@ -145,29 +145,30 @@ class LmsController extends Controller {
         return response()->json(['score'=>$score,'passed'=>$attempt->passed,'correct'=>$correct,'total'=>$total]);
     }
     public function leaderboard(Request $request) {
-        $attempts = QuizAttempt::with('user:id,name')
+        $data = \Illuminate\Support\Facades\DB::table('quiz_attempts')
             ->select('user_id')
-            ->selectRaw('count(*) as count')
-            ->selectRaw('sum(case when passed = 1 then 1 else 0 end) as passed_count')
-            ->selectRaw('avg(score) as average')
-            ->selectRaw('max(score) as top_score')
+            ->selectRaw('COUNT(*) as total_quizzes')
+            ->selectRaw('SUM(CASE WHEN passed = 1 THEN 1 ELSE 0 END) as passed_quizzes')
+            ->selectRaw('AVG(score) as average_score')
+            ->selectRaw('MAX(score) as best_score')
             ->groupBy('user_id')
-            ->get()
-            ->map(function ($a) {
-                return [
-                    'user_id' => $a->user_id,
-                    'user' => $a->user,
-                    'quizzes_taken' => $a->count,
-                    'avg_score' => round($a->average, 1),
-                    'best_score' => $a->top_score,
-                    'points' => $a->passed_count * 10
-                ];
-            })
-            ->sortByDesc('points')
-            ->values()
-            ->take(10);
+            ->get();
 
-        return response()->json($attempts);
+        $userIds = $data->pluck('user_id');
+        $users = \App\Models\User::whereIn('id', $userIds)->select('id', 'name')->get()->keyBy('id');
+
+        $lb = $data->map(function($row) use ($users) {
+            return [
+                'user_id' => $row->user_id,
+                'user' => $users->get($row->user_id),
+                'quizzes_taken' => (int)$row->total_quizzes,
+                'avg_score' => round((float)$row->average_score, 1),
+                'best_score' => (int)$row->best_score,
+                'points' => (int)$row->passed_quizzes * 10
+            ];
+        })->sortByDesc('points')->values()->take(10);
+
+        return response()->json($lb);
     }
     public function certificates(Request $request) {
         return response()->json(Certificate::where('user_id',$request->user()->id)->with('course:id,title')->get());
