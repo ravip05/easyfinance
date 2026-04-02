@@ -145,16 +145,17 @@ class LmsController extends Controller {
         return response()->json(['score'=>$score,'passed'=>$attempt->passed,'correct'=>$correct,'total'=>$total]);
     }
     public function leaderboard(Request $request) {
-        $lb = QuizAttempt::select('user_id', 
-                \Illuminate\Support\Facades\DB::raw('count(*) as quizzes_taken'),
-                \Illuminate\Support\Facades\DB::raw('avg(score) as avg_score'),
-                \Illuminate\Support\Facades\DB::raw('max(score) as best_score'),
-                \Illuminate\Support\Facades\DB::raw('sum(case when passed=1 then 1 else 0 end)*10 as points')
-            )
+        $lb = QuizAttempt::query()
+            ->select('user_id')
+            ->selectRaw('count(*) as quizzes_taken')
+            ->selectRaw('avg(score) as avg_score')
+            ->selectRaw('max(score) as best_score')
+            ->selectRaw('sum(case when passed=1 then 1 else 0 end) * 10 as points')
             ->with('user:id,name')
             ->groupBy('user_id')
-            ->orderByDesc(\Illuminate\Support\Facades\DB::raw('sum(case when passed=1 then 1 else 0 end)'))
-            ->limit(10)->get();
+            ->orderByRaw('sum(case when passed=1 then 1 else 0 end) DESC')
+            ->limit(10)
+            ->get();
         return response()->json($lb);
     }
     public function certificates(Request $request) {
