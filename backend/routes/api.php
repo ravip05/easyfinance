@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\BankPolicyController;
 use App\Http\Controllers\Api\BulkAllocationController;
 use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\TaskController;
+use App\Http\Controllers\Api\ReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,6 +73,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('departments', [App\Http\Controllers\Api\SettingsController::class, 'departments']);
         Route::post('departments', [App\Http\Controllers\Api\SettingsController::class, 'addDepartment']);
         Route::delete('departments/{id}', [App\Http\Controllers\Api\SettingsController::class, 'deleteDepartment']);
+        Route::patch('departments/{id}', [App\Http\Controllers\Api\SettingsController::class, 'updateDepartment']);
+        // Team Allocation Rules
+        Route::get('allocation-rules', [App\Http\Controllers\Api\SettingsController::class, 'allocationRules']);
+        Route::post('allocation-rules', [App\Http\Controllers\Api\SettingsController::class, 'storeAllocationRule']);
+        Route::patch('allocation-rules/{id}', [App\Http\Controllers\Api\SettingsController::class, 'updateAllocationRule']);
+        Route::delete('allocation-rules/{id}', [App\Http\Controllers\Api\SettingsController::class, 'deleteAllocationRule']);
         Route::get('pipeline-stages', [App\Http\Controllers\Api\SettingsController::class, 'pipelineStages']);
         Route::post('pipeline-stages', [App\Http\Controllers\Api\SettingsController::class, 'updatePipelineStages']);
         Route::get('audit-logs', [App\Http\Controllers\Api\SettingsController::class, 'auditLog']);
@@ -250,40 +258,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('certificates', [LmsController::class, 'certificates']);
     });
 
-    // ── Reports (stub — returns aggregated stats) ─────────────────────────────
+    // ── Tasks ─────────────────────────────────────────────────────────────────
+    Route::apiResource('tasks', TaskController::class);
+    Route::post('tasks/import-csv', [TaskController::class, 'importCsv'])
+         ->middleware('role:admin,manager')
+         ->name('tasks.import');
 
-    Route::get('reports', function (\Illuminate\Http\Request $request) {
-        // stub: returns placeholder stats, will be expanded with real analytics
-        $totalLeads = \App\Models\Lead::forUser($request->user())->count();
-        $converted = \App\Models\Lead::forUser($request->user())->where('stage', 'Disbursed')->count();
-        $rate = $totalLeads > 0 ? round(($converted / $totalLeads) * 100, 1) : 0;
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_leads' => $totalLeads,
-                'conversions' => $converted,
-                'conversion_rate' => $rate,
-                'revenue' => '₹' . number_format($converted * 15000),
-                'active_employees' => \App\Models\User::where('status', 'Active')->whereIn('role', ['admin','manager','staff'])->count(),
-                'pipeline' => [
-                    ['stage' => 'New', 'count' => 12, 'percentage' => 30],
-                    ['stage' => 'Contacted', 'count' => 8, 'percentage' => 20],
-                    ['stage' => 'Processing', 'count' => 15, 'percentage' => 37],
-                    ['stage' => 'Disbursed', 'count' => $converted, 'percentage' => $rate],
-                ],
-                'leaderboard' => [
-                    ['id' => 1, 'name' => 'Amit Sharma', 'converted' => 14, 'percentage' => 85],
-                    ['id' => 2, 'name' => 'Priya Patel', 'converted' => 12, 'percentage' => 75],
-                    ['id' => 3, 'name' => 'Rahul Singh', 'converted' => 9, 'percentage' => 60],
-                ],
-                'branches' => [
-                    ['id' => 1, 'name' => 'Mumbai Head Office', 'total_leads' => 45, 'converted' => 12, 'rate' => 26],
-                    ['id' => 2, 'name' => 'Pune Branch', 'total_leads' => 28, 'converted' => 5, 'rate' => 18],
-                ],
-            ],
-        ]);
-    })->name('reports.index');
+    // ── Reports (real data) ──────────────────────────────────────────────────
+    Route::prefix('reports')->group(function () {
+        Route::get('summary', [ReportController::class, 'summary']);
+        Route::get('leads', [ReportController::class, 'leads']);
+        Route::get('revenue-trends', [ReportController::class, 'revenueTrends']);
+        Route::get('branch-performance', [ReportController::class, 'branchPerformance']);
+    });
 });
 
 // ── Catch-all: return JSON 404 instead of falling through to the web router ───

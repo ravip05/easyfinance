@@ -19,7 +19,9 @@ export default function AdminSettings() {
   const tabs = [
     { id: 'company', label: 'Company Settings', icon: '🏢' },
     { id: 'users', label: 'Users & Access', icon: '👥' },
+    { id: 'departments', label: 'Departments', icon: '🏬' },
     { id: 'commission', label: 'Commission & Slabs', icon: '💰' },
+    { id: 'allocation', label: 'Team Allocation', icon: '🔀' },
     { id: 'notifications', label: 'Notification Rules', icon: '🔔' },
     { id: 'leads', label: 'Lead Config', icon: '🎯' },
     { id: 'pipeline', label: 'Pipeline Stages', icon: '🛣️' },
@@ -167,6 +169,12 @@ export default function AdminSettings() {
         )}
         {activeTab === 'audit' && (
           <AuditLogPanel logs={logs} />
+        )}
+        {activeTab === 'departments' && (
+          <DepartmentsManagement />
+        )}
+        {activeTab === 'allocation' && (
+          <TeamAllocationManagement />
         )}
       </div>
     </div>
@@ -1458,3 +1466,287 @@ const sectionTitle = { fontSize: '12px', fontWeight: 900, color: '#2563eb', text
 const thStyle = { padding: '16px 12px', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }
 const tdStyle = { padding: '24px 12px', fontSize: '14px', color: '#1e293b' }
 const badgeStyle = (bg, f) => ({ padding: '6px 14px', borderRadius: '10px', fontSize: '10px', fontWeight: 900, background: bg, color: f, letterSpacing: '0.05em', textTransform: 'uppercase' })
+
+// ── Departments Management ────────────────────────────────────────────────────
+function DepartmentsManagement() {
+  const toast = useToast()
+  const [depts, setDepts] = useState([])
+  const [managers, setManagers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [form, setForm] = useState({ name: '', head_user_id: '', commission_rate: '', description: '' })
+
+  useEffect(() => { fetchAll() }, [])
+
+  async function fetchAll() {
+    setLoading(true)
+    try {
+      const [dRes, mRes] = await Promise.all([
+        apiClient.get('/admin/departments'),
+        apiClient.get('/admin/users')
+      ])
+      setDepts(Array.isArray(dRes.data) ? dRes.data : [])
+      setManagers((Array.isArray(mRes.data) ? mRes.data : []).filter(u => ['admin', 'manager'].includes(u.role)))
+    } catch { toast.error('Failed to load departments') }
+    finally { setLoading(false) }
+  }
+
+  function openEdit(dept) {
+    setEditing(dept)
+    setForm({ name: dept.name, head_user_id: dept.head_user_id || '', commission_rate: dept.commission_rate || '', description: dept.description || '' })
+    setShowForm(true)
+  }
+
+  async function handleSave() {
+    try {
+      if (editing) {
+        await apiClient.patch(`/admin/departments/${editing.id}`, form)
+        toast.success('Department updated')
+      } else {
+        await apiClient.post('/admin/departments', form)
+        toast.success('Department created')
+      }
+      setShowForm(false); setEditing(null); setForm({ name: '', head_user_id: '', commission_rate: '', description: '' }); fetchAll()
+    } catch (e) { toast.error(e.response?.data?.message || 'Failed to save') }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('Delete this department?')) return
+    try { await apiClient.delete(`/admin/departments/${id}`); toast.success('Deleted'); fetchAll() }
+    catch { toast.error('Failed to delete') }
+  }
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Loading departments...</div>
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={sectionTitle}>🏬 Department Management</div>
+        <button onClick={() => { setEditing(null); setForm({ name: '', head_user_id: '', commission_rate: '', description: '' }); setShowForm(true) }}
+          style={{ ...btnStyle, fontSize: 13, padding: '10px 20px' }}>+ Add Department</button>
+      </div>
+
+      {/* Department Table */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+              <th style={thStyle}>Name</th>
+              <th style={thStyle}>Head</th>
+              <th style={thStyle}>Commission Rate</th>
+              <th style={thStyle}>Description</th>
+              <th style={thStyle}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {depts.length === 0 ? (
+              <tr><td colSpan="5" style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>No departments configured yet.</td></tr>
+            ) : depts.map(d => (
+              <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={tdStyle}><span style={{ fontWeight: 700 }}>{d.name}</span></td>
+                <td style={tdStyle}>{d.head?.name || '—'}</td>
+                <td style={tdStyle}>{d.commission_rate ? `${(d.commission_rate * 100).toFixed(2)}%` : '—'}</td>
+                <td style={{ ...tdStyle, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.description || '—'}</td>
+                <td style={tdStyle}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => openEdit(d)} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>✏️ Edit</button>
+                    <button onClick={() => handleDelete(d.id)} style={{ border: '1px solid #fecaca', background: '#fef2f2', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#dc2626' }}>🗑</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Form Modal */}
+      {showForm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowForm(false)}>
+          <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 480, boxShadow: '0 10px 40px rgba(0,0,0,0.12)' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '18px 22px', borderBottom: '1px solid #e2e8f0', fontWeight: 700, fontSize: 17 }}>
+              {editing ? '✏️ Edit Department' : '🏬 New Department'}
+            </div>
+            <div style={{ padding: '18px 22px', display: 'grid', gap: 16 }}>
+              <div><label style={labelStyle}>Department Name *</label><input style={inputStyle} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+              <div><label style={labelStyle}>Department Head</label>
+                <select style={inputStyle} value={form.head_user_id} onChange={e => setForm({ ...form, head_user_id: e.target.value })}>
+                  <option value="">None</option>
+                  {managers.map(m => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
+                </select>
+              </div>
+              <div><label style={labelStyle}>Commission Rate (decimal, e.g. 0.025 = 2.5%)</label><input type="number" step="0.0001" style={inputStyle} value={form.commission_rate} onChange={e => setForm({ ...form, commission_rate: e.target.value })} /></div>
+              <div><label style={labelStyle}>Description</label><textarea style={{ ...inputStyle, resize: 'vertical' }} rows="3" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+            </div>
+            <div style={{ padding: '12px 22px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowForm(false)} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleSave} style={{ ...btnStyle, fontSize: 13, padding: '10px 20px' }}>{editing ? 'Update' : 'Create'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Team Allocation Rules Management ──────────────────────────────────────────
+function TeamAllocationManagement() {
+  const toast = useToast()
+  const [rules, setRules] = useState([])
+  const [managers, setManagers] = useState([])
+  const [depts, setDepts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [form, setForm] = useState({ name: '', manager_id: '', department: '', role_target: 'staff', max_capacity: 10, is_active: true })
+
+  useEffect(() => { fetchAll() }, [])
+
+  async function fetchAll() {
+    setLoading(true)
+    try {
+      const [rRes, mRes, dRes] = await Promise.all([
+        apiClient.get('/admin/allocation-rules'),
+        apiClient.get('/admin/users'),
+        apiClient.get('/admin/departments')
+      ])
+      setRules(Array.isArray(rRes.data) ? rRes.data : [])
+      setManagers((Array.isArray(mRes.data) ? mRes.data : []).filter(u => ['admin', 'manager'].includes(u.role)))
+      setDepts(Array.isArray(dRes.data) ? dRes.data : [])
+    } catch { toast.error('Failed to load allocation rules') }
+    finally { setLoading(false) }
+  }
+
+  function openEdit(rule) {
+    setEditing(rule)
+    setForm({ name: rule.name, manager_id: rule.manager_id, department: rule.department || '', role_target: rule.role_target, max_capacity: rule.max_capacity, is_active: rule.is_active })
+    setShowForm(true)
+  }
+
+  async function handleSave() {
+    try {
+      if (editing) {
+        await apiClient.patch(`/admin/allocation-rules/${editing.id}`, form)
+        toast.success('Rule updated')
+      } else {
+        await apiClient.post('/admin/allocation-rules', form)
+        toast.success('Rule created')
+      }
+      setShowForm(false); setEditing(null); fetchAll()
+    } catch (e) { toast.error(e.response?.data?.message || 'Failed to save') }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('Delete this rule?')) return
+    try { await apiClient.delete(`/admin/allocation-rules/${id}`); toast.success('Deleted'); fetchAll() }
+    catch { toast.error('Failed to delete') }
+  }
+
+  async function toggleActive(rule) {
+    try {
+      await apiClient.patch(`/admin/allocation-rules/${rule.id}`, { is_active: !rule.is_active })
+      toast.success(rule.is_active ? 'Rule deactivated' : 'Rule activated')
+      fetchAll()
+    } catch { toast.error('Failed to update') }
+  }
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Loading allocation rules...</div>
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={sectionTitle}>🔀 Auto Team Allocation Rules</div>
+        <button onClick={() => { setEditing(null); setForm({ name: '', manager_id: '', department: '', role_target: 'staff', max_capacity: 10, is_active: true }); setShowForm(true) }}
+          style={{ ...btnStyle, fontSize: 13, padding: '10px 20px' }}>+ New Rule</button>
+      </div>
+
+      <div style={{ background: '#eff6ff', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#1e40af', fontWeight: 600 }}>
+        💡 Rules automatically assign new staff to a manager based on department matching and remaining capacity. Each rule defines a manager, their target department, and max team size.
+      </div>
+
+      {/* Rules Table */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+              <th style={thStyle}>Rule Name</th>
+              <th style={thStyle}>Manager</th>
+              <th style={thStyle}>Department</th>
+              <th style={thStyle}>Role Target</th>
+              <th style={thStyle}>Max Capacity</th>
+              <th style={thStyle}>Status</th>
+              <th style={thStyle}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rules.length === 0 ? (
+              <tr><td colSpan="7" style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>No allocation rules configured. New staff will need manual manager assignment.</td></tr>
+            ) : rules.map(r => (
+              <tr key={r.id} style={{ borderBottom: '1px solid #f1f5f9', opacity: r.is_active ? 1 : 0.5 }}>
+                <td style={tdStyle}><span style={{ fontWeight: 700 }}>{r.name}</span></td>
+                <td style={tdStyle}>{r.manager?.name || '—'}</td>
+                <td style={tdStyle}>{r.department || 'All'}</td>
+                <td style={tdStyle}><span style={badgeStyle('#eff6ff', '#2563eb')}>{r.role_target}</span></td>
+                <td style={tdStyle}>{r.max_capacity}</td>
+                <td style={tdStyle}>
+                  <span style={badgeStyle(r.is_active ? '#dcfce7' : '#fef2f2', r.is_active ? '#166534' : '#991b1b')} onClick={() => toggleActive(r)} className="cursor-pointer">
+                    {r.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td style={tdStyle}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => openEdit(r)} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>✏️</button>
+                    <button onClick={() => handleDelete(r.id)} style={{ border: '1px solid #fecaca', background: '#fef2f2', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#dc2626' }}>🗑</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Form Modal */}
+      {showForm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowForm(false)}>
+          <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 520, boxShadow: '0 10px 40px rgba(0,0,0,0.12)' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '18px 22px', borderBottom: '1px solid #e2e8f0', fontWeight: 700, fontSize: 17 }}>
+              {editing ? '✏️ Edit Allocation Rule' : '🔀 New Allocation Rule'}
+            </div>
+            <div style={{ padding: '18px 22px', display: 'grid', gap: 16 }}>
+              <div><label style={labelStyle}>Rule Name *</label><input style={inputStyle} placeholder="e.g. Sales Team A" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+              <div><label style={labelStyle}>Assign To Manager *</label>
+                <select style={inputStyle} value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })}>
+                  <option value="">Select Manager</option>
+                  {managers.map(m => <option key={m.id} value={m.id}>{m.name} ({m.emp_code})</option>)}
+                </select>
+              </div>
+              <div><label style={labelStyle}>Department (optional — blank = all)</label>
+                <select style={inputStyle} value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}>
+                  <option value="">All Departments</option>
+                  {depts.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div><label style={labelStyle}>Target Role</label>
+                  <select style={inputStyle} value={form.role_target} onChange={e => setForm({ ...form, role_target: e.target.value })}>
+                    <option value="staff">Staff</option>
+                    <option value="dsa">DSA</option>
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Max Capacity</label><input type="number" min="1" max="100" style={inputStyle} value={form.max_capacity} onChange={e => setForm({ ...form, max_capacity: parseInt(e.target.value) || 10 })} /></div>
+              </div>
+            </div>
+            <div style={{ padding: '12px 22px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowForm(false)} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleSave} style={{ ...btnStyle, fontSize: 13, padding: '10px 20px' }}>{editing ? 'Update Rule' : 'Create Rule'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

@@ -136,4 +136,55 @@ class SettingsController extends Controller {
         CommissionSlab::findOrFail($id)->delete();
         return response()->json(['message'=>'Slab deleted']);
     }
+
+    // ── Department Management ────────────────────────────────────────────────
+    public function updateDepartment(Request $request, $id) {
+        $dept = Department::findOrFail($id);
+        $data = $request->validate([
+            'name'            => 'sometimes|string|max:100',
+            'head_user_id'    => 'nullable|exists:users,id',
+            'commission_rate' => 'nullable|numeric|min:0|max:1',
+            'description'     => 'nullable|string',
+            'is_active'       => 'nullable|boolean',
+        ]);
+        $dept->update($data);
+        return response()->json(['message' => 'Department updated', 'data' => $dept->load('head:id,name')]);
+    }
+
+    // ── Team Allocation Rules ────────────────────────────────────────────────
+    public function allocationRules() {
+        return response()->json(\App\Models\TeamAllocationRule::with('manager:id,name,emp_code')->orderBy('department')->get());
+    }
+
+    public function storeAllocationRule(Request $request) {
+        $data = $request->validate([
+            'name'         => 'required|string|max:255',
+            'manager_id'   => 'required|exists:users,id',
+            'department'   => 'nullable|string',
+            'role_target'  => 'nullable|in:staff,dsa',
+            'max_capacity' => 'nullable|integer|min:1|max:100',
+            'is_active'    => 'nullable|boolean',
+        ]);
+        $rule = \App\Models\TeamAllocationRule::create($data);
+        return response()->json(['message' => 'Rule created', 'data' => $rule->load('manager:id,name')], 201);
+    }
+
+    public function updateAllocationRule(Request $request, $id) {
+        $rule = \App\Models\TeamAllocationRule::findOrFail($id);
+        $data = $request->validate([
+            'name'         => 'sometimes|string|max:255',
+            'manager_id'   => 'sometimes|exists:users,id',
+            'department'   => 'nullable|string',
+            'role_target'  => 'nullable|in:staff,dsa',
+            'max_capacity' => 'nullable|integer|min:1|max:100',
+            'is_active'    => 'nullable|boolean',
+        ]);
+        $rule->update($data);
+        return response()->json(['message' => 'Rule updated', 'data' => $rule->load('manager:id,name')]);
+    }
+
+    public function deleteAllocationRule($id) {
+        \App\Models\TeamAllocationRule::findOrFail($id)->delete();
+        return response()->json(['message' => 'Rule deleted']);
+    }
 }

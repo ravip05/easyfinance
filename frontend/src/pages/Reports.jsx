@@ -16,6 +16,8 @@ export default function Reports() {
   const role = user?.role ?? 'staff'
   const [activeTab, setActiveTab] = useState('leads')
   const [loading, setLoading] = useState(true)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [stats, setStats] = useState({
       summary: {},
       by_stage: [],
@@ -26,16 +28,20 @@ export default function Reports() {
 
   useEffect(() => {
     fetchStats()
-  }, [activeTab])
+  }, [activeTab, dateFrom, dateTo])
 
   async function fetchStats() {
     setLoading(true)
     try {
+      const params = new URLSearchParams()
+      if (dateFrom) params.set('from', dateFrom)
+      if (dateTo) params.set('to', dateTo)
+      const qs = params.toString() ? `?${params}` : ''
       const [sRes, lRes, rRes, bRes] = await Promise.all([
-        apiClient.get('/reports/summary'),
-        apiClient.get('/reports/leads'),
-        apiClient.get('/reports/revenue-trends'),
-        apiClient.get('/reports/branch-performance')
+        apiClient.get(`/reports/summary${qs}`),
+        apiClient.get(`/reports/leads${qs}`),
+        apiClient.get(`/reports/revenue-trends${qs}`),
+        apiClient.get(`/reports/branch-performance${qs}`)
       ])
       
       setStats({
@@ -65,9 +71,29 @@ export default function Reports() {
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', fontFamily: "'Inter', sans-serif" }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.02em' }}>Analytics & Intelligence</h1>
-        <p style={{ color: '#64748b', fontSize: '14px' }}>Real-time insights across your lead pipeline and branch performance.</p>
+      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.02em' }}>Analytics & Intelligence</h1>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>Real-time insights across your lead pipeline and branch performance.</p>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, fontWeight: 600 }} />
+          <span style={{ color: '#94a3b8', fontWeight: 700 }}>to</span>
+          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, fontWeight: 600 }} />
+          {(dateFrom || dateTo) && (
+            <button onClick={() => { setDateFrom(''); setDateTo('') }}
+              style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>✕ Clear</button>
+          )}
+          <button onClick={() => {
+            const rows = ['Metric,Value', `Conversion Rate,${stats.summary.conversion_rate || 0}%`, `Revenue,${stats.summary.revenue || 0}`, `Total Leads,${stats.summary.total_leads || 0}`, `Conversions,${stats.summary.conversions || 0}`]
+            stats.by_stage.forEach(s => rows.push(`Stage: ${s.stage},${s.count}`))
+            stats.branches.forEach(b => rows.push(`Branch: ${b.name},Leads: ${b.total_leads} Converted: ${b.converted}`))
+            const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'analytics_report.csv'; a.click()
+          }} style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg, #059669, #10b981)', color: 'white', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(5,150,105,0.2)' }}>📊 Export CSV</button>
+        </div>
       </div>
 
       {/* KPI Cards */}

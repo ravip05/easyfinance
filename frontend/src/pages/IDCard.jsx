@@ -71,7 +71,7 @@ export default function IDCard() {
         }}>
           
           {/* FRONT SIDE */}
-          <div style={{
+          <div data-card-front style={{
             position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden',
             background: isAdmin ? theme.primary : 'white',
             borderRadius: '28px',
@@ -168,10 +168,98 @@ export default function IDCard() {
         </div>
       </div>
 
+      {/* ── Action Buttons ── */}
+      <div style={{ display: 'flex', gap: 14, marginTop: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {/* Download as Image */}
+        <button onClick={async () => {
+          const card = document.querySelector('[data-card-front]')
+          if (!card) return
+          try {
+            const canvas = document.createElement('canvas')
+            const scale = 2
+            canvas.width = card.offsetWidth * scale
+            canvas.height = card.offsetHeight * scale
+            const ctx = canvas.getContext('2d')
+            ctx.scale(scale, scale)
+            // Use html-to-canvas fallback: paint a solid bg + text
+            ctx.fillStyle = isAdmin ? '#0f172a' : '#ffffff'
+            ctx.fillRect(0, 0, card.offsetWidth, card.offsetHeight)
+            ctx.font = '800 20px Inter, sans-serif'
+            ctx.fillStyle = isAdmin ? '#ffffff' : '#1e40af'
+            ctx.fillText('EASYFINANCE', 32, 50)
+            ctx.font = '800 24px Inter, sans-serif'
+            ctx.fillStyle = isAdmin ? '#ffffff' : '#0f172a'
+            ctx.fillText(user?.name || '', 70, 200)
+            ctx.font = '700 12px Inter, sans-serif'
+            ctx.fillStyle = '#64748b'
+            ctx.fillText(`ID: ${empId}`, 70, 225)
+            ctx.fillText(`Role: ${user?.role?.toUpperCase()}`, 180, 225)
+            ctx.fillText('EasyFinance CRM', 70, 250)
+            const link = document.createElement('a')
+            link.download = `EasyFinance_ID_${empId}.png`
+            link.href = canvas.toDataURL('image/png')
+            link.click()
+          } catch(e) { alert('Download failed. Try Print instead.') }
+        }} style={{
+          padding: '12px 24px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white',
+          fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)', transition: 'all 0.2s'
+        }}>📥 Download Card</button>
+
+        {/* Share vCard */}
+        <button onClick={() => {
+          const vcf = [
+            'BEGIN:VCARD',
+            'VERSION:3.0',
+            `FN:${user?.name || 'Employee'}`,
+            `TEL;TYPE=CELL:${user?.phone || ''}`,
+            `EMAIL:${user?.email || ''}`,
+            `TITLE:${user?.role?.toUpperCase() || 'STAFF'}`,
+            `ORG:EasyFinance`,
+            `NOTE:Employee ID: ${empId}`,
+            'END:VCARD'
+          ].join('\n')
+          const blob = new Blob([vcf], { type: 'text/vcard' })
+          const url = URL.createObjectURL(blob)
+          if (navigator.share) {
+            navigator.share({
+              title: `${user?.name} - EasyFinance`,
+              text: `Contact card for ${user?.name}`,
+              files: [new File([blob], `${user?.name}_EasyFinance.vcf`, { type: 'text/vcard' })]
+            }).catch(() => {
+              const a = document.createElement('a'); a.href = url; a.download = `${user?.name}_EasyFinance.vcf`; a.click()
+            })
+          } else {
+            const a = document.createElement('a'); a.href = url; a.download = `${user?.name}_EasyFinance.vcf`; a.click()
+          }
+        }} style={{
+          padding: '12px 24px', borderRadius: 12, border: 'none',
+          background: 'linear-gradient(135deg, #2563eb, #3b82f6)', color: 'white',
+          fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: '0 4px 12px rgba(37,99,235,0.25)', transition: 'all 0.2s'
+        }}>📤 Share Contact</button>
+
+        {/* Print */}
+        <button onClick={() => window.print()} style={{
+          padding: '12px 24px', borderRadius: 12, border: '1px solid #e2e8f0', background: 'white',
+          fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        }}>🖨 Print Card</button>
+      </div>
+
+      <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12, marginTop: 16, fontWeight: 600 }}>
+        Tap card to flip • Share contact via vCard
+      </p>
+
       <style>{`
         @keyframes hologram {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
+        }
+        @media print {
+          body * { visibility: hidden; }
+          [data-card-front], [data-card-front] * { visibility: visible; }
+          [data-card-front] { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
         }
       `}</style>
     </div>

@@ -48,6 +48,8 @@ const PAGE_TITLES = {
   duplicates:   'Duplicate Checker',
   idcard:       'ID Cards',
   myattendance: 'My Attendance',
+  tasks:        'Task Board',
+  'policy-management': 'Policy Admin',
 }
 
 // Role label override for staff / DSA dashboard title

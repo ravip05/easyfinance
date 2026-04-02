@@ -55,6 +55,7 @@ import Duplicates      from './pages/Duplicates'
 import MyAttendance      from './pages/MyAttendance'
 import PolicyManagement  from './pages/PolicyManagement'
 import Profile           from './pages/Profile'
+import Tasks             from './pages/Tasks'
 
 
 // ── Route guards ──────────────────────────────────────────────────────────────
@@ -170,6 +171,7 @@ export default function App() {
         <Route path="tickets"          element={<Tickets />} />
         <Route path="policy-management" element={<PolicyManagement />} />
         <Route path="profile"          element={<UserSettings />} />
+        <Route path="tasks"            element={<Tasks />} />
 
         {/* Catch-all within the layout → 404 inside the shell */}
         <Route

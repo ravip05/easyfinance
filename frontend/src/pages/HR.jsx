@@ -205,11 +205,36 @@ function AttendanceView({ data, summary, loading }) {
 }
 
 function HolidaysView({ data, loading, isAdmin, onDelete }) {
+    const [calMonth, setCalMonth] = useState(new Date().getMonth())
+    const [calYear, setCalYear] = useState(new Date().getFullYear())
+
     if (loading) return <Loader />
 
     const today = new Date().toISOString().split('T')[0]
     const upcoming = data.filter(h => h.date >= today)
     const past = data.filter(h => h.date < today)
+
+    // Calendar helpers
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
+    const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay()
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const monthName = new Date(calYear, calMonth).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+
+    // Build a set of holiday dates for this month
+    const holidayMap = {}
+    data.forEach(h => {
+      const d = new Date(h.date)
+      if (d.getMonth() === calMonth && d.getFullYear() === calYear) {
+        const key = d.getDate()
+        holidayMap[key] = h
+      }
+    })
+
+    const todayDate = new Date()
+    const isToday = (day) => todayDate.getDate() === day && todayDate.getMonth() === calMonth && todayDate.getFullYear() === calYear
+
+    const prevMonth = () => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1) } else setCalMonth(calMonth - 1) }
+    const nextMonth = () => { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1) } else setCalMonth(calMonth + 1) }
 
     const renderCard = (h) => (
         <div key={h.id} style={{ background: 'white', borderRadius: '20px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', position: 'relative' }}>
@@ -228,6 +253,57 @@ function HolidaysView({ data, loading, isAdmin, onDelete }) {
 
     return (
         <div>
+          {/* ── Calendar Grid ── */}
+          <div style={{ background: 'white', borderRadius: 20, border: '1px solid #e2e8f0', padding: 24, marginBottom: 32, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <button onClick={prevMonth} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: 8, padding: '6px 14px', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>← Prev</button>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: 0 }}>{monthName}</h3>
+              <button onClick={nextMonth} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: 8, padding: '6px 14px', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>Next →</button>
+            </div>
+            {/* Day headers */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, textAlign: 'center', marginBottom: 8 }}>
+              {dayNames.map(d => (
+                <div key={d} style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '4px 0' }}>{d}</div>
+              ))}
+            </div>
+            {/* Date cells */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, textAlign: 'center' }}>
+              {/* Empty cells for offset */}
+              {Array.from({ length: firstDayOfWeek }, (_, i) => (
+                <div key={`blank-${i}`} style={{ padding: 10 }} />
+              ))}
+              {/* Day cells */}
+              {Array.from({ length: daysInMonth }, (_, i) => {
+                const day = i + 1
+                const holiday = holidayMap[day]
+                const todayHighlight = isToday(day)
+                return (
+                  <div key={day} title={holiday?.title || ''} style={{
+                    padding: '8px 4px', borderRadius: 10, position: 'relative', cursor: holiday ? 'pointer' : 'default',
+                    background: holiday ? '#eff6ff' : todayHighlight ? '#f0fdf4' : 'transparent',
+                    border: todayHighlight ? '2px solid #22c55e' : holiday ? '2px solid #3b82f6' : '1px solid transparent',
+                    transition: 'all 0.15s',
+                  }}>
+                    <div style={{ fontSize: 14, fontWeight: todayHighlight || holiday ? 800 : 500, color: holiday ? '#1e40af' : todayHighlight ? '#166534' : '#334155' }}>{day}</div>
+                    {holiday && (
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: holiday.type === 'national' ? '#2563eb' : '#f59e0b', margin: '2px auto 0' }} />
+                    )}
+                    {holiday && (
+                      <div style={{ fontSize: 8, fontWeight: 700, color: '#3b82f6', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{holiday.title}</div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: 16, marginTop: 16, fontSize: 11, color: '#64748b', fontWeight: 600 }}>
+              <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#2563eb', marginRight: 4, verticalAlign: 'middle' }} />National</span>
+              <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', marginRight: 4, verticalAlign: 'middle' }} />Company</span>
+              <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#22c55e', marginRight: 4, verticalAlign: 'middle' }} />Today</span>
+            </div>
+          </div>
+
+          {/* ── Holiday Cards ── */}
           {upcoming.length > 0 && (
             <div style={{ marginBottom: 32 }}>
               <h3 style={{ fontSize: 14, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16, borderLeft: '4px solid #10b981', paddingLeft: 12 }}>Upcoming Holidays ({upcoming.length})</h3>
@@ -253,6 +329,7 @@ function HolidaysView({ data, loading, isAdmin, onDelete }) {
         </div>
     )
 }
+
 
 // ── Leave Management View ─────────────────────────────────────────────────────
 
