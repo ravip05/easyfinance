@@ -6,6 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property string $title
+ * @property string|null $description
+ * @property int|null $assigned_to
+ * @property int $assigned_by
+ * @property string $priority
+ * @property string $status
+ * @property \Carbon\Carbon|null $due_date
+ * @property \Carbon\Carbon|null $completed_at
+ * @property string|null $category
+ * @property-read bool $is_overdue
+ */
 class Task extends Model
 {
     use SoftDeletes;

@@ -22,7 +22,13 @@ class TaskController extends Controller
             ->when($request->priority, fn ($q, $p) => $q->where('priority', $p))
             ->when($request->assigned_to, fn ($q, $a) => $q->where('assigned_to', $a))
             ->when($request->category, fn ($q, $c) => $q->where('category', $c))
-            ->orderByRaw("FIELD(priority, 'Urgent', 'High', 'Medium', 'Low')")
+            ->orderByRaw("CASE 
+                WHEN priority = 'Urgent' THEN 1 
+                WHEN priority = 'High' THEN 2 
+                WHEN priority = 'Medium' THEN 3 
+                WHEN priority = 'Low' THEN 4 
+                ELSE 5 
+            END")
             ->orderBy('due_date')
             ->get();
 
