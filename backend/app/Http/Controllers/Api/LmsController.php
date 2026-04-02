@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 class LmsController extends Controller {
     public function courses(Request $request) {
         $user = $request->user();
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
         $q = LmsCourse::query();
         if ($user->role !== 'admin') $q->where('is_active', true);
         return response()->json($q->orderBy('sort_order')->get()->map(function($c) use($user) {
@@ -144,9 +145,16 @@ class LmsController extends Controller {
         return response()->json(['score'=>$score,'passed'=>$attempt->passed,'correct'=>$correct,'total'=>$total]);
     }
     public function leaderboard(Request $request) {
-        $lb = QuizAttempt::select('user_id',\Illuminate\Support\Facades\DB::raw('count(*) as quizzes_taken'),\Illuminate\Support\Facades\DB::raw('avg(score) as avg_score'),\Illuminate\Support\Facades\DB::raw('max(score) as best_score'),\Illuminate\Support\Facades\DB::raw('sum(case when passed=1 then 1 else 0 end)*10 as points'))
+        $lb = QuizAttempt::select('user_id', 
+                \Illuminate\Support\Facades\DB::raw('count(*) as quizzes_taken'),
+                \Illuminate\Support\Facades\DB::raw('avg(score) as avg_score'),
+                \Illuminate\Support\Facades\DB::raw('max(score) as best_score'),
+                \Illuminate\Support\Facades\DB::raw('sum(case when passed=1 then 1 else 0 end)*10 as points')
+            )
             ->with('user:id,name')
-            ->groupBy('user_id')->orderByDesc('points')->limit(10)->get();
+            ->groupBy('user_id')
+            ->orderByDesc(\Illuminate\Support\Facades\DB::raw('sum(case when passed=1 then 1 else 0 end)'))
+            ->limit(10)->get();
         return response()->json($lb);
     }
     public function certificates(Request $request) {
