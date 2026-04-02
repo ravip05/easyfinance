@@ -259,6 +259,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ── Tasks ─────────────────────────────────────────────────────────────────
+    Route::get('tasks/export/csv', [TaskController::class, 'exportCsv'])->name('tasks.export');
     Route::apiResource('tasks', TaskController::class);
     Route::post('tasks/import-csv', [TaskController::class, 'importCsv'])
          ->middleware('role:admin,manager')
@@ -270,6 +271,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('leads', [ReportController::class, 'leads']);
         Route::get('revenue-trends', [ReportController::class, 'revenueTrends']);
         Route::get('branch-performance', [ReportController::class, 'branchPerformance']);
+        Route::get('export', [ReportController::class, 'export']);
     });
 });
 

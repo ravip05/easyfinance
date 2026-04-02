@@ -200,6 +200,66 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * GET /api/tasks/export/csv
+     * Stream all scoped tasks as a CSV file.
+     */
+    public function exportCsv(Request $request)
+    {
+        $user = $request->user();
+        
+        // Scope tasks exactly as index() does
+        $query = Task::with(['assignedTo:id,name,emp_code', 'assignedBy:id,name'])->forUser($user);
+
+        // Filter like index()
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+        if ($request->priority) {
+            $query->where('priority', $request->priority);
+        }
+        if ($request->category) {
+            $query->where('category', $request->category);
+        }
+
+        $tasks = $query->orderBy('due_date', 'asc')->get();
+
+        $filename = 'tasks_export_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-type'        => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0'
+        ];
+
+        $callback = function () use ($tasks) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV Header
+            fputcsv($file, ['ID', 'Title', 'Description', 'Assigned To', 'Assigned By', 'Priority', 'Status', 'Due Date', 'Category', 'Created At']);
+
+            foreach ($tasks as $task) {
+                fputcsv($file, [
+                    $task->id,
+                    $task->title,
+                    $task->description,
+                    $task->assignedTo ? "{$task->assignedTo->name} ({$task->assignedTo->emp_code})" : 'Unassigned',
+                    $task->assignedBy ? $task->assignedBy->name : 'System',
+                    $task->priority,
+                    $task->status,
+                    $task->due_date ? $task->due_date->toDateString() : '',
+                    $task->category,
+                    $task->created_at ? $task->created_at->toDateTimeString() : ''
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     private function formatTask(Task $t): array
     {
         return [

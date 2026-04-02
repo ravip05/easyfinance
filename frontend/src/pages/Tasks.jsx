@@ -130,6 +130,21 @@ export default function Tasks() {
     } catch (e) { toast.error(e.response?.data?.message || 'Import failed') }
   }
 
+  const handleExportCSV = async () => {
+    try {
+      const res = await apiClient.get('/tasks/export/csv', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tasks_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch {
+      toast.error('Failed to export tasks');
+    }
+  }
+
   return (
     <div style={s.page}>
       {/* Header */}
@@ -140,6 +155,7 @@ export default function Tasks() {
         </div>
         {isAdmin && (
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button className="btn btn-ghost btn-sm" style={{ border: '1px solid #e2e8f0', background: '#fff' }} onClick={handleExportCSV}>⬇ Export CSV</button>
             <button className="btn btn-secondary btn-sm" onClick={() => setShowImport(true)}>📥 Import CSV</button>
             <button className="btn btn-primary btn-sm" onClick={() => { setEditingTask(null); setShowModal(true) }}>+ New Task</button>
           </div>

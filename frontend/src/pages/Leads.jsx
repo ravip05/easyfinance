@@ -32,6 +32,7 @@ export default function Leads() {
   // ── Modal state ────────────────────────────────────────────────────────────
   const [modalOpen, setModalOpen] = useState(false)
   const [editingLead, setEditingLead] = useState(null)
+  const [importOpen, setImportOpen] = useState(false)
 
   // ── Filter state (lifted here so FilterBar and LeadsList share it) ─────────
   const [filters, setFilters] = useState({
@@ -68,12 +69,15 @@ export default function Leads() {
         priority={filters.priority}
         onChange={handleFilterChange}
         onAdd={() => setModalOpen(true)}
+        onImport={() => setImportOpen(true)}
         canEdit={canEdit}
       />
 
       {/* The table — passes filter state down */}
       <LeadsList
         filters={filters}
+        importOpen={importOpen}
+        setImportOpen={setImportOpen}
         onAddLead={() => { setEditingLead(null); setModalOpen(true); }}
         onEditLead={(lead) => { setEditingLead(lead); setModalOpen(true); }}
       />

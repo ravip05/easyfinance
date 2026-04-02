@@ -56,7 +56,7 @@ const ROLE_TITLE = {
 // Stages that are convertible to a client
 const CONVERTIBLE_STAGES = ['CIBIL', 'Docs Received', 'Login', 'Processing', 'Sanctioned', 'Disbursed']
 
-export default function LeadsList({ onAddLead, onEditLead, filters: externalFilters }) {
+export default function LeadsList({ onAddLead, onEditLead, filters: externalFilters, importOpen, setImportOpen }) {
   const { user }                        = useAuth()
   const { leads, isLoading, updateStage, deleteLead, refreshLeads } = useLeads()
 
@@ -73,7 +73,6 @@ export default function LeadsList({ onAddLead, onEditLead, filters: externalFilt
   }, [refreshLeads])
 
   // ── Import modal state ───────────────────────────────────────────────
-  const [importOpen, setImportOpen] = useState(false)
   const [ownSearch,   setOwnSearch]   = useState('')
   const [ownStageFil, setOwnStageFil] = useState('')
   const [ownTypeFil,  setOwnTypeFil]  = useState('')
@@ -153,15 +152,31 @@ export default function LeadsList({ onAddLead, onEditLead, filters: externalFilt
     return () => window.removeEventListener('open-convert-modal', handler)
   }, [])
 
-  // ── CSV export (mirrors exportLeadsCSV()) ──────────────────────────────────
-  function handleExport() {
-    const rows = [['Name', 'Phone', 'Type', 'Amount', 'Stage', 'Assigned', 'Priority', 'Follow-up']]
-    filtered.forEach((l) => rows.push([l.name, l.phone, l.type, l.amount, l.stage, l.assigned, l.priority, l.followup]))
-    const csv = rows.map((r) => r.map((c) => `"${(c ?? '').toString().replace(/"/g, '""')}"`).join(',')).join('\n')
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
-    a.download = `leads_${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
+  // ── CSV export (now streams from backend) ──────────────────────────────────
+  async function handleExport() {
+    try {
+      const { default: apiClient } = await import('../api/client');
+      // Append current filters for scoping the export
+      const params = new URLSearchParams()
+      if (search) params.set('search', search)
+      if (stageFil) params.set('stage', stageFil)
+      if (typeFil) params.set('loan_type', typeFil)
+      if (priofil) params.set('priority', priofil)
+      
+      const qs = params.toString() ? `?${params}` : ''
+      const res = await apiClient.get(`/leads/export/csv${qs}`, { responseType: 'blob' })
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `leads_${new Date().toISOString().slice(0, 10)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    } catch (e) {
+      console.error('Export failed', e)
+      alert('Failed to export leads')
+    }
   }
 
   // ── Delete confirmation ────────────────────────────────────────────────────
@@ -449,7 +464,7 @@ function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConver
 }
 
 // ── FilterBar — exported so Leads.jsx can render it above the card ────────────
-export function LeadsFilterBar({ search, stage, loanType, priority, onChange, onAdd, canEdit }) {
+export function LeadsFilterBar({ search, stage, loanType, priority, onChange, onAdd, onImport, canEdit }) {
   return (
     <div className="filter-bar">
 
@@ -510,7 +525,7 @@ export function LeadsFilterBar({ search, stage, loanType, priority, onChange, on
       <button
         className="btn btn-secondary btn-sm"
         id="leads-import-btn"
-        onClick={() => setImportOpen(true)}
+        onClick={onImport}
       >
         ⬆ Import
       </button>
