@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import apiClient from '../api/client'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 
 export default function Tickets() {
   const { user } = useAuth()
   const toast = useToast()
+  const role = user?.role ?? 'staff'
+  const isAdminOrManager = ['admin', 'manager'].includes(role)
+  
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [newReply, setNewReply] = useState('')
+  const [employees, setEmployees] = useState([]) // For assignment
+
   const [newTicket, setNewTicket] = useState({
     subject: '',
     category: 'Technical',
@@ -20,19 +25,21 @@ export default function Tickets() {
 
   useEffect(() => {
     fetchTickets()
+    if (isAdminOrManager) fetchEmployees()
   }, [])
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await apiClient.get('/employees')
+      setEmployees(res.data.data || [])
+    } catch {}
+  }
 
   const fetchTickets = async () => {
     setLoading(true)
     try {
-      // For now, if API fails (due to migration issues), we'll mock
-      const res = await axios.get('/api/tickets').catch(() => ({ 
-        data: { data: [
-          { id: 1, subject: 'Login issue on mobile', status: 'Open', priority: 'High', category: 'Technical', created_at: '2024-03-12T10:00:00Z', user: { name: 'Demo Staff' } },
-          { id: 2, subject: 'Commission not credited', status: 'In Progress', priority: 'Medium', category: 'Commission', created_at: '2024-03-11T14:30:00Z', user: { name: 'Demo Staff' } }
-        ]} 
-      }))
-      setTickets(res.data.data || [])
+      const res = await apiClient.get('/tickets')
+      setTickets(res.data.data?.data || res.data.data || [])
     } catch (err) {
       toast.error('Failed to load tickets')
     } finally {
@@ -43,7 +50,7 @@ export default function Tickets() {
   const handleCreateTicket = async (e) => {
     e.preventDefault()
     try {
-      await axios.post('/api/tickets', newTicket)
+      await apiClient.post('/tickets', newTicket)
       toast.success('Ticket created successfully')
       setShowModal(false)
       fetchTickets()
@@ -56,15 +63,25 @@ export default function Tickets() {
   const handleReply = async () => {
     if (!newReply.trim()) return
     try {
-      await axios.post(`/api/tickets/${selectedTicket.id}/reply`, { message: newReply })
+      await apiClient.post(`/tickets/${selectedTicket.id}/reply`, { message: newReply })
       setNewReply('')
       // Refresh selected ticket
-      const res = await axios.get(`/api/tickets/${selectedTicket.id}`)
+      const res = await apiClient.get(`/tickets/${selectedTicket.id}`)
       setSelectedTicket(res.data.data)
       fetchTickets()
     } catch (err) {
       toast.error('Failed to send reply')
     }
+  }
+
+  const handleAdminUpdate = async (field, value) => {
+    try {
+      await apiClient.put(`/tickets/${selectedTicket.id}`, { [field]: value })
+      toast.success('Ticket updated')
+      const res = await apiClient.get(`/tickets/${selectedTicket.id}`)
+      setSelectedTicket(res.data.data)
+      fetchTickets()
+    } catch { toast.error('Update failed') }
   }
 
   const getStatusBadge = (status) => {
@@ -136,14 +153,42 @@ export default function Tickets() {
         {selectedTicket && (
           <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '600px' }}>
             <div className="card-header" style={{ paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <h3 className="card-title">{selectedTicket.subject}</h3>
-                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+              <div style={{ flex: 1 }}>
+                <h3 className="card-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  {selectedTicket.subject}
+                  <button className="modal-close" onClick={() => setSelectedTicket(null)}>✕</button>
+                </h3>
+                <div style={{ display: 'flex', gap: 10, marginTop: 4, alignItems: 'center', flexWrap: 'wrap' }}>
                   {getStatusBadge(selectedTicket.status)}
                   <span style={{ fontSize: 11, color: 'var(--text3)' }}>Category: {selectedTicket.category}</span>
+                  
+                  {isAdminOrManager && (
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                      <select 
+                        className="form-select" style={{ padding: '2px 6px', fontSize: 11, height: 26 }}
+                        value={selectedTicket.assigned_to || ''}
+                        onChange={(e) => handleAdminUpdate('assigned_to', e.target.value || null)}
+                      >
+                        <option value="">Unassigned</option>
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.id}>{emp.name}</option>
+                        ))}
+                      </select>
+                      <select 
+                        className="form-select" style={{ padding: '2px 6px', fontSize: 11, height: 26 }}
+                        value={selectedTicket.status}
+                        onChange={(e) => handleAdminUpdate('status', e.target.value)}
+                      >
+                        <option value="Open">Open</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Awaiting Reply">Awaiting Reply</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
-              <button className="modal-close" onClick={() => setSelectedTicket(null)}>✕</button>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
