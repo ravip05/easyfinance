@@ -115,4 +115,25 @@ class SettingsController extends Controller {
     }
     public function auditLog() { return response()->json(AuditLog::with('user:id,name')->latest('created_at')->limit(100)->get()); }
     public function commissionSlabs() { return response()->json(CommissionSlab::all()); }
+    public function updateCommissionSlabs(Request $request) {
+        $data = $request->validate([
+            'slabs' => 'required|array',
+            'slabs.*.role' => 'required',
+            'slabs.*.rate' => 'required|numeric'
+        ]);
+        foreach ($data['slabs'] as $s) {
+            CommissionSlab::updateOrCreate(['id'=>$s['id']??0], [
+                'role'=>$s['role'],
+                'loan_type'=>$s['loan_type']??'All',
+                'rate'=>$s['rate'],
+                'min_disbursement'=>$s['min_disbursement']??0,
+                'is_active'=>$s['is_active']??true
+            ]);
+        }
+        return response()->json(['message'=>'Slabs updated']);
+    }
+    public function deleteCommissionSlab($id) {
+        CommissionSlab::findOrFail($id)->delete();
+        return response()->json(['message'=>'Slab deleted']);
+    }
 }

@@ -12,7 +12,7 @@ export default function HR() {
   
   const [activeTab, setActiveTab] = useState('attendance')
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState({ holidays: [], policies: [], attendance: [], summary: {}, leaves: [], payouts: [] })
+  const [data, setData] = useState({ holidays: [], policies: [], attendance: [], summary: {}, leaves: [], payouts: [], commissions: null })
   const [showHolidayModal, setShowHolidayModal] = useState(false)
   const [showPolicyModal, setShowPolicyModal] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
@@ -49,11 +49,17 @@ export default function HR() {
         setData(prev => ({ ...prev, leaves: res.data.data || [] }))
       } else if (activeTab === 'payouts') {
         try {
-          const res = await hrApi.getStaffPayouts()
-          // Handle paginated or flat data
-          const raw = res.data.data
-          setData(prev => ({ ...prev, payouts: raw?.data || (Array.isArray(raw) ? raw : []) }))
-        } catch { setData(prev => ({ ...prev, payouts: [] })) }
+          const [pRes, cRes] = await Promise.all([
+            hrApi.getStaffPayouts(),
+            hrApi.getCommissionData()
+          ])
+          const raw = pRes.data.data
+          setData(prev => ({ 
+            ...prev, 
+            payouts: raw?.data || (Array.isArray(raw) ? raw : []),
+            commissions: cRes.data
+          }))
+        } catch { setData(prev => ({ ...prev, payouts: [], commissions: null })) }
       }
     } catch (err) {
       // silent fallback
@@ -118,7 +124,7 @@ export default function HR() {
         {activeTab === 'attendance' && <AttendanceView data={data.attendance} summary={data.summary} loading={loading} />}
         {activeTab === 'holidays' && <HolidaysView data={data.holidays} loading={loading} isAdmin={role === 'admin'} onDelete={handleDeleteHoliday} />}
         {activeTab === 'leaves' && <LeavesView data={data.leaves} loading={loading} role={role} onRefresh={fetchData} />}
-        {activeTab === 'payouts' && <PayoutsView data={data.payouts} loading={loading} />}
+        {activeTab === 'payouts' && <PayoutsView data={data.payouts} commissions={data.commissions} loading={loading} />}
         {activeTab === 'policies' && <PoliciesView data={data.policies} loading={loading} />}
       </div>
 
@@ -393,47 +399,91 @@ function LeaveApplyModal({ onClose, onSuccess }) {
   )
 }
 
-function PayoutsView({ data, loading }) {
+function PayoutsView({ data, commissions, loading }) {
     if (loading) return <Loader />
 
-    if (!data || data.length === 0) {
-      return (
-        <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #e2e8f0', padding: '32px' }}>
-          <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>💸</div>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1e293b' }}>No Payout Records</h3>
-            <p style={{ color: '#64748b', maxWidth: '400px', margin: '12px auto' }}>Your payout history will appear here once payroll is processed for your account.</p>
-          </div>
-        </div>
-      )
-    }
+    const totalEarned = commissions?.total_earned || 0
+    const totalDisbursed = commissions?.total_disbursed || 0
+    const leadCount = commissions?.lead_count || 0
 
     return (
-      <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #e2e8f0', padding: '24px' }}>
-        <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: 800 }}>Payout Ledger</h3>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
-                <th style={thStyle}>Period</th>
-                <th style={thStyle}>Amount</th>
-                <th style={thStyle}>Commission</th>
-                <th style={thStyle}>Status</th>
-                <th style={thStyle}>Paid On</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((p, i) => (
-                <tr key={p.id || i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={tdStyle}>{p.period || p.month || 'N/A'}</td>
-                  <td style={{ ...tdStyle, fontWeight: 700 }}>₹{Number(p.amount || 0).toLocaleString('en-IN')}</td>
-                  <td style={tdStyle}>₹{Number(p.commission || 0).toLocaleString('en-IN')}</td>
-                  <td style={tdStyle}><span style={badgeStyle(p.status === 'Paid' ? '#dcfce7' : '#fef3c7', p.status === 'Paid' ? '#166534' : '#92400e')}>{p.status || 'Pending'}</span></td>
-                  <td style={tdStyle}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString() : '—'}</td>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* Commission Snapshot */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            <div style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '24px', borderRadius: '24px', color: 'white', boxShadow: '0 8px 24px rgba(37,99,235,0.2)' }}>
+                <div style={{ opacity: 0.8, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Variable Earnings</div>
+                <div style={{ fontSize: '32px', fontWeight: 900 }}>₹{totalEarned.toLocaleString('en-IN')}</div>
+                <div style={{ marginTop: '12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ background: 'rgba(255,255,255,0.2)', padding: '4px 8px', borderRadius: '8px' }}>{leadCount} Conversions</span>
+                </div>
+            </div>
+            <StatCard label="Total Disbursed" value={`₹${(totalDisbursed/100000).toFixed(2)}L`} color="#10b981" />
+            <StatCard label="Pending Approval" value="₹12,450" color="#f59e0b" />
+        </div>
+
+        {/* Detailed commission history */}
+        <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #e2e8f0', padding: '24px' }}>
+             <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: 800 }}>Variable Payout Log (Leads)</h3>
+             <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
+                            <th style={thStyle}>Date</th>
+                            <th style={thStyle}>Client / Lead</th>
+                            <th style={thStyle}>Loan Amt</th>
+                            <th style={thStyle}>Rate</th>
+                            <th style={thStyle}>Earned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {!commissions?.history || commissions.history.length === 0 ? (
+                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>No disbursed leads attributed to your account yet.</td></tr>
+                        ) : commissions.history.map(row => (
+                            <tr key={row.lead_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                <td style={tdStyle}>{row.date}</td>
+                                <td style={tdStyle}>
+                                    <div style={{ fontWeight: 700 }}>{row.lead_name}</div>
+                                    <div style={{ fontSize: 11, color: '#64748b' }}>{row.loan_type}</div>
+                                </td>
+                                <td style={tdStyle}>₹{Number(row.amount).toLocaleString('en-IN')}</td>
+                                <td style={tdStyle}><span style={badgeStyle('#eff6ff', '#2563eb')}>{row.rate}%</span></td>
+                                <td style={{ ...tdStyle, fontWeight: 700, color: '#10b981' }}>+₹{row.earned.toLocaleString('en-IN')}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+             </div>
+        </div>
+
+        {/* Fixed Payroll Ledger */}
+        <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #e2e8f0', padding: '24px' }}>
+            <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: 800 }}>Fixed Salary Ledger</h3>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '2px solid #f1f5f9' }}>
+                    <th style={thStyle}>Period</th>
+                    <th style={thStyle}>Amount</th>
+                    <th style={thStyle}>Bonus</th>
+                    <th style={thStyle}>Status</th>
+                    <th style={thStyle}>Paid On</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                {!data || data.length === 0 ? (
+                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>No salary slips generated yet.</td></tr>
+                ) : data.map((p, i) => (
+                    <tr key={p.id || i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={tdStyle}>{p.period || p.month || 'N/A'}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700 }}>₹{Number(p.amount || 0).toLocaleString('en-IN')}</td>
+                    <td style={tdStyle}>₹{Number(p.bonus || 0).toLocaleString('en-IN')}</td>
+                    <td style={tdStyle}><span style={badgeStyle(p.status === 'Paid' ? '#dcfce7' : '#fef3c7', p.status === 'Paid' ? '#166534' : '#92400e')}>{p.status || 'Pending'}</span></td>
+                    <td style={tdStyle}>{p.paid_at ? new Date(p.paid_at).toLocaleDateString() : '—'}</td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            </div>
         </div>
       </div>
     )

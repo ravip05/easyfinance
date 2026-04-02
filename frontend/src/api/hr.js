@@ -33,4 +33,6 @@ export const hrApi = {
 
   // Staff self-view
   getStaffPayouts: () => apiClient.get('/staff/payouts'),
+  getCommissionData: () => apiClient.get('/staff/commissions'),
+  getStaffPerformance: () => apiClient.get('/admin/staff-performance'),
 }

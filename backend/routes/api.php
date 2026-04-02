@@ -75,6 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('pipeline-stages', [App\Http\Controllers\Api\SettingsController::class, 'updatePipelineStages']);
         Route::get('audit-logs', [App\Http\Controllers\Api\SettingsController::class, 'auditLog']);
         Route::get('commission-slabs', [App\Http\Controllers\Api\SettingsController::class, 'commissionSlabs']);
+        Route::post('commission-slabs', [App\Http\Controllers\Api\SettingsController::class, 'updateCommissionSlabs']);
+        Route::delete('commission-slabs/{id}', [App\Http\Controllers\Api\SettingsController::class, 'deleteCommissionSlab']);
     });
 
     // ── Leads ─────────────────────────────────────────────────────────────────
@@ -190,6 +192,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:staff,manager,admin')->group(function () {
         Route::get('staff/me', [StaffController::class, 'me']);
         Route::get('staff/payouts', [StaffController::class, 'payouts']);
+        Route::get('staff/commissions', [App\Http\Controllers\Api\CommissionController::class, 'myCommission']);
+    });
+
+    Route::middleware('role:admin,manager')->group(function () {
+        Route::get('admin/staff-performance', [App\Http\Controllers\Api\CommissionController::class, 'staffPerformance']);
     });
 
     // ── Franchise Dashboard (dsa role only) ──────────────────────────────────

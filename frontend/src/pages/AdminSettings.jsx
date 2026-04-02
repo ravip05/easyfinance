@@ -13,12 +13,13 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState({})
   const [users, setUsers] = useState([])
   const [stages, setStages] = useState([])
+  const [commissionSlabs, setCommissionSlabs] = useState([])
   const [logs, setLogs] = useState([])
   
   const tabs = [
     { id: 'company', label: 'Company Settings', icon: '🏢' },
     { id: 'users', label: 'Users & Access', icon: '👥' },
-    { id: 'commission', label: 'Commission Slabs', icon: '💰' },
+    { id: 'commission', label: 'Commission & Slabs', icon: '💰' },
     { id: 'notifications', label: 'Notification Rules', icon: '🔔' },
     { id: 'leads', label: 'Lead Config', icon: '🎯' },
     { id: 'pipeline', label: 'Pipeline Stages', icon: '🛣️' },
@@ -37,16 +38,18 @@ export default function AdminSettings() {
     else setRefreshing(true)
     
     try {
-      const [sRes, uRes, pRes, aRes] = await Promise.all([
+      const [sRes, uRes, pRes, aRes, cRes] = await Promise.all([
         apiClient.get('/admin/settings'),
         apiClient.get('/admin/users'),
         apiClient.get('/admin/pipeline-stages'),
-        apiClient.get('/admin/audit-logs')
+        apiClient.get('/admin/audit-logs'),
+        apiClient.get('/admin/commission-slabs')
       ])
       setSettings(sRes.data || {})
       setUsers(Array.isArray(uRes.data) ? uRes.data : [])
       setStages(Array.isArray(pRes.data) ? pRes.data : [])
       setLogs(Array.isArray(aRes.data) ? aRes.data : [])
+      setCommissionSlabs(Array.isArray(cRes.data) ? cRes.data : [])
     } catch (err) {
       toast.error('Failed to load system settings')
     } finally {
@@ -135,7 +138,14 @@ export default function AdminSettings() {
           <UsersManagement users={users} onReload={fetchInitialData} />
         )}
         {activeTab === 'commission' && (
-          <CommissionSettings settings={settings} onSave={handleSaveSettings} saving={saving} />
+          <CommissionSettings 
+            settings={settings} 
+            slabs={commissionSlabs} 
+            onSave={handleSaveSettings} 
+            onUpdateSlabs={(newSlabs) => setCommissionSlabs(newSlabs)}
+            onReload={fetchInitialData}
+            saving={saving} 
+          />
         )}
         {activeTab === 'notifications' && (
           <NotificationSettings settings={settings} onSave={handleSaveSettings} saving={saving} />
@@ -263,25 +273,59 @@ function NotificationSettings({ settings, onSave, saving }) {
     )
 }
 
-function CommissionSettings({ settings, onSave, saving }) {
-    const [form, setForm] = useState({
+function CommissionSettings({ settings, slabs, onSave, onUpdateSlabs, onReload, saving }) {
+    const toast = useToast()
+    const [payoutForm, setPayoutForm] = useState({
         tds_rate: settings.tds_rate || '10',
         min_payout_threshold: settings.min_payout_threshold || '500',
         payout_cycle: settings.payout_cycle || 'monthly',
     })
+    const [editSlabs, setEditSlabs] = useState([])
+
+    useEffect(() => {
+        setEditSlabs(slabs)
+    }, [slabs])
+
+    const handleAddSlab = () => {
+        setEditSlabs([...editSlabs, { role: 'staff', loan_type: 'All', rate: 0.1, min_disbursement: 0, is_active: true }])
+    }
+
+    const handleUpdateSlabField = (idx, field, value) => {
+        const updated = [...editSlabs]
+        updated[idx][field] = value
+        setEditSlabs(updated)
+    }
+
+    const handleDeleteSlab = async (slab) => {
+        if (!slab.id) return setEditSlabs(editSlabs.filter((_, i) => editSlabs[i] !== slab))
+        if (!window.confirm('Delete this slab?')) return
+        try {
+            await apiClient.delete(`/admin/commission-slabs/${slab.id}`)
+            toast.success('Slab deleted')
+            onReload()
+        } catch { toast.error('Failed to delete slab') }
+    }
+
+    const handleSaveSlabs = async () => {
+        try {
+            await apiClient.post('/admin/commission-slabs', { slabs: editSlabs })
+            toast.success('Commission slabs updated')
+            onReload()
+        } catch { toast.error('Failed to update slabs') }
+    }
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); onSave(form) }}>
+        <div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '40px', marginBottom: '40px' }}>
                 <div>
                     <h3 style={sectionTitle}>Payout Parameters</h3>
-                    <Field label="TDS Deduction (%)" value={form.tds_rate} onChange={v => setForm({...form, tds_rate: v})} />
-                    <Field label="Min Payout Threshold (₹)" value={form.min_payout_threshold} onChange={v => setForm({...form, min_payout_threshold: v})} />
+                    <Field label="TDS Deduction (%)" value={payoutForm.tds_rate} onChange={v => setPayoutForm({...payoutForm, tds_rate: v})} />
+                    <Field label="Min Payout Threshold (₹)" value={payoutForm.min_payout_threshold} onChange={v => setPayoutForm({...payoutForm, min_payout_threshold: v})} />
                     <div style={{ marginTop: '20px' }}>
                         <label style={{ ...labelStyle, display: 'block', marginBottom: '8px' }}>Payout Cycle</label>
                         <select 
-                            value={form.payout_cycle} 
-                            onChange={e => setForm({...form, payout_cycle: e.target.value})}
+                            value={payoutForm.payout_cycle} 
+                            onChange={e => setPayoutForm({...payoutForm, payout_cycle: e.target.value})}
                             style={inputStyle}
                         >
                             <option value="weekly">Weekly</option>
@@ -289,32 +333,60 @@ function CommissionSettings({ settings, onSave, saving }) {
                             <option value="monthly">Monthly</option>
                         </select>
                     </div>
+                    <button className="btn btn-primary btn-sm" style={{ marginTop: 16 }} onClick={() => onSave(payoutForm)}>Update Payout Rules</button>
                 </div>
                 <div>
-                    <h3 style={sectionTitle}>Commission Slabs (Role-Based)</h3>
-                    <div style={{ padding: '24px', background: 'linear-gradient(to bottom right, #f8fafc, #eff6ff)', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1.5px solid #e2e8f0', paddingBottom: '12px' }}>
-                            <span style={{ fontWeight: 800, fontSize: '13px', color: '#64748b' }}>ROLE TYPE</span>
-                            <span style={{ fontWeight: 800, fontSize: '13px', color: '#64748b' }}>BASE RATE</span>
-                        </div>
-                        {[
-                            { r: 'Super Admin', v: '0.35%' },
-                            { r: 'Branch Manager', v: '0.25%' },
-                            { r: 'Field Executive', v: '0.15%' },
-                            { r: 'DSA Partner', v: '0.10%' }
-                        ].map((row, i) => (
-                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <span style={{ fontWeight: 700, color: '#1e293b' }}>{row.r}</span>
-                                <span style={{ fontWeight: 800, color: '#2563eb' }}>{row.v}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ ...sectionTitle, margin: 0 }}>Role-Based Slabs</h3>
+                        <button className="btn btn-secondary btn-sm" onClick={handleAddSlab}>+ Add Slab</button>
+                    </div>
+                    <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {editSlabs.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 13 }}>No slabs configured.</div>
+                        ) : editSlabs.map((s, i) => (
+                            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 0.8fr 40px', gap: 8, alignItems: 'center', background: '#fff', padding: 8, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                <select 
+                                    value={s.role} 
+                                    onChange={e => handleUpdateSlabField(i, 'role', e.target.value)}
+                                    style={{ ...inputStyle, padding: '4px 8px', fontSize: 12 }}
+                                >
+                                    <option value="staff">Staff</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="dsa">DSA Partner</option>
+                                    <option value="admin">Super Admin</option>
+                                </select>
+                                <select 
+                                    value={s.loan_type} 
+                                    onChange={e => handleUpdateSlabField(i, 'loan_type', e.target.value)}
+                                    style={{ ...inputStyle, padding: '4px 8px', fontSize: 12 }}
+                                >
+                                    <option value="All">All Types</option>
+                                    <option value="Home Loan">Home Loan</option>
+                                    <option value="Business Loan">Business Loan</option>
+                                    <option value="Personal Loan">Personal Loan</option>
+                                    <option value="LAP">LAP</option>
+                                    <option value="Insurance">Insurance</option>
+                                </select>
+                                <div style={{ position: 'relative' }}>
+                                    <input 
+                                        type="number" 
+                                        step="0.01"
+                                        value={s.rate} 
+                                        onChange={e => handleUpdateSlabField(i, 'rate', parseFloat(e.target.value))}
+                                        style={{ ...inputStyle, padding: '4px 8px', fontSize: 12, paddingRight: 16 }}
+                                    />
+                                    <span style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', fontSize: 10, color: '#94a3b8' }}>%</span>
+                                </div>
+                                <button onClick={() => handleDeleteSlab(s)} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 14 }}>✕</button>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '32px', borderTop: '1px solid #f1f5f9' }}>
-                <button type="submit" disabled={saving} style={btnStyle}>Save Commission Slabs</button>
+                <button type="button" disabled={saving} style={btnStyle} onClick={handleSaveSlabs}>Sync Commission Logic</button>
             </div>
-        </form>
+        </div>
     )
 }
 
