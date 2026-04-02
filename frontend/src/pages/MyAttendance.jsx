@@ -10,21 +10,6 @@ import { useState, useEffect } from 'react'
 import apiClient from '../api/client'
 import { useAuth } from '../context/AuthContext'
 
-// Office coordinates & geofence radius (should be fetched from settings)
-const OFFICE_COORDS = { lat: 19.0760, lng: 72.8777 }
-const ALLOWED_RADIUS_METERS = 200
-
-/** Calculate distance between two coordinates in meters (Haversine) */
-function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3
-  const rad = Math.PI / 180
-  const dLat = (lat2 - lat1) * rad
-  const dLon = (lon2 - lon1) * rad
-  const a = Math.sin(dLat / 2) ** 2 +
-            Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
-            Math.sin(dLon / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
 
 /** Get current position using web API (Capacitor-free) */
 function getCurrentPosition() {
@@ -78,14 +63,7 @@ export default function MyAttendance() {
       const coords = await getCurrentPosition()
       setLocationInfo(coords)
 
-      // 2. Geofence check (only for check-in)
-      const distance = getDistance(coords.latitude, coords.longitude, OFFICE_COORDS.lat, OFFICE_COORDS.lng)
-
-      if (distance > ALLOWED_RADIUS_METERS && type === 'check-in') {
-        setError(`You are ${Math.round(distance)}m away from the office. Must be within ${ALLOWED_RADIUS_METERS}m.`)
-        setActing(false)
-        return
-      }
+      // 2. Send to backend API (Geofencing is handled server-side)
 
       // 3. Send to backend API
       const endpoint = type === 'check-in' ? '/attendance/check-in' : '/attendance/check-out'
@@ -160,7 +138,7 @@ export default function MyAttendance() {
                 ⏳ Not Checked In
               </div>
               <div style={{ fontSize: 12, color: 'var(--text2)' }}>
-                You must be within {ALLOWED_RADIUS_METERS}m of the office to check in.
+                You must be within the authorized office radius to check in.
               </div>
             </div>
             <button

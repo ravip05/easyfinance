@@ -10,6 +10,7 @@ use App\Models\LeaveRequest;
 use App\Models\Announcement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class HRController extends Controller
 {
@@ -126,6 +127,49 @@ class HRController extends Controller
         ], 201);
     }
 
+    /**
+     * PUT /api/admin/hr/policies/{policy}
+     */
+    public function updatePolicy(Request $request, CompanyPolicy $policy): JsonResponse
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Admin access required.'], 403);
+        }
+
+        $validated = $request->validate([
+            'title'     => ['required', 'string', 'max:255'],
+            'category'  => ['nullable', 'string', 'max:100'],
+            'content'   => ['required', 'string'],
+            'version'   => ['nullable', 'string', 'max:20'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $policy->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Policy updated.',
+            'data' => $policy,
+        ]);
+    }
+
+    /**
+     * DELETE /api/admin/hr/policies/{policy}
+     */
+    public function destroyPolicy(Request $request, CompanyPolicy $policy): JsonResponse
+    {
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Admin access required.'], 403);
+        }
+
+        $policy->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Policy deleted.',
+        ]);
+    }
+
     // ── leave management ─────────────────────────────────────────────────────
 
     /**
@@ -156,16 +200,15 @@ class HRController extends Controller
                     'emp_code'   => $l->user->emp_code,
                     'department' => $l->user->department,
                 ] : null,
-                'type'           => $l->type,
-                'start_date'     => $l->start_date->format('Y-m-d'),
-                'end_date'       => $l->end_date->format('Y-m-d'),
+                'start_date'     => Carbon::parse($l->start_date)->format('Y-m-d'),
+                'end_date'       => Carbon::parse($l->end_date)->format('Y-m-d'),
                 'days'           => $l->days,
                 'reason'         => $l->reason,
                 'status'         => $l->status,
                 'rejection_note' => $l->rejection_note,
                 'approved_by'    => $l->approver?->name,
-                'actioned_at'    => $l->actioned_at?->toDateTimeString(),
-                'created_at'     => $l->created_at->toDateTimeString(),
+                'actioned_at'    => $l->actioned_at ? Carbon::parse($l->actioned_at)->toDateTimeString() : null,
+                'created_at'     => Carbon::parse($l->created_at)->toDateTimeString(),
             ]),
             'meta' => [
                 'total'        => $leaves->total(),
@@ -243,9 +286,11 @@ class HRController extends Controller
         $note = $validated['rejection_note'] ? " Reason: {$validated['rejection_note']}" : '';
 
         try {
+            $startDate = Carbon::parse($leave->start_date)->format('d M');
+            $endDate = Carbon::parse($leave->end_date)->format('d M');
             Announcement::create([
                 'title'        => "{$statusEmoji} Leave {$validated['status']}",
-                'message'      => "{$leave->user->name}'s leave request ({$leave->type}) from {$leave->start_date->format('d M')} to {$leave->end_date->format('d M')} has been {$validated['status']} by {$user->name}.{$note}",
+                'message'      => "{$leave->user->name}'s leave request ({$leave->type}) from {$startDate} to {$endDate} has been {$validated['status']} by {$user->name}.{$note}",
                 'target'       => 'staff',
                 'priority'     => 'normal',
                 'published_at' => now(),
@@ -285,7 +330,7 @@ class HRController extends Controller
                 'user_code'  => $l->user?->emp_code,
                 'department' => $l->user?->department,
                 'type'       => $l->type,
-                'end_date'   => $l->end_date->format('d M Y'),
+                'end_date'   => Carbon::parse($l->end_date)->format('d M Y'),
             ]),
         ]);
     }

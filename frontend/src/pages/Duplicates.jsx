@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
-import apiClient from '../api/client'
+import { useToast } from '../context/ToastContext'
 
 const BADGE_COLORS = { phone: '#2563eb', pan_number: '#7c3aed' }
 
 export default function Duplicates() {
+  const toast = useToast()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
@@ -33,11 +33,11 @@ export default function Duplicates() {
         duplicate_ids: duplicates
       });
       if (res.data?.success) {
-        alert(res.data.message);
+        toast.success(res.data.message || 'Leads merged successfully.');
         fetchDuplicates(); // refresh the list
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to merge leads.');
+      toast.error(err.response?.data?.message || 'Failed to merge leads.');
     }
   }
 
@@ -55,11 +55,11 @@ export default function Duplicates() {
         duplicate_ids: duplicates
       });
       if (res.data?.success) {
-        alert('Duplicates archived successfully.');
+        toast.success('Duplicates archived successfully.');
         fetchDuplicates();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to archive leads.');
+      toast.error(err.response?.data?.message || 'Failed to archive leads.');
     }
   }
 

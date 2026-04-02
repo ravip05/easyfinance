@@ -34,6 +34,21 @@ class AttendanceController extends Controller
             'longitude' => 'nullable|numeric',
         ]);
 
+        // Geofencing Check
+        $officeLat = \App\Models\Setting::get('office_lat');
+        $officeLng = \App\Models\Setting::get('office_lng');
+        $radius = \App\Models\Setting::get('office_radius', 500); // meters
+
+        if ($officeLat && $officeLng && isset($validated['latitude']) && isset($validated['longitude'])) {
+            $distance = $this->calculateDistance($validated['latitude'], $validated['longitude'], $officeLat, $officeLng);
+            if ($distance > $radius) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Check-in denied. You are " . round($distance) . "m away from the office. (Allowed: {$radius}m)"
+                ], 403);
+            }
+        }
+
         $attendance = Attendance::create([
             'user_id' => $user->id,
             'check_in_at' => now(),
@@ -141,5 +156,20 @@ class AttendanceController extends Controller
                 'absent' => 0, // Placeholder
             ]
         ]);
+    }
+
+    /**
+     * Haversine formula to calculate distance between two points in meters
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // meters
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return $earthRadius * $c;
     }
 }

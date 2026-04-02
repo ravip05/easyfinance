@@ -168,6 +168,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('company-policies', [HRController::class, 'policies'])->name('policies.index');
     Route::post('company-policies', [HRController::class, 'storePolicy'])->name('policies.store');
+    
+    Route::middleware('role:admin')->group(function () {
+        Route::put('admin/hr/policies/{policy}', [HRController::class, 'updatePolicy'])->name('admin.policies.update');
+        Route::delete('admin/hr/policies/{policy}', [HRController::class, 'destroyPolicy'])->name('admin.policies.destroy');
+    });
 
     Route::post('push-subscriptions', [HRController::class, 'registerPushDevice'])->name('push.register');
     Route::delete('push-subscriptions', [HRController::class, 'unregisterPushDevice'])->name('push.unregister');

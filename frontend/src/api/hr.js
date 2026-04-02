@@ -14,6 +14,8 @@ export const hrApi = {
   // Policies
   listPolicies: () => apiClient.get('/company-policies'),
   createPolicy: (data) => apiClient.post('/company-policies', data),
+  updatePolicy: (id, data) => apiClient.put(`/admin/hr/policies/${id}`, data),
+  deletePolicy: (id) => apiClient.delete(`/admin/hr/policies/${id}`),
   
   // Attendance
   getAttendance: (params = {}) => apiClient.get('/attendance', { params }),

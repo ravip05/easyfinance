@@ -17,20 +17,30 @@ const EMPTY_FORM = () => ({
   is_active: true,
 })
 
-export default function PolicyModal({ isOpen, onClose, onSuccess }) {
+export default function PolicyModal({ isOpen, onClose, onSuccess, policy }) {
   const toast = useToast()
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [form, setForm] = useState(EMPTY_FORM())
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
   const titleRef = useRef(null)
 
   useEffect(() => {
     if (!isOpen) return
-    setForm(EMPTY_FORM())
+    if (policy) {
+        setForm({
+            title: policy.title || '',
+            category: policy.category || 'General',
+            content: policy.content || '',
+            version: policy.version || '1.0',
+            is_active: policy.is_active !== false,
+        })
+    } else {
+        setForm(EMPTY_FORM())
+    }
     setErrors({})
     setIsLoading(false)
     setTimeout(() => titleRef.current?.focus(), 60)
-  }, [isOpen])
+  }, [isOpen, policy])
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target
@@ -54,14 +64,19 @@ export default function PolicyModal({ isOpen, onClose, onSuccess }) {
 
     setIsLoading(true)
     try {
-      await hrApi.createPolicy(form)
-      toast.success('Policy published successfully')
+      if (policy?.id) {
+        await hrApi.updatePolicy(policy.id, form)
+        toast.success('Policy updated successfully')
+      } else {
+        await hrApi.createPolicy(form)
+        toast.success('Policy published successfully')
+      }
       onSuccess?.()
       onClose()
     } catch (e) {
       const body = e.response?.data
-      toast.error(body?.message || 'Failed to publish policy')
-      if (body.errors) setErrors(body.errors)
+      toast.error(body?.message || 'Failed to save policy')
+      if (body?.errors) setErrors(body.errors)
     } finally {
       setIsLoading(false)
     }
@@ -73,7 +88,7 @@ export default function PolicyModal({ isOpen, onClose, onSuccess }) {
     <div className="modal-overlay open">
       <div className="modal" style={{ maxWidth: 600 }}>
         <div className="modal-header">
-          <div className="modal-title">📋 Publish Company Policy</div>
+          <div className="modal-title">{policy ? '✏️ Edit Policy' : '📋 Publish Company Policy'}</div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
@@ -127,7 +142,7 @@ export default function PolicyModal({ isOpen, onClose, onSuccess }) {
         <div className="modal-footer">
           <button className="btn btn-ghost" onClick={onClose} disabled={isLoading}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? 'Publishing...' : '✓ Publish Policy'}
+            {isLoading ? 'Saving...' : (policy ? '✓ Update Policy' : '✓ Publish Policy')}
           </button>
         </div>
       </div>

@@ -25,7 +25,7 @@ export default function AdminSettings() {
     { id: 'pipeline', label: 'Pipeline Stages', icon: '🛣️' },
     { id: 'bank-policies', label: 'Bank Policies', icon: '🏛️' },
     { id: 'lms', label: 'LMS Training', icon: '🎓' },
-    { id: 'security', label: 'Security & Auth', icon: '🔐' },
+    { id: 'security', label: 'Security & Geofencing', icon: '🔐' },
     { id: 'audit', label: 'Audit Logs', icon: '📜' },
   ]
 
@@ -828,6 +828,9 @@ function SecuritySettings({ settings, onSave, saving }) {
         two_factor_auth: settings.two_factor_auth || '0',
         session_timeout: settings.session_timeout || '30',
         backup_frequency: settings.backup_frequency || 'daily',
+        office_lat: settings.office_lat || '',
+        office_lng: settings.office_lng || '',
+        office_radius: settings.office_radius || '500',
     })
 
     return (
@@ -847,6 +850,16 @@ function SecuritySettings({ settings, onSave, saving }) {
                     </div>
                 </div>
                 <div>
+                    <h3 style={sectionTitle}>Attendance Geofencing</h3>
+                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>Verify physical presence during check-in.</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                        <Field label="Office Latitude" value={form.office_lat} onChange={v => setForm({...form, office_lat: v})} placeholder="Ex: 18.52" />
+                        <Field label="Office Longitude" value={form.office_lng} onChange={v => setForm({...form, office_lng: v})} placeholder="Ex: 73.85" />
+                    </div>
+                    <Field label="Allowed Radius (Meters)" value={form.office_radius} onChange={v => setForm({...form, office_radius: v})} />
+                </div>
+                <div>
+
                     <h3 style={sectionTitle}>Data Preservation</h3>
                     <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '24px' }}>Configure automated cloud redundancy.</p>
                     <label style={{ ...labelStyle, display: 'block', marginBottom: '8px' }}>Snapshot Frequency</label>

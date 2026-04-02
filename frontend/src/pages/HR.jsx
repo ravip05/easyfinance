@@ -16,6 +16,7 @@ export default function HR() {
   const [showHolidayModal, setShowHolidayModal] = useState(false)
   const [showPolicyModal, setShowPolicyModal] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
+  const [editingPolicy, setEditingPolicy] = useState(null)
 
   const tabs = [
     { id: 'attendance', label: 'My Attendance', icon: '📅' },
@@ -125,11 +126,34 @@ export default function HR() {
         {activeTab === 'holidays' && <HolidaysView data={data.holidays} loading={loading} isAdmin={role === 'admin'} onDelete={handleDeleteHoliday} />}
         {activeTab === 'leaves' && <LeavesView data={data.leaves} loading={loading} role={role} onRefresh={fetchData} />}
         {activeTab === 'payouts' && <PayoutsView data={data.payouts} commissions={data.commissions} loading={loading} />}
-        {activeTab === 'policies' && <PoliciesView data={data.policies} loading={loading} />}
+        {activeTab === 'policies' && (
+            <PoliciesView 
+              data={data.policies} 
+              loading={loading} 
+              isAdmin={role === 'admin'} 
+              onEdit={(p) => { setEditingPolicy(p); setShowPolicyModal(true); }}
+              onDelete={async (id) => {
+                  if (window.confirm('Are you sure you want to delete this policy?')) {
+                      try {
+                          await hrApi.deletePolicy(id);
+                          toast.success('Policy deleted successfully');
+                          fetchData();
+                      } catch {
+                          toast.error('Failed to delete policy');
+                      }
+                  }
+              }}
+            />
+        )}
       </div>
 
       <HolidayModal isOpen={showHolidayModal} onClose={() => setShowHolidayModal(false)} onSuccess={fetchData} />
-      <PolicyModal isOpen={showPolicyModal} onClose={() => setShowPolicyModal(false)} onSuccess={fetchData} />
+      <PolicyModal 
+        isOpen={showPolicyModal} 
+        onClose={() => { setShowPolicyModal(false); setEditingPolicy(null); }} 
+        onSuccess={fetchData} 
+        policy={editingPolicy}
+      />
       {showLeaveModal && <LeaveApplyModal onClose={() => setShowLeaveModal(false)} onSuccess={() => { setShowLeaveModal(false); fetchData() }} />}
     </div>
   )
@@ -489,7 +513,7 @@ function PayoutsView({ data, commissions, loading }) {
     )
 }
 
-function PoliciesView({ data, loading }) {
+function PoliciesView({ data, loading, isAdmin, onEdit, onDelete }) {
     if (loading) return <Loader />
     if (data.length === 0) {
       return (
@@ -502,13 +526,21 @@ function PoliciesView({ data, loading }) {
     return (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px' }}>
             {data.map(p => (
-                <div key={p.id} style={{ background: 'white', border: '1.5px solid #e2e8f0', borderRadius: '20px', padding: '24px', transition: 'all 0.2s', cursor: 'pointer' }}>
+                <div key={p.id} style={{ background: 'white', border: '1.5px solid #e2e8f0', borderRadius: '20px', padding: '24px', transition: 'all 0.2s' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#2563eb', marginTop: '6px' }} />
-                        <span style={badgeStyle('#eff6ff', '#2563eb')}>v{p.version || '1.0'}</span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            {isAdmin && (
+                                <>
+                                    <button onClick={() => onEdit(p)} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '11px', fontWeight: 800 }}>EDIT</button>
+                                    <button onClick={() => onDelete(p.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '11px', fontWeight: 800 }}>DELETE</button>
+                                </>
+                            )}
+                            <span style={badgeStyle('#eff6ff', '#2563eb')}>v{p.version || '1.0'}</span>
+                        </div>
                     </div>
                     <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>{p.title}</h3>
-                    <p style={{ fontSize: '14px', color: '#64748b', lineHeight: 1.6, marginBottom: '20px' }}>{p.content?.substring(0, 150)}...</p>
+                    <p style={{ fontSize: '14px', color: '#64748b', lineHeight: 1.6, marginBottom: '20px' }}>{p.category} · {p.content?.substring(0, 150)}...</p>
                     <button style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: 'transparent', color: '#1e293b', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>Read Full Policy</button>
                 </div>
             ))}
