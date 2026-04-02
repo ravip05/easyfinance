@@ -50,7 +50,9 @@ export default function HR() {
       } else if (activeTab === 'payouts') {
         try {
           const res = await hrApi.getStaffPayouts()
-          setData(prev => ({ ...prev, payouts: res.data.data || [] }))
+          // Handle paginated or flat data
+          const raw = res.data.data
+          setData(prev => ({ ...prev, payouts: raw?.data || (Array.isArray(raw) ? raw : []) }))
         } catch { setData(prev => ({ ...prev, payouts: [] })) }
       }
     } catch (err) {

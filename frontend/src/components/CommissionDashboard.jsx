@@ -42,7 +42,7 @@ const CommissionDashboard = ({ payouts = [], stats = {} }) => {
               </tr>
             </thead>
             <tbody>
-              {payouts.length > 0 ? payouts.map(payout => (
+              {(Array.isArray(payouts) ? payouts : (payouts?.data || [])).length > 0 ? (Array.isArray(payouts) ? payouts : (payouts?.data || [])).map(payout => (
                 <tr key={payout.id}>
                   <td>{new Date(payout.payout_date).toLocaleDateString()}</td>
                   <td className="font-bold">{formatCurrency(payout.amount)}</td>
