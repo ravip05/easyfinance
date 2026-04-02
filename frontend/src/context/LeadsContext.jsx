@@ -19,7 +19,7 @@
  *   deleteLead() — soft-delete (admin only)
  *   staff        — [{ id, name }] list for the "Assign To" dropdown
  */
-import {
+import React, {
   createContext, useCallback, useContext,
   useEffect, useRef, useState,
 } from 'react'

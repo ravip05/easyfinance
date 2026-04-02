@@ -145,18 +145,29 @@ class LmsController extends Controller {
         return response()->json(['score'=>$score,'passed'=>$attempt->passed,'correct'=>$correct,'total'=>$total]);
     }
     public function leaderboard(Request $request) {
-        $lb = QuizAttempt::query()
+        $attempts = QuizAttempt::with('user:id,name')
             ->select('user_id')
-            ->selectRaw('count(*) as quizzes_taken')
-            ->selectRaw('avg(score) as avg_score')
-            ->selectRaw('max(score) as best_score')
-            ->selectRaw('sum(case when passed=1 then 1 else 0 end) * 10 as points')
-            ->with('user:id,name')
+            ->selectRaw('count(*) as count')
+            ->selectRaw('sum(case when passed = 1 then 1 else 0 end) as passed_count')
+            ->selectRaw('avg(score) as average')
+            ->selectRaw('max(score) as top_score')
             ->groupBy('user_id')
-            ->orderByRaw('sum(case when passed=1 then 1 else 0 end) DESC')
-            ->limit(10)
-            ->get();
-        return response()->json($lb);
+            ->get()
+            ->map(function ($a) {
+                return [
+                    'user_id' => $a->user_id,
+                    'user' => $a->user,
+                    'quizzes_taken' => $a->count,
+                    'avg_score' => round($a->average, 1),
+                    'best_score' => $a->top_score,
+                    'points' => $a->passed_count * 10
+                ];
+            })
+            ->sortByDesc('points')
+            ->values()
+            ->take(10);
+
+        return response()->json($attempts);
     }
     public function certificates(Request $request) {
         return response()->json(Certificate::where('user_id',$request->user()->id)->with('course:id,title')->get());
