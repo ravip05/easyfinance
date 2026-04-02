@@ -87,6 +87,10 @@ export default function LMS() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [search, setSearch] = useState('')
 
+  // Modals state
+  const [showCourseModal, setShowCourseModal] = useState(false)
+  const [showMaterialModal, setShowMaterialModal] = useState(false)
+
   // Sub-views
   const [selectedCourse, setSelectedCourse] = useState(null) // syllabus modal
   const [playerCourse, setPlayerCourse] = useState(null) // course player
@@ -218,6 +222,15 @@ export default function LMS() {
             {CATEGORIES.map(cat => (
               <div key={cat.id} style={s.chip(filterCategory === cat.id)} onClick={() => setFilterCategory(cat.id)}>{cat.label}</div>
             ))}
+            {['admin', 'manager'].includes(user?.role) && (
+              <button 
+                className="btn btn-primary btn-sm" 
+                style={{ marginLeft: 'auto' }}
+                onClick={() => setShowCourseModal(true)}
+              >
+                + Add Course
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
             {[{ id: 'all', label: 'All' }, { id: 'enrolled', label: 'Enrolled' }, { id: 'in-progress', label: 'In Progress' }, { id: 'completed', label: 'Completed' }].map(st => (
@@ -263,6 +276,12 @@ export default function LMS() {
       {/* ── TAB: Materials ── */}
       {activeTab === 'materials' && (
         <div className="card" style={{ padding: 0 }}>
+          <div className="card-header" style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0' }}>
+            <h3 className="card-title">Study Resources</h3>
+            {['admin', 'manager'].includes(user?.role) && (
+              <button className="btn btn-primary btn-sm" onClick={() => setShowMaterialModal(true)}>+ Upload Material</button>
+            )}
+          </div>
           <div style={s.tableWrap}>
             <table>
               <thead>
@@ -397,10 +416,142 @@ export default function LMS() {
           onStart={() => handleEnrollAndPlay(selectedCourse)}
         />
       )}
+
+      {/* ── Add Course Modal ── */}
+      {showCourseModal && (
+        <CourseFormModal 
+          onClose={() => setShowCourseModal(false)}
+          onSuccess={() => { setShowCourseModal(false); fetchAll(); }}
+        />
+      )}
+
+      {/* ── Upload Material Modal ── */}
+      {showMaterialModal && (
+        <MaterialUploadModal 
+          onClose={() => setShowMaterialModal(false)}
+          onSuccess={() => { setShowMaterialModal(false); fetchAll(); }}
+        />
+      )}
     </div>
   )
 }
 
+function CourseFormModal({ onClose, onSuccess }) {
+  const toast = useToast()
+  const [formData, setFormData] = useState({ title: '', category: 'loans', level: 'beginner', duration_minutes: 0, thumbnail: '🎓' })
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await apiClient.post('/lms/courses', formData)
+      toast.success('Course created')
+      onSuccess()
+    } catch (err) {
+      toast.error('Failed to create course')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={s.overlay} onClick={onClose}>
+      <div style={s.modal(500)} onClick={e => e.stopPropagation()}>
+        <div style={s.modalHeader}>
+          <div style={s.modalTitle}>Add New Course</div>
+          <button style={s.modalClose} onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div style={s.modalBody} className="form-grid">
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label">Title <span className="req">*</span></label>
+              <input type="text" className="form-input" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Category</label>
+              <select className="form-select" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                {CATEGORIES.filter(c => c.id !== 'all').map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Level</label>
+              <select className="form-select" value={formData.level} onChange={e => setFormData({...formData, level: e.target.value})}>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+          </div>
+          <div style={s.modalFooter}>
+            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating...' : 'Create Course'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function MaterialUploadModal({ onClose, onSuccess }) {
+  const toast = useToast()
+  const [formData, setFormData] = useState({ title: '', category: 'loans', file: null })
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!formData.file) return toast.error('Please select a file to upload')
+    setLoading(true)
+    const data = new FormData()
+    data.append('title', formData.title)
+    data.append('category', formData.category)
+    data.append('file', formData.file)
+    try {
+      await apiClient.post('/lms/materials/upload', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      toast.success('Material uploaded')
+      onSuccess()
+    } catch (err) {
+      toast.error('Failed to upload material')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={s.overlay} onClick={onClose}>
+      <div style={s.modal(500)} onClick={e => e.stopPropagation()}>
+        <div style={s.modalHeader}>
+          <div style={s.modalTitle}>Upload Material</div>
+          <button style={s.modalClose} onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div style={s.modalBody} className="form-grid">
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label">Title <span className="req">*</span></label>
+              <input type="text" className="form-input" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Category</label>
+              <select className="form-select" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                {CATEGORIES.filter(c => c.id !== 'all').map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label">File attachment <span className="req">*</span></label>
+              <input type="file" className="form-input" required onChange={e => setFormData({...formData, file: e.target.files[0]})} />
+            </div>
+          </div>
+          <div style={s.modalFooter}>
+            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Uploading...' : 'Upload'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  CourseDetailModal — Syllabus preview before entering player

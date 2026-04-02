@@ -120,6 +120,14 @@ export default function Franchise() {
             + Add Franchise
           </button>
         )}
+        {role === 'dsa' && (
+          <button 
+            className="btn btn-primary btn-sm" 
+            onClick={() => navigate('/tickets')}
+          >
+            Raise Issue
+          </button>
+        )}
       </div>
 
       {!isLoading && franchises.length > 0 && (

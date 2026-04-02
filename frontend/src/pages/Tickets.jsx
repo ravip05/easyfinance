@@ -222,6 +222,7 @@ export default function Tickets() {
                       <option>Technical</option>
                       <option>Commission</option>
                       <option>Lead Issue</option>
+                      <option>Franchise Issue</option>
                       <option>Other</option>
                     </select>
                   </div>
