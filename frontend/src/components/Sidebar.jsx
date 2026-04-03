@@ -161,8 +161,7 @@ export default function Sidebar({ isOpen, onClose }) {
       const pageToMod = {
          dashboard: 'dashboard', leads: 'leads', duplicates: 'leads', clients: 'clients',
          pipeline: 'pipeline', tasks: 'tasks', hr: 'hr', idcard: 'hr', myattendance: 'hr',
-         reports: 'reports', lms: 'lms', bankpolicies: 'lms', tickets: 'tickets', announcements: 'announcements',
-         'team-chat': 'announcements'
+         reports: 'reports', lms: 'lms', bankpolicies: 'lms', tickets: 'tickets', announcements: 'announcements'
       };
       const filteredNav = roleConfig.nav.map(section => ({
           ...section,
