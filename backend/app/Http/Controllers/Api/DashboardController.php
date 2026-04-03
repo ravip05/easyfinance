@@ -75,12 +75,12 @@ class DashboardController extends Controller {
         $leads = Lead::forUser($user)
             ->whereNotNull('follow_up_date')
             ->whereNotIn('stage',['Closed'])
-            ->orderBy('followup_date')
+            ->orderBy('follow_up_date')
             ->limit(10)
             ->with('assignedUser:id,name,initials')
-            ->get(['id','name','phone','loan_type','stage','followup_date','priority','assigned_to']);
+            ->get(['id','name','phone','loan_type','stage','follow_up_date','priority','assigned_to']);
         return response()->json($leads->map(fn($l) => array_merge($l->toArray(), [
-            'status' => $l->followup_date < $today ? 'overdue' : ($l->followup_date == $today ? 'today' : 'upcoming')
+            'status' => $l->follow_up_date < $today ? 'overdue' : ($l->follow_up_date == $today ? 'today' : 'upcoming')
         ])));
     }
     public function leaderboard(Request $request) {

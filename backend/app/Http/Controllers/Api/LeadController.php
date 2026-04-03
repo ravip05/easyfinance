@@ -614,7 +614,6 @@ class LeadController extends Controller
             'name'            => $lead->name,
             'phone'           => $lead->phone,
             'email'           => $lead->email,
-            'pan_number'      => $lead->pan_number,
             'birth_date'      => $lead->birth_date?->toDateString(),
             'age'             => $lead->age,
             'location'        => $lead->location,

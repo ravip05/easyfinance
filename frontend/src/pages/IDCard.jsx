@@ -58,15 +58,15 @@ export default function IDCard() {
       </div>
 
       {/* Format Toggle */}
-      <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '12px', padding: '4px', marginBottom: '40px' }}>
+      <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '12px', padding: '4px', marginBottom: '40px', border: '1px solid #cbd5e1' }}>
         <button 
           onClick={() => setIsVisitingCard(false)}
-          style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: !isVisitingCard ? 'white' : 'transparent', color: !isVisitingCard ? '#0f172a' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: !isVisitingCard ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
+          style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: !isVisitingCard ? 'white' : 'transparent', color: !isVisitingCard ? '#0f172a' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: !isVisitingCard ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
           ID Card
         </button>
         <button 
           onClick={() => setIsVisitingCard(true)}
-          style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: isVisitingCard ? 'white' : 'transparent', color: isVisitingCard ? '#0f172a' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: isVisitingCard ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
+          style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: isVisitingCard ? 'white' : 'transparent', color: isVisitingCard ? '#0f172a' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: isVisitingCard ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
           Visiting Card
         </button>
       </div>
@@ -86,7 +86,7 @@ export default function IDCard() {
         }}>
           
           {/* FRONT SIDE */}
-          <div data-card-front style={{
+          <div data-id-card style={{
             position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden',
             background: isAdmin ? theme.primary : 'white',
             borderRadius: '28px',
@@ -186,6 +186,7 @@ export default function IDCard() {
       {/* HORIZONTAL VISITING CARD */}
       <div 
         style={{ display: isVisitingCard ? 'block' : 'none', position: 'relative' }}
+        data-visiting-card
       >
         <div data-card-front style={{
           width: '600px',
@@ -232,7 +233,7 @@ export default function IDCard() {
       <div style={{ display: 'flex', gap: 14, marginTop: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
         {/* Download as Image */}
         <button onClick={async () => {
-          const card = document.querySelector('[data-card-front]')
+          const card = document.querySelector(isVisitingCard ? '[data-visiting-card]' : '[data-id-card]')
           if (!card) return
           try {
             const canvas = document.createElement('canvas')
@@ -241,7 +242,6 @@ export default function IDCard() {
             canvas.height = card.offsetHeight * scale
             const ctx = canvas.getContext('2d')
             ctx.scale(scale, scale)
-            // Use html-to-canvas fallback: paint a solid bg + text
             ctx.fillStyle = isAdmin ? '#0f172a' : '#ffffff'
             ctx.fillRect(0, 0, card.offsetWidth, card.offsetHeight)
             ctx.font = '800 20px Inter, sans-serif'
@@ -249,14 +249,14 @@ export default function IDCard() {
             ctx.fillText('EASYFINANCE', 32, 50)
             ctx.font = '800 24px Inter, sans-serif'
             ctx.fillStyle = isAdmin ? '#ffffff' : '#0f172a'
-            ctx.fillText(user?.name || '', 70, 200)
+            ctx.fillText(user?.name || '', 70, isVisitingCard ? 150 : 200)
             ctx.font = '700 12px Inter, sans-serif'
             ctx.fillStyle = '#64748b'
-            ctx.fillText(`ID: ${empId}`, 70, 225)
-            ctx.fillText(`Role: ${user?.role?.toUpperCase()}`, 180, 225)
-            ctx.fillText('EasyFinance CRM', 70, 250)
+            ctx.fillText(`ID: ${empId}`, 70, isVisitingCard ? 175 : 225)
+            ctx.fillText(`Role: ${user?.role?.toUpperCase()}`, 180, isVisitingCard ? 175 : 225)
+            ctx.fillText('EasyFinance CRM', 70, isVisitingCard ? 200 : 250)
             const link = document.createElement('a')
-            link.download = `EasyFinance_ID_${empId}.png`
+            link.download = `EasyFinance_${isVisitingCard ? 'VisitingCard' : 'IDCard'}_${empId}.png`
             link.href = canvas.toDataURL('image/png')
             link.click()
           } catch(e) { alert('Download failed. Try Print instead.') }
