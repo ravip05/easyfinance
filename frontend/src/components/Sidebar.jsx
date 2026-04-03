@@ -83,15 +83,17 @@ const ROLE_CONFIG = {
       { s: 'My Leads',   i: [{ p: 'leads',        ic: '🎯', l: 'My Leads' },
                               { p: 'pipeline',     ic: '🔄', l: 'Pipeline' }] },
       { s: 'Clients',    i: [{ p: 'clients',      ic: '👤', l: 'My Clients' }] },
-      { s: 'Tools',      i: [{ p: 'calculator',   ic: '🧮', l: 'Loan Calculator' },
-                              { p: 'cibil',        ic: '📈', l: 'CIBIL Checker' }] },
+      { s: 'Tools',      i: [
+        { p: 'calculator',   ic: '🧮', l: 'Loan Calculator' },
+        { p: 'cibil',        ic: '📈', l: 'CIBIL Checker' },
+        { p: 'idcard',       ic: '🪪', l: 'My ID Card' }
+      ] },
       { s: 'Learn',      i: [{ p: 'lms',          ic: '🎓', l: 'Training & LMS', b: '2', bc: 'nb-orange' },
                               { p: 'bankpolicies', ic: '🏦', l: 'Bank Policies' }] },
       { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' },
                               { p: 'team-chat',    ic: '💬', l: 'Team Chat', b: 'New', bc: 'nb-green' }] },
       { s: 'My HR',      i: [{ p: 'myattendance', ic: '📅', l: 'My Attendance' },
-                              { p: 'tasks',        ic: '📋', l: 'My Tasks' },
-                              { p: 'idcard',       ic: '🪪', l: 'My ID Card' }] },
+                              { p: 'tasks',        ic: '📋', l: 'My Tasks' }] },
     ],
   },
   dsa: {
@@ -100,13 +102,15 @@ const ROLE_CONFIG = {
       { s: 'Main',       i: [{ p: 'dashboard',    ic: '📊', l: 'My Dashboard' }] },
       { s: 'My Leads',   i: [{ p: 'leads',        ic: '🎯', l: 'My Leads' },
                               { p: 'pipeline',     ic: '🔄', l: 'Pipeline' }] },
-      { s: 'Tools',      i: [{ p: 'calculator',   ic: '🧮', l: 'Loan Calculator' },
-                              { p: 'cibil',        ic: '📈', l: 'CIBIL Checker' }] },
+      { s: 'Tools',      i: [
+        { p: 'calculator',   ic: '🧮', l: 'Loan Calculator' },
+        { p: 'cibil',        ic: '📈', l: 'CIBIL Checker' },
+        { p: 'idcard',       ic: '🪪', l: 'My ID Card' }
+      ] },
       { s: 'Learn',      i: [{ p: 'lms',          ic: '🎓', l: 'Training & LMS' },
                               { p: 'bankpolicies', ic: '🏦', l: 'Bank Policies' }] },
       { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' }] },
-      { s: 'My HR',      i: [{ p: 'myattendance', ic: '📅', l: 'My Attendance' },
-                              { p: 'idcard',       ic: '🪪', l: 'My ID Card' }] },
+      { s: 'My HR',      i: [{ p: 'myattendance', ic: '📅', l: 'My Attendance' }] },
     ],
   },
   client: {
