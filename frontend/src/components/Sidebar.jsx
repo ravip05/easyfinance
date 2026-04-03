@@ -165,17 +165,31 @@ export default function Sidebar({ isOpen, onClose }) {
          pipeline: 'pipeline', tasks: 'tasks', hr: 'hr', idcard: 'hr', myattendance: 'hr',
          reports: 'reports', lms: 'lms', bankpolicies: 'lms', tickets: 'tickets', announcements: 'announcements'
       };
-      const filteredNav = roleConfig.nav.map(section => ({
-          ...section,
-           i: section.i.filter(item => {
-               if (item.p === 'idcard') return true; 
+       const filteredNav = roleConfig.nav.map(section => {
+           const filteredItems = section.i.filter(item => {
+               if (item.p === 'idcard' || item.l === 'My ID Card' || item.l === 'ID Cards') return true;
                const mod = pageToMod[item.p];
                if (mod && !allowed.has(mod)) return false;
                return true;
-           })
-       })).filter(section => section.i.length > 0);
+           });
+           return { ...section, i: filteredItems };
+       }).filter(section => section.i.length > 0);
+       
+       // FINAL SANITY CHECK: If idcard is missing but in original roleConfig, force it back.
+       const originalHasIdCard = roleConfig.nav.some(s => s.i.some(it => it.p === 'idcard'));
+       const filteredHasIdCard = filteredNav.some(s => s.i.some(it => it.p === 'idcard'));
+       
+       if (originalHasIdCard && !filteredHasIdCard) {
+           // This should never happen with the bypass above, but if it does, we force it.
+           const hrSection = roleConfig.nav.find(s => s.i.some(it => it.p === 'idcard'));
+           if (hrSection) {
+               const idItem = hrSection.i.find(it => it.p === 'idcard');
+               filteredNav.push({ s: hrSection.s, i: [idItem] });
+           }
+       }
+
        roleConfig = { ...roleConfig, nav: filteredNav };
-  }
+   }
 
 
   // Current path segment (e.g. "/leads" → "leads") for active detection
