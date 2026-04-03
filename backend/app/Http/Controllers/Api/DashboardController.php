@@ -32,7 +32,7 @@ class DashboardController extends Controller {
             
         $monthlyPayouts = \App\Models\Payout::whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
-            ->sum('amount');
+            ->sum('net_amount');
             
         $monthlyProfit = max(0, ($monthlyDisbursedAmount * 0.02) - $monthlyPayouts);
         

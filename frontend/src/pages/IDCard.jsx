@@ -58,15 +58,15 @@ export default function IDCard() {
       </div>
 
       {/* Format Toggle */}
-      <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '12px', padding: '4px', marginBottom: '40px', border: '1px solid #cbd5e1' }}>
+      <div style={{ display: 'flex', background: '#ffffff', borderRadius: '14px', padding: '6px', marginBottom: '40px', border: '2px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
         <button 
           onClick={() => setIsVisitingCard(false)}
-          style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: !isVisitingCard ? 'white' : 'transparent', color: !isVisitingCard ? '#0f172a' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: !isVisitingCard ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
+          style={{ padding: '10px 32px', borderRadius: '10px', border: 'none', background: !isVisitingCard ? '#0f172a' : 'transparent', color: !isVisitingCard ? 'white' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
           ID Card
         </button>
         <button 
           onClick={() => setIsVisitingCard(true)}
-          style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: isVisitingCard ? 'white' : 'transparent', color: isVisitingCard ? '#0f172a' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: isVisitingCard ? '0 2px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
+          style={{ padding: '10px 32px', borderRadius: '10px', border: 'none', background: isVisitingCard ? '#0f172a' : 'transparent', color: isVisitingCard ? 'white' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
           Visiting Card
         </button>
       </div>
