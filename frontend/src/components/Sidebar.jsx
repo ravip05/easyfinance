@@ -47,7 +47,8 @@ const ROLE_CONFIG = {
                               { p: 'bankpolicies', ic: '🏦', l: 'Bank Policies' },
                               { p: 'policy-management', ic: '🛠️', l: 'Policy Admin' }] },
       { s: 'Analytics',  i: [{ p: 'reports',      ic: '📋', l: 'Reports' }] },
-      { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements', b: '', bc: 'nb-orange' }] },
+      { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements', b: '', bc: 'nb-orange' },
+                              { p: 'team-chat',    ic: '💬', l: 'Team Chat', b: 'New', bc: 'nb-green' }] },
       { s: 'HR & Ops',   i: [{ p: 'hr',           ic: '🏢', l: 'HR Module' },
                               { p: 'tasks',        ic: '📋', l: 'Task Board', b: 'New', bc: 'nb-green' },
                               { p: 'idcard',       ic: '🪪', l: 'ID Cards' }] },
@@ -68,7 +69,8 @@ const ROLE_CONFIG = {
       { s: 'Knowledge',  i: [{ p: 'lms',          ic: '🎓', l: 'Training & LMS' },
                               { p: 'bankpolicies', ic: '🏦', l: 'Bank Policies' }] },
       { s: 'Analytics',  i: [{ p: 'reports',      ic: '📋', l: 'Reports' }] },
-      { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' }] },
+      { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' },
+                              { p: 'team-chat',    ic: '💬', l: 'Team Chat', b: 'New', bc: 'nb-green' }] },
       { s: 'HR & Ops',   i: [{ p: 'hr',           ic: '🏢', l: 'HR Module' },
                               { p: 'tasks',        ic: '📋', l: 'Task Board', b: 'New', bc: 'nb-green' },
                               { p: 'idcard',       ic: '🪪', l: 'ID Cards' }] },
@@ -85,7 +87,8 @@ const ROLE_CONFIG = {
                               { p: 'cibil',        ic: '📈', l: 'CIBIL Checker' }] },
       { s: 'Learn',      i: [{ p: 'lms',          ic: '🎓', l: 'Training & LMS', b: '2', bc: 'nb-orange' },
                               { p: 'bankpolicies', ic: '🏦', l: 'Bank Policies' }] },
-      { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' }] },
+      { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' },
+                              { p: 'team-chat',    ic: '💬', l: 'Team Chat', b: 'New', bc: 'nb-green' }] },
       { s: 'My HR',      i: [{ p: 'myattendance', ic: '📅', l: 'My Attendance' },
                               { p: 'tasks',        ic: '📋', l: 'My Tasks' }] },
     ],
@@ -140,6 +143,7 @@ const PAGE_ROUTES = {
   'policy-management': '/policy-management',
   profile:      '/profile',
   tasks:        '/tasks',
+  'team-chat':  '/team-chat',
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -157,7 +161,8 @@ export default function Sidebar({ isOpen, onClose }) {
       const pageToMod = {
          dashboard: 'dashboard', leads: 'leads', duplicates: 'leads', clients: 'clients',
          pipeline: 'pipeline', tasks: 'tasks', hr: 'hr', idcard: 'hr', myattendance: 'hr',
-         reports: 'reports', lms: 'lms', bankpolicies: 'lms', tickets: 'tickets', announcements: 'announcements'
+         reports: 'reports', lms: 'lms', bankpolicies: 'lms', tickets: 'tickets', announcements: 'announcements',
+         'team-chat': 'announcements'
       };
       const filteredNav = roleConfig.nav.map(section => ({
           ...section,

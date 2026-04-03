@@ -655,4 +655,65 @@ class LeadController extends Controller
             'updated_at'      => $lead->updated_at->toDateTimeString(),
         ];
     }
+
+    /**
+     * POST /api/leads/{lead}/escalate
+     *
+     * One-click escalation: reassigns the lead to the current user's
+     * team leader. If no team leader is set, escalates to the first
+     * active admin in the system.
+     */
+    public function escalate(Request $request, Lead $lead): JsonResponse
+    {
+        $user = $request->user();
+
+        // Find escalation target: team leader → first admin fallback
+        $targetId = $user->team_leader_id;
+
+        if (!$targetId) {
+            $admin = User::where('role', 'admin')
+                ->where('status', 'Active')
+                ->first();
+
+            if (!$admin) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No team leader or admin found to escalate to.',
+                ], 422);
+            }
+
+            $targetId = $admin->id;
+        }
+
+        $target = User::find($targetId);
+
+        if (!$target) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Escalation target user not found.',
+            ], 422);
+        }
+
+        $previousAssigned = $lead->assignedUser?->name ?? 'Unassigned';
+
+        $lead->update(['assigned_to' => $target->id]);
+
+        // Create timeline entry
+        \App\Models\LeadTimeline::create([
+            'lead_id'     => $lead->id,
+            'user_id'     => $user->id,
+            'type'        => 'escalation',
+            'description' => "Escalated by {$user->name} from {$previousAssigned} to {$target->name}",
+        ]);
+
+        return response()->json([
+            'success'     => true,
+            'message'     => "Lead escalated to {$target->name}.",
+            'escalated_to'=> [
+                'id'   => $target->id,
+                'name' => $target->name,
+                'role' => $target->role,
+            ],
+        ]);
+    }
 }

@@ -56,6 +56,7 @@ import MyAttendance      from './pages/MyAttendance'
 import PolicyManagement  from './pages/PolicyManagement'
 import Profile           from './pages/Profile'
 import Tasks             from './pages/Tasks'
+import TeamChat          from './pages/TeamChat'
 
 
 // ── Route guards ──────────────────────────────────────────────────────────────
@@ -172,6 +173,7 @@ export default function App() {
         <Route path="policy-management" element={<PolicyManagement />} />
         <Route path="profile"          element={<UserSettings />} />
         <Route path="tasks"            element={<Tasks />} />
+        <Route path="team-chat"        element={<TeamChat />} />
 
         {/* Catch-all within the layout → 404 inside the shell */}
         <Route

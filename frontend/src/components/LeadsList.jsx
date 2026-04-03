@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLeads } from '../context/LeadsContext'
 import ConvertLeadModal from './ConvertLeadModal'
 import ImportLeadsModal from './ImportLeadsModal'
+import apiClient from '../api/axiosConfig'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 export const STAGES = [
@@ -64,6 +65,7 @@ export default function LeadsList({ onAddLead, onEditLead, filters: externalFilt
   const canEdit   = ['admin', 'manager', 'staff'].includes(role)
   const canDelete = role === 'admin'
   const canConvert = ['admin', 'manager'].includes(role)
+  const canEscalate = role === 'staff'
 
   // ── Convert-to-client modal state ─────────────────────────────────────────
   const [convertLead, setConvertLead] = useState(null)
@@ -304,6 +306,8 @@ export default function LeadsList({ onAddLead, onEditLead, filters: externalFilt
                 onEdit={() => onEditLead?.(lead)}
                 canEdit={canEdit}
                 canDelete={canDelete}
+                canEscalate={canEscalate}
+                onEscalateSuccess={refreshLeads}
               />
             ))}
 
@@ -337,9 +341,28 @@ export default function LeadsList({ onAddLead, onEditLead, filters: externalFilt
 
 // ── LeadRow ───────────────────────────────────────────────────────────────────
 // Extracted for performance — only re-renders when its own props change.
-function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConvert, onEdit, canEdit, canDelete }) {
+function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConvert, onEdit, canEdit, canDelete, canEscalate, onEscalateSuccess }) {
   const isOverdue = lead.isOverdue
   const followupColor = isOverdue ? '#dc2626' : '#64748b'
+  const [escalating, setEscalating] = useState(false)
+
+  async function handleEscalate() {
+    if (escalating) return
+    setEscalating(true)
+    try {
+      const res = await apiClient.post(`/leads/${lead.id}/escalate`)
+      if (res.data?.success) {
+        alert(`✅ ${res.data.message}`)
+        onEscalateSuccess?.()
+      } else {
+        alert(`❌ ${res.data?.message || 'Escalation failed.'}`)
+      }
+    } catch (e) {
+      alert(`❌ ${e.response?.data?.message || 'Escalation failed.'}`)
+    } finally {
+      setEscalating(false)
+    }
+  }
 
   return (
     <tr style={isSelected ? { background: 'var(--accent-light)' } : undefined}>
@@ -434,13 +457,28 @@ function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConver
               ✏️
             </button>
           )}
+          {canEscalate && (
+            <button
+              className="btn btn-xs"
+              title="Escalate to Manager"
+              style={{
+                background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a',
+                fontWeight: 700, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px',
+                cursor: escalating ? 'wait' : 'pointer', opacity: escalating ? 0.6 : 1,
+              }}
+              onClick={handleEscalate}
+              disabled={escalating}
+            >
+              ⬆ <span style={{ fontSize: '10px' }}>{escalating ? 'Sending...' : 'Escalate'}</span>
+            </button>
+          )}
           {onConvert && (
             <button
               className="btn btn-primary btn-xs"
               title="Convert to client"
-              style={{ 
-                background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe', 
-                fontWeight: 700, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px' 
+              style={{
+                background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe',
+                fontWeight: 700, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '4px'
               }}
               onClick={onConvert}
             >

@@ -273,6 +273,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('branch-performance', [ReportController::class, 'branchPerformance']);
         Route::get('export', [ReportController::class, 'export']);
     });
+
+    // ── Team Chat (Internal Discussion) ──────────────────────────────────────
+    Route::prefix('team-chat')->group(function () {
+        Route::get('channels', [App\Http\Controllers\Api\TeamChatController::class, 'channels']);
+        Route::post('channels', [App\Http\Controllers\Api\TeamChatController::class, 'createChannel'])->middleware('role:admin');
+        Route::patch('channels/{channel}', [App\Http\Controllers\Api\TeamChatController::class, 'updateChannel'])->middleware('role:admin');
+        Route::delete('channels/{channel}', [App\Http\Controllers\Api\TeamChatController::class, 'deleteChannel'])->middleware('role:admin');
+        Route::get('{channel}/messages', [App\Http\Controllers\Api\TeamChatController::class, 'messages']);
+        Route::post('{channel}/messages', [App\Http\Controllers\Api\TeamChatController::class, 'sendMessage']);
+    });
+
+    // ── Lead Escalation ──────────────────────────────────────────────────────
+    Route::post('leads/{lead}/escalate', [LeadController::class, 'escalate'])->name('leads.escalate');
 });
 
 // ── Catch-all: return JSON 404 instead of falling through to the web router ───
