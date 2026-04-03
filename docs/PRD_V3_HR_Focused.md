@@ -1,4 +1,4 @@
-# EasyFinanceCRM — PRD V3 (HR & Operations Focused)
+"# EasyFinanceCRM — PRD V3 (HR & Operations Focused)
 
 **Version:** 3.0 — HR Operations Module
 **Product:** EasyFinanceCRM — Loan Consultancy CRM

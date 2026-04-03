@@ -39,6 +39,9 @@ class Lead extends Model
         'franchise_id',
     ];
 
+    // ── Appends ───────────────────────────────────────────────────────────────
+    protected $appends = ['age', 'amount_formatted', 'initials', 'is_overdue'];
+
     // ── Casts ─────────────────────────────────────────────────────────────────
     protected function casts(): array
     {

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 export default function IDCard() {
   const { user } = useAuth()
   const [showBack, setShowBack] = useState(false)
+  const [isVisitingCard, setIsVisitingCard] = useState(false)
   const isAdmin = user?.role === 'admin'
   const isManager = user?.role === 'manager'
   
@@ -49,16 +50,30 @@ export default function IDCard() {
     }}>
       
       {/* Title */}
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.04em' }}>
           Digital Identity Vault
         </h1>
         <p style={{ color: '#64748b', fontSize: '15px' }}>Your secure system credentials and access token.</p>
       </div>
 
+      {/* Format Toggle */}
+      <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '12px', padding: '4px', marginBottom: '40px' }}>
+        <button 
+          onClick={() => setIsVisitingCard(false)}
+          style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: !isVisitingCard ? 'white' : 'transparent', color: !isVisitingCard ? '#0f172a' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: !isVisitingCard ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
+          ID Card
+        </button>
+        <button 
+          onClick={() => setIsVisitingCard(true)}
+          style={{ padding: '8px 24px', borderRadius: '8px', border: 'none', background: isVisitingCard ? 'white' : 'transparent', color: isVisitingCard ? '#0f172a' : '#64748b', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: isVisitingCard ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}>
+          Visiting Card
+        </button>
+      </div>
+
       {/* Card Wrapper (3D Effect) */}
       <div 
-        style={{ perspective: '1200px', cursor: 'pointer' }}
+        style={{ perspective: '1200px', cursor: 'pointer', display: isVisitingCard ? 'none' : 'block' }}
         onClick={() => setShowBack(!showBack)}
       >
         <div style={{
@@ -165,6 +180,51 @@ export default function IDCard() {
              </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* HORIZONTAL VISITING CARD */}
+      <div 
+        style={{ display: isVisitingCard ? 'block' : 'none', position: 'relative' }}
+      >
+        <div data-card-front style={{
+          width: '600px',
+          height: '340px',
+          background: isAdmin ? theme.primary : 'white',
+          borderRadius: '20px',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
+          border: isAdmin ? `2px solid ${theme.secondary}40` : '1.5px solid #e2e8f0',
+          overflow: 'hidden',
+          display: 'flex', position: 'relative'
+        }}>
+           {/* Visual Accent */}
+           <div style={{ width: '40%', background: isAdmin ? `linear-gradient(135deg, ${theme.secondary}, #4c1d95)` : `linear-gradient(135deg, ${theme.primary}, #1d4ed8)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', padding: '32px' }}>
+              <div style={{ fontSize: '72px', fontWeight: 900, marginBottom: '24px', opacity: 0.9 }}>{initials}</div>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${empId}&color=ffffff&bgcolor=${isAdmin ? '4c1d95' : '1d4ed8'}`} style={{ width: '100px', height: '100px', borderRadius: '12px' }} alt="QR" />
+           </div>
+           
+           {/* Card Info */}
+           <div style={{ flex: 1, padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ color: isAdmin ? 'white' : '#1e40af', fontWeight: 900, fontSize: '24px', letterSpacing: '-0.02em', marginBottom: '40px' }}>
+                 EASY<span style={{ color: isAdmin ? theme.secondary : '#3b82f6' }}>FINANCE</span>
+              </div>
+              <h2 style={{ fontSize: '32px', fontWeight: 900, color: isAdmin ? 'white' : '#0f172a', margin: '0 0 8px 0' }}>{user?.name}</h2>
+              <div style={{ color: isAdmin ? '#94a3b8' : '#64748b', fontSize: '16px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '32px' }}>
+                 {user?.role === 'dsa' ? 'Franchise Partner' : (user?.department || 'Operations')}
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: isAdmin ? '#cbd5e1' : '#475569', fontSize: '14px', fontWeight: 500 }}>
+                    <span style={{ fontSize: '18px' }}>📞</span> {user?.phone || '+91 9876543210'}
+                 </div>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: isAdmin ? '#cbd5e1' : '#475569', fontSize: '14px', fontWeight: 500 }}>
+                    <span style={{ fontSize: '18px' }}>✉️</span> {user?.email}
+                 </div>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: isAdmin ? '#cbd5e1' : '#475569', fontSize: '14px', fontWeight: 500 }}>
+                    <span style={{ fontSize: '18px' }}>🌐</span> www.easyfinance.in
+                 </div>
+              </div>
+           </div>
         </div>
       </div>
 

@@ -9,6 +9,9 @@ Artisan::command('inspire', function () { $this->comment(Inspiring::quote()); })
 // the job itself filters leads with follow up times in the current minute window
 Schedule::job(new \App\Jobs\DispatchFollowUpReminders)->everyMinute();
 
+// Dispatch the daily summary command
+Schedule::command('crm:followups')->dailyAt('09:00');
+
 // Daily database backup at midnight
 Schedule::exec('mysqldump -u ' . config('database.connections.mysql.username') . 
               ' -p' . config('database.connections.mysql.password') . 

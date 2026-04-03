@@ -24,10 +24,15 @@ class StoreLeadRequest extends FormRequest
             'name'           => ['required', 'string', 'min:2', 'max:100'],
             'phone'          => ['required', 'string', 'regex:/^[0-9]{10}$/'],
 
-            // ── Loan Details ───────────────────────────────────────────────
+            // ── Loan & Assessment Details ──────────────────────────────────
             'loan_type'      => ['required', Rule::in(Lead::LOAN_TYPES)],
             'amount'         => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'monthly_income' => ['nullable', 'numeric', 'min:0'],
+            'income_status'  => ['nullable', 'string', 'max:50'],
+            'running_loans'  => ['nullable', 'integer', 'min:0'],
+            'lead_value'     => ['nullable', 'numeric', 'min:0'],
+            'birth_date'     => ['nullable', 'date', 'before:today'],
+            'location'       => ['nullable', 'string', 'max:150'],
 
             // ── Pipeline ──────────────────────────────────────────────────
             'source'         => ['nullable', Rule::in(Lead::SOURCES)],

@@ -21,6 +21,20 @@ class DashboardController extends Controller {
         $totalClients = $totalLeads; 
         
         $commission = Commission::where('user_id', $user->id)->sum('amount');
+
+        // Monthly Profit Calculation
+        // Assuming company revenue is approx 2% of total disbursed this month, minus staff payouts
+        $monthlyDisbursed = clone $q;
+        $monthlyDisbursedAmount = $monthlyDisbursed->where('stage', 'Disbursed')
+            ->whereYear('updated_at', now()->year)
+            ->whereMonth('updated_at', now()->month)
+            ->sum('amount');
+            
+        $monthlyPayouts = \App\Models\Payout::whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('amount');
+            
+        $monthlyProfit = max(0, ($monthlyDisbursedAmount * 0.02) - $monthlyPayouts);
         
         return response()->json([
             'total_leads'     => $totalLeads,
@@ -29,6 +43,7 @@ class DashboardController extends Controller {
             'total_clients'   => $totalClients,
             'total_amount'    => $totalAmount,
             'my_commission'   => $commission,
+            'monthly_profit'  => $monthlyProfit,
         ]);
     }
     public function trend(Request $request) {
