@@ -169,6 +169,7 @@ export default function Sidebar({ isOpen, onClose }) {
           ...section,
           i: section.i.filter(item => {
               const mod = pageToMod[item.p];
+              if (item.p === 'idcard') return true; // Always allow ID Card access if in config
               if (mod && !allowed.has(mod)) return false;
               return true;
           })
