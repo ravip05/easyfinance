@@ -30,6 +30,7 @@ export default function TeamChat() {
   const [sending, setSending] = useState(false)
   const [loadingChannels, setLoadingChannels] = useState(true)
   const [loadingMessages, setLoadingMessages] = useState(false)
+  const [error, setError] = useState(false)
 
   // Admin channel management
   const [showChannelModal, setShowChannelModal] = useState(false)
@@ -51,6 +52,7 @@ export default function TeamChat() {
       }
     } catch (e) {
       console.error('Failed to load channels', e)
+      setError(true)
     } finally {
       setLoadingChannels(false)
     }
@@ -255,7 +257,17 @@ export default function TeamChat() {
 
         {/* ── Right: Chat Panel ── */}
         <div style={chatPanelStyle}>
-          {!activeChannel ? (
+          {error ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+              <span style={{ fontSize: 48 }}>⚠️</span>
+              <div style={{ color: '#ef4444', fontWeight: 600 }}>Connection Failed</div>
+              <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', maxWidth: 200 }}>
+                Could not connect to the chat server. This might be due to missing database tables or server downtime.
+              </p>
+              <button onClick={() => { setError(false); setLoadingChannels(true); fetchChannels(); }}
+                className="btn btn-xs btn-ghost" style={{ marginTop: 8 }}>Try Again</button>
+            </div>
+          ) : !activeChannel ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
               <span style={{ fontSize: 48 }}>💬</span>
               <p style={{ color: '#94a3b8', fontSize: 14 }}>Select a channel to start chatting</p>

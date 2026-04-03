@@ -702,8 +702,8 @@ class LeadController extends Controller
         \App\Models\LeadTimeline::create([
             'lead_id'     => $lead->id,
             'user_id'     => $user->id,
-            'type'        => 'escalation',
-            'description' => "Escalated by {$user->name} from {$previousAssigned} to {$target->name}",
+            'action'      => 'escalation',
+            'notes'       => "Escalated by {$user->name} from {$previousAssigned} to {$target->name}",
         ]);
 
         return response()->json([
