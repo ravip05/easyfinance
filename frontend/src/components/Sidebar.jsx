@@ -90,7 +90,8 @@ const ROLE_CONFIG = {
       { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' },
                               { p: 'team-chat',    ic: '💬', l: 'Team Chat', b: 'New', bc: 'nb-green' }] },
       { s: 'My HR',      i: [{ p: 'myattendance', ic: '📅', l: 'My Attendance' },
-                              { p: 'tasks',        ic: '📋', l: 'My Tasks' }] },
+                              { p: 'tasks',        ic: '📋', l: 'My Tasks' },
+                              { p: 'idcard',       ic: '🪪', l: 'My ID Card' }] },
     ],
   },
   dsa: {
@@ -104,7 +105,8 @@ const ROLE_CONFIG = {
       { s: 'Learn',      i: [{ p: 'lms',          ic: '🎓', l: 'Training & LMS' },
                               { p: 'bankpolicies', ic: '🏦', l: 'Bank Policies' }] },
       { s: 'Comms',      i: [{ p: 'announcements',ic: '📢', l: 'Announcements' }] },
-      { s: 'My HR',      i: [{ p: 'myattendance', ic: '📅', l: 'My Attendance' }] },
+      { s: 'My HR',      i: [{ p: 'myattendance', ic: '📅', l: 'My Attendance' },
+                              { p: 'idcard',       ic: '🪪', l: 'My ID Card' }] },
     ],
   },
   client: {

@@ -469,30 +469,32 @@ function FollowUps({ leads }) {
 
 // ── Role-specific dashboard layouts ──────────────────────────────────────────
 
-function AdminDashboard({ leads, clients, employees, onViewLeads }) {
+function AdminDashboard({ leads, clients, employees, onViewLeads, extraStats }) {
   const totalLeads  = leads.length
-  const disbursed   = leads.filter((l) => l.stage === 'Disbursed').reduce((s, l) => s + parseAmt(l.amount), 0)
-  const activeFiles = leads.filter((l) => !['Disbursed', 'Closed'].includes(l.stage)).length
+  // Use API stats if available, fallback to local calculation
+  const disbursed   = extraStats?.total_amount ?? leads.filter((l) => l.stage === 'Disbursed').reduce((s, l) => s + parseAmt(l.amount), 0)
+  const activeFiles = extraStats?.active_leads ?? leads.filter((l) => !['Disbursed', 'Closed'].includes(l.stage)).length
   const convRate    = totalLeads
     ? Math.round(leads.filter((l) => ['Sanctioned', 'Disbursed'].includes(l.stage)).length / totalLeads * 100)
     : 0
   const docsPending = leads.filter((l) => l.stage === 'Docs Pending').length
   const followupPending = leads.filter((l) => l.followup).length
+  const monthlyProfit = extraStats?.monthly_profit ?? 0
 
   return (
     <>
       {/* Row 1 — 4 primary KPIs (Premium Glassmorphism) */}
       <div className="stats-grid">
         <StatCard icon="🎯" label="Total Leads"       value={totalLeads}          sub="↑ 18 this week"           subUp  iconClass="blue"   glass="glass-blue"  />
-        <StatCard icon="💰" label="Disbursed (Month)" value={fmtCr(disbursed)}    sub="↑ 12% vs last month"      subUp  iconClass="green"  glass="glass-green" />
-        <StatCard icon="📁" label="Active Files"       value={activeFiles}         sub={`${docsPending} pending docs`}   iconClass="gold"   glass="glass-gold"  />
+        <StatCard icon="💰" label="Total Disbursed"   value={fmtCr(disbursed)}    sub="Life-time total"          subUp  iconClass="green"  glass="glass-green" />
+        <StatCard icon="📈" label="Monthly Profit"    value={fmtCr(monthlyProfit)} sub="Estimated Net"           subUp  iconClass="purple" glass="glass-purple"/>
         <StatCard icon="📊" label="Conversion Rate"    value={`${convRate}%`}      sub="↑ 5% this quarter"        subUp  iconClass="purple" glass="glass-purple"/>
       </div>
 
       {/* Row 2 — 4 secondary KPIs */}
       <div className="stats-grid" style={{ marginTop: 12 }}>
         <StatCard icon="👥" label="Total Staff"      value={employees.length}  sub="Across all depts"  iconClass="blue"   />
-        <StatCard icon="🏢" label="Franchises"       value="—"                 sub="Active partners"   iconClass="green"  />
+        <StatCard icon="📁" label="Active Files"      value={activeFiles}       sub={`${docsPending} pending docs`}   iconClass="gold"   />
         <StatCard icon="👤" label="Total Clients"    value={clients.length}    sub="Active clients"    iconClass="gold"   />
         <StatCard icon="🏦" label="Banks Onboarded"  value={6}                 sub="Active tie-ups"    iconClass="purple" />
       </div>
@@ -732,11 +734,17 @@ export default function Dashboard() {
 
   // Fetch employees list for admin/manager leaderboard
   const [employees, setEmployees] = useState([])
+  const [extraStats, setExtraStats] = useState(null)
+
   useEffect(() => {
     if (!['admin', 'manager'].includes(role)) return
     apiClient.get('/staff')
       .then(({ data }) => setEmployees(data.data ?? []))
-      .catch(() => {})  // non-critical — leaderboard shows graceful fallback
+      .catch(() => {}) 
+    
+    apiClient.get('/dashboard/stats')
+      .then(({ data }) => setExtraStats(data))
+      .catch(() => {})
   }, [role])
 
   // Register push notifications on dashboard load
@@ -801,14 +809,17 @@ export default function Dashboard() {
   }
 
   return (
-    <div id="page-dashboard" className="page active">
+    <div id="page-dashboard" className="page active" style={{ paddingBottom: 80 }}>
       {/* Role banner */}
       {user && <RoleBanner user={user} scopeLabel={scopeLabels[role] ?? 'My Data'} />}
 
       {/* Role-specific content */}
       {role === 'admin' && (
         <AdminDashboard
-          leads={leads} clients={clients} employees={employees}
+          leads={leads}
+          clients={clients}
+          employees={employees}
+          extraStats={extraStats}
           onViewLeads={onViewLeads}
         />
       )}

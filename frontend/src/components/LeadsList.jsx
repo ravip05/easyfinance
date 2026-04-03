@@ -387,7 +387,7 @@ function LeadRow({ lead, isSelected, onToggle, onStageChange, onDelete, onConver
           </div>
           <div>
             <strong>{lead.name}</strong>
-            {lead._raw && (lead._raw.location || lead.age) && (
+            {lead._raw && (lead._raw.location || lead._raw.age) && (
               <div style={{ fontSize: 10, color: '#64748b', marginTop: 2, fontWeight: 500 }}>
                 {lead._raw.location || 'Unknown'} {lead._raw.age ? `• ${lead._raw.age} yrs` : ''}
               </div>
