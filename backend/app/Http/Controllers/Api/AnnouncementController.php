@@ -58,10 +58,14 @@ class AnnouncementController extends Controller
             $targetUsers->where('role', $validated['target']);
         }
         
-        \Illuminate\Support\Facades\Notification::send(
-            $targetUsers->get(), 
-            new \App\Notifications\NewAnnouncementNotification($announcement)
-        );
+        try {
+            \Illuminate\Support\Facades\Notification::send(
+                $targetUsers->get(), 
+                new \App\Notifications\NewAnnouncementNotification($announcement)
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('announcement_notification_failed: ' . $e->getMessage());
+        }
 
         // Send Push Notification
         try {

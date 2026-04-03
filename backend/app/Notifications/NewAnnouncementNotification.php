@@ -29,8 +29,9 @@ class NewAnnouncementNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        // Always save to database, and push via fcm if token exists
-        return ['database', 'fcm'];
+        // Save only to database channel for UI notifications.
+        // PWA push is handled manually via FcmService call in the controller.
+        return ['database'];
     }
 
     /**
