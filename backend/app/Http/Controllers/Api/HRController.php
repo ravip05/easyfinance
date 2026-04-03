@@ -59,6 +59,15 @@ class HRController extends Controller
 
         $holiday = Holiday::create($validated);
 
+        // Send Push Notification
+        try {
+            app(\App\Services\FcmService::class)->sendToAllActiveUsers(
+                '📅 Holiday Announcement: ' . $holiday->title,
+                "A new holiday has been declared for " . \Carbon\Carbon::parse($holiday->date)->format('M d, Y') . ".",
+                ['type' => 'holiday', 'id' => (string)$holiday->id, 'url' => '/hr']
+            );
+        } catch (\Exception $e) { }
+
         return response()->json([
             'success' => true,
             'message' => 'Holiday added.',

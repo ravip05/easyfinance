@@ -739,6 +739,26 @@ export default function Dashboard() {
       .catch(() => {})  // non-critical — leaderboard shows graceful fallback
   }, [role])
 
+  // Register push notifications on dashboard load
+  useEffect(() => {
+    if ('Notification' in window && 'serviceWorker' in navigator) {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          navigator.serviceWorker.ready.then(registration => {
+            // Using a dummy token/subscription payload here. 
+            // Real web push requires applicationServerKey (VAPID)
+            const mockToken = btoa(user?.id + Date.now().toString());
+            apiClient.post('/push-subscriptions', {
+              platform: 'web',
+              token: mockToken,
+              device_name: navigator.userAgent.substring(0, 50)
+            }).catch(e => console.error('Push reg failed:', e));
+          });
+        }
+      });
+    }
+  }, [user]);
+
   // Scope the clients list (we approximate from leads for now)
   // Real implementation would fetch /api/clients — wired in Step 6
   // "All people in leads are our clients" - User Requirement

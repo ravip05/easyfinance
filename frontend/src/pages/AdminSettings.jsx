@@ -1475,7 +1475,8 @@ function DepartmentsManagement() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ name: '', head_user_id: '', commission_rate: '', description: '' })
+  const [form, setForm] = useState({ name: '', head_user_id: '', commission_rate: '', description: '', permissions: [] })
+
 
   useEffect(() => { fetchAll() }, [])
 
@@ -1494,7 +1495,7 @@ function DepartmentsManagement() {
 
   function openEdit(dept) {
     setEditing(dept)
-    setForm({ name: dept.name, head_user_id: dept.head_user_id || '', commission_rate: dept.commission_rate || '', description: dept.description || '' })
+    setForm({ name: dept.name, head_user_id: dept.head_user_id || '', commission_rate: dept.commission_rate || '', description: dept.description || '', permissions: dept.permissions || [] })
     setShowForm(true)
   }
 
@@ -1507,7 +1508,7 @@ function DepartmentsManagement() {
         await apiClient.post('/admin/departments', form)
         toast.success('Department created')
       }
-      setShowForm(false); setEditing(null); setForm({ name: '', head_user_id: '', commission_rate: '', description: '' }); fetchAll()
+      setShowForm(false); setEditing(null); setForm({ name: '', head_user_id: '', commission_rate: '', description: '', permissions: [] }); fetchAll()
     } catch (e) { toast.error(e.response?.data?.message || 'Failed to save') }
   }
 
@@ -1523,7 +1524,7 @@ function DepartmentsManagement() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={sectionTitle}>🏬 Department Management</div>
-        <button onClick={() => { setEditing(null); setForm({ name: '', head_user_id: '', commission_rate: '', description: '' }); setShowForm(true) }}
+        <button onClick={() => { setEditing(null); setForm({ name: '', head_user_id: '', commission_rate: '', description: '', permissions: [] }); setShowForm(true) }}
           style={{ ...btnStyle, fontSize: 13, padding: '10px 20px' }}>+ Add Department</button>
       </div>
 
@@ -1579,6 +1580,26 @@ function DepartmentsManagement() {
               </div>
               <div><label style={labelStyle}>Commission Rate (decimal, e.g. 0.025 = 2.5%)</label><input type="number" step="0.0001" style={inputStyle} value={form.commission_rate} onChange={e => setForm({ ...form, commission_rate: e.target.value })} /></div>
               <div><label style={labelStyle}>Description</label><textarea style={{ ...inputStyle, resize: 'vertical' }} rows="3" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+              
+              <div>
+                <label style={{ ...labelStyle, borderTop: '1px solid #e2e8f0', paddingTop: '16px', marginTop: '8px' }}>Module Access (Permissions)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  {['dashboard', 'leads', 'clients', 'pipeline', 'tasks', 'hr', 'reports', 'lms', 'tickets', 'announcements'].map(mod => (
+                    <label key={mod} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#334155', cursor: 'pointer', textTransform: 'capitalize' }}>
+                      <input type="checkbox" style={{ width: '18px', height: '18px', accentColor: '#2563eb' }}
+                        checked={form.permissions.includes(mod)}
+                        onChange={(e) => {
+                          const newPerms = e.target.checked 
+                            ? [...form.permissions, mod] 
+                            : form.permissions.filter(p => p !== mod);
+                          setForm({ ...form, permissions: newPerms });
+                        }}
+                      />
+                      {mod === 'hr' ? 'HR & Payroll' : mod === 'lms' ? 'Training (LMS)' : mod}
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
             <div style={{ padding: '12px 22px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>

@@ -102,7 +102,11 @@ class SettingsController extends Controller {
     }
     public function departments() { return response()->json(Department::with('head:id,name')->get()); }
     public function addDepartment(Request $request) {
-        $dept = Department::create($request->validate(['name'=>'required|unique:departments']));
+        $data = $request->validate([
+            'name' => 'required|unique:departments',
+            'permissions' => 'nullable|array'
+        ]);
+        $dept = Department::create($data);
         return response()->json($dept,201);
     }
     public function deleteDepartment($id) { Department::findOrFail($id)->delete(); return response()->json(['message'=>'Deleted']); }
@@ -146,6 +150,7 @@ class SettingsController extends Controller {
             'commission_rate' => 'nullable|numeric|min:0|max:1',
             'description'     => 'nullable|string',
             'is_active'       => 'nullable|boolean',
+            'permissions'     => 'nullable|array',
         ]);
         $dept->update($data);
         return response()->json(['message' => 'Department updated', 'data' => $dept->load('head:id,name')]);

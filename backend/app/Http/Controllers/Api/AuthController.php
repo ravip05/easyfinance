@@ -211,6 +211,14 @@ class AuthController extends Controller
                                ->toArray();
         }
 
+        $moduleAccess = null;
+        if ($user->department) {
+            $dept = \App\Models\Department::where('name', $user->department)->first();
+            if ($dept && $dept->permissions) {
+                $moduleAccess = $dept->permissions;
+            }
+        }
+
         return [
             'id'             => $user->id,
             'emp_code'       => $user->emp_code,       // 'EF-002'
@@ -230,6 +238,7 @@ class AuthController extends Controller
                 'name' => $user->franchise->name,
                 'code' => $user->franchise->code,      // 'EFW-MUM01'
             ] : null,
+            'module_access'  => $moduleAccess,
         ];
     }
 }

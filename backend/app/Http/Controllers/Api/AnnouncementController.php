@@ -63,6 +63,16 @@ class AnnouncementController extends Controller
             new \App\Notifications\NewAnnouncementNotification($announcement)
         );
 
+        // Send Push Notification
+        try {
+            app(\App\Services\FcmService::class)->sendToAllActiveUsers(
+                '📢 ' . $announcement->title,
+                strip_tags($announcement->message),
+                ['type' => 'announcement', 'id' => (string)$announcement->id, 'url' => '/announcements']
+            );
+        } catch (\Exception $e) { // passive failure if firebase keys are missing }
+        }
+
         // --- Audit Log ---
         \App\Models\AuditLog::create([
             'user_id' => $request->user()->id,

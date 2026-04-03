@@ -150,7 +150,26 @@ export default function Sidebar({ isOpen, onClose }) {
 
   // Fall back to 'staff' if role is somehow undefined
   const role       = user?.role ?? 'staff'
-  const roleConfig = ROLE_CONFIG[role] ?? ROLE_CONFIG.staff
+  let roleConfig = ROLE_CONFIG[role] ?? ROLE_CONFIG.staff
+  
+  if (role !== 'admin' && Array.isArray(user?.module_access)) {
+      const allowed = new Set(user.module_access);
+      const pageToMod = {
+         dashboard: 'dashboard', leads: 'leads', duplicates: 'leads', clients: 'clients',
+         pipeline: 'pipeline', tasks: 'tasks', hr: 'hr', idcard: 'hr', myattendance: 'hr',
+         reports: 'reports', lms: 'lms', bankpolicies: 'lms', tickets: 'tickets', announcements: 'announcements'
+      };
+      const filteredNav = roleConfig.nav.map(section => ({
+          ...section,
+          i: section.i.filter(item => {
+              const mod = pageToMod[item.p];
+              if (mod && !allowed.has(mod)) return false;
+              return true;
+          })
+      })).filter(section => section.i.length > 0);
+      roleConfig = { ...roleConfig, nav: filteredNav };
+  }
+
 
   // Current path segment (e.g. "/leads" → "leads") for active detection
   const activePath = location.pathname.replace(/^\//, '').split('/')[0] || 'dashboard'

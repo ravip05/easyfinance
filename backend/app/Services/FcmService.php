@@ -101,4 +101,19 @@ class FcmService
 
         return $sent;
     }
+
+    // broadcast to all active devices in the system
+    public function sendToAllActiveUsers(string $title, string $body, array $data = []): int
+    {
+        $devices = PushDevice::where('is_active', true)->get();
+
+        $sent = 0;
+        foreach ($devices as $device) {
+            if ($this->sendToDevice($device->token, $title, $body, $data)) {
+                $sent++;
+            }
+        }
+
+        return $sent;
+    }
 }

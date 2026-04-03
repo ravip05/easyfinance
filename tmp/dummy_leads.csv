@@ -1,0 +1,4 @@
+Name,Phone,Loan Type,Amount,Priority,Email
+"John Doe","9876543210","Home Loan","5000000","High","john@example.com"
+"Jane Smith","9123456789","Personal Loan","200000","Medium","jane@example.com"
+"Bob Wilson","9000000000","Business Loan","1500000","Low","bob@example.com"
