@@ -309,131 +309,122 @@ function EmiTab() {
 // Tab 2 — Eligibility Check
 // ─────────────────────────────────────────────────────────────────────────────
 function EligibilityTab() {
-  const [income,   setIncome]   = useState('')
-  const [existing, setExisting] = useState('')
-  const [age,      setAge]      = useState('')
-  const [cibil,    setCibil]    = useState('')
-  const [empType,  setEmpType]  = useState('Salaried')
-  const [loanType, setLoanType] = useState('Home Loan')
+  const [income,      setIncome]      = useState(100_000)
+  const [existing,    setExisting]    = useState(10_000)
+  const [annualRate,  setAnnualRate]  = useState(8.5)
+  const [tenureYears, setTenureYears] = useState(20)
+  const [age,         setAge]         = useState(35)
+  const [cibil,       setCibil]       = useState(750)
 
   // ── Derived result (calcEligibility() port) ──────────────────────────────
   const result = useMemo(() => {
-    const inc = parseFloat(income)    || 0
-    const ext = parseFloat(existing)  || 0
-    const ag  = parseFloat(age)       || 0
-    const cib = parseFloat(cibil)     || 0
-
-    if (!inc || !ag) return null   // not enough input yet
-
-    const avail   = inc * 0.5 - ext
-    const r       = 8.5 / 12 / 100
-    const maxYrs  = Math.min(30, 60 - ag)
-    const n       = maxYrs * 12
-    const maxLoan = avail > 0
-      ? avail * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n))
-      : 0
-
-    const eligible = cib >= 650 && ag >= 21 && ag <= 60 && maxLoan > 100_000
-    const meter    = Math.min(100, Math.max(0, ((cib || 500) - 300) / 600 * 100))
-    const mColor   = meter > 70 ? 'var(--green)' : meter > 50 ? 'var(--gold)' : 'var(--red)'
-
-    // Reason string for ineligibility
+    // 50% FOIR baseline rule
+    const maxEmiCapacity = (income * 0.5) - existing
+    
+    let eligible = true
     let reason = ''
-    if (!eligible) {
-      if (cib < 650)         reason = 'CIBIL score below minimum 650.'
-      else if (ag < 21)      reason = 'Minimum age requirement is 21 years.'
-      else if (ag > 60)      reason = 'Maximum age limit is 60 years.'
-      else                   reason = 'Insufficient income after existing obligations.'
+    
+    // Qualitative guardrails
+    if (age < 18) { eligible = false; reason = 'Minimum age requirement is 18 years.' }
+    else if (age > 65) { eligible = false; reason = 'Maximum age limit is 65 years.' }
+    else if (cibil < 700) { eligible = false; reason = 'Minimum CIBIL score of 700 required.' }
+    else if (income < 25000) { eligible = false; reason = 'Minimum monthly income of ₹25,000 required.' }
+    else if (maxEmiCapacity <= 0) { eligible = false; reason = 'Existing EMIs exceed maximum allowed obligation (50% FOIR).' }
+
+    // Calc loan principal based on EMI capacity
+    const r = annualRate / 12 / 100
+    const n = tenureYears * 12
+    let maxLoan = 0
+    if (maxEmiCapacity > 0 && r > 0) {
+      maxLoan = maxEmiCapacity * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n))
     }
 
-    const foirPct = inc > 0 ? ((ext / inc) * 100).toFixed(0) : 0
-    const availPct = inc > 0 ? ((avail / inc) * 100).toFixed(0) : 0
+    if (eligible && maxLoan < 100000) {
+      eligible = false
+      reason = 'Calculated eligible amount is below minimum threshold (₹1 Lakh).'
+    }
 
-    return { eligible, maxLoan, meter, mColor, reason, foirPct, availPct }
-  }, [income, existing, age, cibil, empType, loanType])
+    const meter = Math.min(100, Math.max(0, ((cibil || 500) - 300) / 600 * 100))
+    const mColor = meter > 70 ? 'var(--green)' : meter > 50 ? 'var(--gold)' : 'var(--red)'
+    
+    const foirPct = income > 0 ? ((existing / income) * 100).toFixed(0) : 0
+    const availPct = income > 0 && maxEmiCapacity > 0 ? ((maxEmiCapacity / income) * 100).toFixed(0) : 0
+
+    return { eligible, maxLoan, meter, mColor, reason, foirPct, availPct, maxEmiCapacity }
+  }, [income, existing, annualRate, tenureYears, age, cibil])
 
   return (
     <div className="grid-2">
       {/* ── Left: inputs ── */}
       <div className="card">
         <div className="card-title" style={{ marginBottom: 16 }}>Loan Eligibility Calculator</div>
-        <div className="form-grid">
-
-          <div className="form-group">
-            <div className="form-label">Monthly Income (₹)</div>
-            <input
-              className="form-input"
-              type="number"
-              placeholder="75000"
-              id="eli-income"
-              value={income}
-              onChange={(e) => setIncome(e.target.value)}
-            />
+        
+        <SliderRow
+          label="Monthly Income"
+          id="eli-inc"
+          min={25000} max={1000000} step={5000}
+          value={income}
+          onChange={setIncome}
+          displayValue={fmtINR(income)}
+        />
+        <SliderRow
+          label="Existing EMIs"
+          id="eli-ext"
+          min={0} max={500000} step={2000}
+          value={existing}
+          onChange={setExisting}
+          displayValue={fmtINR(existing)}
+        />
+        <SliderRow
+          label="Interest Rate (% p.a.)"
+          id="eli-rate"
+          min={5} max={18} step={0.25}
+          value={annualRate}
+          onChange={setAnnualRate}
+          displayValue={`${annualRate.toFixed(2)}%`}
+        />
+        <SliderRow
+          label="Tenure"
+          id="eli-ten"
+          min={1} max={30} step={1}
+          value={tenureYears}
+          onChange={setTenureYears}
+          displayValue={`${tenureYears} year${tenureYears > 1 ? 's' : ''}`}
+        />
+        
+        <div style={{display: 'flex', gap: 16, marginTop: 12}}>
+          <div style={{flex: 1}}>
+            <div className="form-group">
+              <div className="form-label" style={{display: 'flex', justifyContent: 'space-between'}}>
+                Age 
+                <strong style={{color: 'var(--accent)'}}>{age}</strong>
+              </div>
+              <input
+                type="range"
+                min={18} max={80} step={1}
+                value={age}
+                onChange={(e) => setAge(Number(e.target.value))}
+              />
+            </div>
           </div>
-
-          <div className="form-group">
-            <div className="form-label">Existing EMIs (₹)</div>
-            <input
-              className="form-input"
-              type="number"
-              placeholder="10000"
-              id="eli-emi"
-              value={existing}
-              onChange={(e) => setExisting(e.target.value)}
-            />
+          <div style={{flex: 1}}>
+            <div className="form-group">
+              <div className="form-label" style={{display: 'flex', justifyContent: 'space-between'}}>
+                CIBIL Score
+                <strong style={{
+                    color: cibil >= 750 ? 'var(--green)'
+                         : cibil >= 700 ? 'var(--gold)'
+                         : 'var(--red)',
+                }}>{cibil}</strong>
+              </div>
+              <input
+                type="range"
+                min={300} max={900} step={10}
+                value={cibil}
+                onChange={(e) => setCibil(Number(e.target.value))}
+              />
+            </div>
           </div>
-
-          <div className="form-group">
-            <div className="form-label">Age</div>
-            <input
-              className="form-input"
-              type="number"
-              placeholder="35"
-              id="eli-age"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              min={18} max={70}
-            />
-          </div>
-
-          <div className="form-group">
-            <div className="form-label">CIBIL Score</div>
-            <input
-              className="form-input"
-              type="number"
-              placeholder="720"
-              id="eli-cibil"
-              value={cibil}
-              onChange={(e) => setCibil(e.target.value)}
-              min={300} max={900}
-            />
-          </div>
-
-          <div className="form-group">
-            <div className="form-label">Employment Type</div>
-            <select
-              className="form-select"
-              id="eli-emp"
-              value={empType}
-              onChange={(e) => setEmpType(e.target.value)}
-            >
-              {EMP_TYPES.map((t) => <option key={t}>{t}</option>)}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <div className="form-label">Loan Type</div>
-            <select
-              className="form-select"
-              value={loanType}
-              onChange={(e) => setLoanType(e.target.value)}
-            >
-              <option>Home Loan</option>
-              <option>Business Loan</option>
-              <option>Personal Loan</option>
-            </select>
-          </div>
-
         </div>
       </div>
 
@@ -441,99 +432,98 @@ function EligibilityTab() {
       <div className="card">
         <div className="card-title" style={{ marginBottom: 16 }}>Eligibility Result</div>
         <div id="eli-result">
-          {!result ? (
-            <div className="empty">
-              <div className="empty-icon">🏦</div>
-              <div className="empty-text">Enter income and age to calculate eligibility</div>
+          {/* Confidence meter */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              fontSize: 12, marginBottom: 5,
+            }}>
+              <span style={{ color: 'var(--text2)' }}>Credit Profile Match</span>
+              <strong>{result.meter.toFixed(0)}%</strong>
             </div>
-          ) : (
+            <ProgressBar pct={result.meter} color={result.mColor} />
+          </div>
+
+          {result.eligible ? (
             <>
-              {/* Confidence meter */}
-              <div style={{ marginBottom: 14 }}>
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  fontSize: 12, marginBottom: 5,
-                }}>
-                  <span style={{ color: 'var(--text2)' }}>Eligibility Confidence</span>
-                  <strong>{result.meter.toFixed(0)}%</strong>
+              {/* Eligible — green box */}
+              <div style={{
+                background: 'var(--green-light)',
+                border: '1px solid #a7f3d0',
+                borderRadius: 10, padding: 16,
+                textAlign: 'center', marginBottom: 12,
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)' }}>
+                  ✅ ELIGIBLE FOR LOAN
                 </div>
-                <ProgressBar pct={result.meter} color={result.mColor} />
+                <div style={{
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: 32, fontWeight: 800,
+                  color: 'var(--green)', margin: '6px 0',
+                }}>
+                  {fmtCompact(result.maxLoan)}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+                  Maximum Loan Amount
+                </div>
               </div>
-
-              {result.eligible ? (
-                <>
-                  {/* Eligible — green box */}
-                  <div style={{
-                    background: 'var(--green-light)',
-                    border: '1px solid #a7f3d0',
-                    borderRadius: 10, padding: 16,
-                    textAlign: 'center', marginBottom: 12,
-                  }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)' }}>
-                      ✅ ELIGIBLE FOR LOAN
-                    </div>
-                    <div style={{
-                      fontFamily: "'Inter',sans-serif",
-                      fontSize: 26, fontWeight: 800,
-                      color: 'var(--green)', margin: '6px 0',
-                    }}>
-                      {fmtCompact(result.maxLoan)}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--text3)' }}>
-                      Maximum Loan Amount
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 4 }}>
-                    📊 FOIR: {result.foirPct}% · Available capacity: {result.availPct}%
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text2)' }}>
-                    🏦 Recommended: SBI, HDFC, ICICI
-                  </div>
-                </>
-              ) : (
-                /* Not eligible — red box */
-                <div style={{
-                  background: 'var(--red-light)',
-                  border: '1px solid #fecaca',
-                  borderRadius: 10, padding: 16,
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--red)' }}>
-                    ❌ NOT CURRENTLY ELIGIBLE
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 6 }}>
-                    {result.reason}
-                  </div>
-                </div>
-              )}
-
-              {/* CIBIL score band */}
-              {cibil && (
-                <div style={{
-                  marginTop: 12, padding: '10px 14px',
-                  background: 'var(--surface2)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 10, fontSize: 12,
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text2)' }}>CIBIL Score</span>
-                    <strong style={{
-                      color: parseFloat(cibil) >= 750 ? 'var(--green)'
-                           : parseFloat(cibil) >= 650 ? 'var(--gold)'
-                           : 'var(--red)',
-                    }}>
-                      {cibil} — {
-                        parseFloat(cibil) >= 750 ? 'Excellent'
-                        : parseFloat(cibil) >= 700 ? 'Good'
-                        : parseFloat(cibil) >= 650 ? 'Fair'
-                        : 'Poor'
-                      }
-                    </strong>
-                  </div>
-                </div>
-              )}
+              
+              <div className="calc-result" style={{marginBottom: 12}}>
+                <CalcRow label="Repayment Capacity (Max EMI)" value={fmtINR(result.maxEmiCapacity)} accent />
+              </div>
+              
+              <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 4 }}>
+                📊 FOIR Used: {result.foirPct}% · Available Capacity: {result.availPct}%
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text2)' }}>
+                🏦 Recommended: SBI, HDFC, ICICI
+              </div>
             </>
+          ) : (
+            /* Not eligible — red box */
+            <div style={{
+              background: 'var(--red-light)',
+              border: '1px solid #fecaca',
+              borderRadius: 10, padding: 16,
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--red)' }}>
+                ❌ NOT CURRENTLY ELIGIBLE
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 6 }}>
+                {result.reason}
+              </div>
+              {result.maxEmiCapacity <= 0 && income >= 25000 && (
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 10 }}>
+                  Tip: Your existing EMIs exceed 50% of your income. Reduce obligations to qualify.
+                </div>
+              )}
+            </div>
           )}
+
+          {/* CIBIL score band */}
+          <div style={{
+            marginTop: 12, padding: '10px 14px',
+            background: 'var(--surface2)',
+            border: '1px solid var(--border)',
+            borderRadius: 10, fontSize: 12,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--text2)' }}>CIBIL Profile</span>
+              <strong style={{
+                color: cibil >= 750 ? 'var(--green)'
+                     : cibil >= 700 ? 'var(--gold)'
+                     : 'var(--red)',
+              }}>
+                {cibil} — {
+                  cibil >= 750 ? 'Excellent'
+                  : cibil >= 700 ? 'Good'
+                  : cibil >= 650 ? 'Fair'
+                  : 'Poor'
+                }
+              </strong>
+            </div>
+          </div>
         </div>
       </div>
     </div>
