@@ -211,9 +211,9 @@ class AuthController extends Controller
                                ->toArray();
         }
 
-        $moduleAccess = null;
+        $moduleAccess = [];
         if ($user->department) {
-            $dept = \App\Models\Department::where('name', $user->department)->first();
+            $dept = \App\Models\Department::where('name', 'LIKE', $user->department)->first();
             if ($dept && $dept->permissions) {
                 $moduleAccess = $dept->permissions;
             }

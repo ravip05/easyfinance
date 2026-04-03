@@ -741,21 +741,34 @@ export default function Dashboard() {
 
   // Register push notifications on dashboard load
   useEffect(() => {
-    if ('Notification' in window && 'serviceWorker' in navigator) {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          navigator.serviceWorker.ready.then(registration => {
-            // Using a dummy token/subscription payload here. 
-            // Real web push requires applicationServerKey (VAPID)
-            const mockToken = btoa(user?.id + Date.now().toString());
-            apiClient.post('/push-subscriptions', {
-              platform: 'web',
-              token: mockToken,
-              device_name: navigator.userAgent.substring(0, 50)
-            }).catch(e => console.error('Push reg failed:', e));
+    async function registerPush() {
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+        try {
+          // In a real app, you'd call registration.pushManager.subscribe() with a VAPID key.
+          // For now, we register the device with a mock token to the backend.
+          const mockToken = btoa(user?.id + '-' + navigator.userAgent.substring(0, 10));
+          await apiClient.post('/push-subscriptions', {
+            platform: 'web',
+            token: mockToken,
+            device_name: navigator.userAgent.substring(0, 50)
           });
+          console.log('Push notification registration successful');
+        } catch (e) {
+          console.error('Push registration error:', e);
         }
-      });
+      }
+    }
+    
+    if (user?.id) {
+      registerPush();
     }
   }, [user]);
 

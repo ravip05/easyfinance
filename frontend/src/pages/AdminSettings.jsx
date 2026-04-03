@@ -15,6 +15,7 @@ export default function AdminSettings() {
   const [stages, setStages] = useState([])
   const [commissionSlabs, setCommissionSlabs] = useState([])
   const [logs, setLogs] = useState([])
+  const [departments, setDepartments] = useState([])
   
   const tabs = [
     { id: 'company', label: 'Company Settings', icon: '🏢' },
@@ -40,18 +41,20 @@ export default function AdminSettings() {
     else setRefreshing(true)
     
     try {
-      const [sRes, uRes, pRes, aRes, cRes] = await Promise.all([
+      const [sRes, uRes, pRes, aRes, cRes, dRes] = await Promise.all([
         apiClient.get('/admin/settings'),
         apiClient.get('/admin/users'),
         apiClient.get('/admin/pipeline-stages'),
         apiClient.get('/admin/audit-logs'),
-        apiClient.get('/admin/commission-slabs')
+        apiClient.get('/admin/commission-slabs'),
+        apiClient.get('/admin/departments')
       ])
       setSettings(sRes.data || {})
       setUsers(Array.isArray(uRes.data) ? uRes.data : [])
       setStages(Array.isArray(pRes.data) ? pRes.data : [])
       setLogs(Array.isArray(aRes.data) ? aRes.data : [])
       setCommissionSlabs(Array.isArray(cRes.data) ? cRes.data : [])
+      setDepartments(Array.isArray(dRes.data) ? dRes.data : [])
     } catch (err) {
       toast.error('Failed to load system settings')
     } finally {
@@ -137,7 +140,7 @@ export default function AdminSettings() {
           <CompanySettings settings={settings} onSave={handleSaveSettings} saving={saving} />
         )}
         {activeTab === 'users' && (
-          <UsersManagement users={users} onReload={fetchInitialData} />
+          <UsersManagement users={users} departments={departments} onReload={fetchInitialData} />
         )}
         {activeTab === 'commission' && (
           <CommissionSettings 
@@ -895,7 +898,7 @@ function SecuritySettings({ settings, onSave, saving }) {
     )
 }
 
-function UsersManagement({ users, onReload }) {
+function UsersManagement({ users, departments, onReload }) {
     const [selectedUser, setSelectedUser] = useState(null)
     const [showRegister, setShowRegister] = useState(false)
     const [registerForm, setRegisterForm] = useState({ name: '', email: '', phone: '', role: 'staff', department: '' })
@@ -1071,7 +1074,17 @@ function UsersManagement({ users, onReload }) {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                                     <Field label="Phone Number" value={editForm.phone} onChange={v => setEditForm({...editForm, phone: v})} />
-                                    <Field label="Department" value={editForm.department} onChange={v => setEditForm({...editForm, department: v})} />
+                                    <div>
+                                        <label style={{ ...labelStyle, display: 'block', marginBottom: '8px' }}>Department</label>
+                                        <select 
+                                            value={editForm.department} 
+                                            onChange={e => setEditForm({...editForm, department: e.target.value})}
+                                            style={inputStyle}
+                                        >
+                                            <option value="">Select Department</option>
+                                            {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                                        </select>
+                                    </div>
                                 </div>
                                 <div style={{ marginBottom: '16px' }}>
                                     <label style={{ ...labelStyle, display: 'block', marginBottom: '8px' }}>Access Level (Role)</label>
@@ -1158,7 +1171,17 @@ function UsersManagement({ users, onReload }) {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                                     <Field label="Phone (10 digits) *" value={registerForm.phone} onChange={v => setRegisterForm({...registerForm, phone: v})} placeholder="9988776655" />
-                                    <Field label="Department" value={registerForm.department} onChange={v => setRegisterForm({...registerForm, department: v})} placeholder="Home Loans" />
+                                    <div>
+                                        <label style={{ ...labelStyle, display: 'block', marginBottom: '8px' }}>Department</label>
+                                        <select 
+                                            value={registerForm.department} 
+                                            onChange={e => setRegisterForm({...registerForm, department: e.target.value})}
+                                            style={inputStyle}
+                                        >
+                                            <option value="">Select Department</option>
+                                            {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                                        </select>
+                                    </div>
                                 </div>
                                 <div style={{ marginBottom: '24px' }}>
                                     <label style={{ ...labelStyle, display: 'block', marginBottom: '8px' }}>Access Level (Role) *</label>
