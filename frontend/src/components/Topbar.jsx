@@ -308,7 +308,7 @@ export default function Topbar({
               width: '38px', height: '38px', borderRadius: '50%',
               background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
               color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: '13px', border: 'none', cursor: 'pointer',
+              fontWeight: 800, fontSize: '13px', cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(59,130,246,0.3)', transition: 'transform 0.2s',
               border: '2px solid white'
             }}

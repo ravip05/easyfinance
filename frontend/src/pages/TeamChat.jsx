@@ -7,7 +7,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
-import apiClient from '../api/axiosConfig'
+import apiClient from '../api/client'
 
 // Toast hook (same pattern used across the app)
 function useToast() {

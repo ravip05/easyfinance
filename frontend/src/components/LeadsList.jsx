@@ -25,7 +25,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLeads } from '../context/LeadsContext'
 import ConvertLeadModal from './ConvertLeadModal'
 import ImportLeadsModal from './ImportLeadsModal'
-import apiClient from '../api/axiosConfig'
+import apiClient from '../api/client'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 export const STAGES = [
