@@ -12,5 +12,9 @@ if (isset($_GET['debug'])) {
     exit;
 }
 
+// Redirect service and package caches to /tmp for Vercel
+putenv('APP_SERVICES_CACHE=/tmp/services.php');
+putenv('APP_PACKAGES_CACHE=/tmp/packages.php');
+
 // Forward Vercel requests to the public index
 require __DIR__ . '/../public/index.php';
