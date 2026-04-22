@@ -21,3 +21,6 @@ fix.php
 build.sh
 
 .vercel
+/bootstrap/cache/*.php
+/api/index.php
+
