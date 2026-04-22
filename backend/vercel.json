@@ -21,7 +21,7 @@
         {
             "src": "/api/(.*)",
             "headers": {
-                "Access-Control-Allow-Origin": "https://easyfinance-rosy.vercel.app",
+                "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
                 "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
                 "Access-Control-Allow-Credentials": "true"
@@ -32,7 +32,7 @@
     "env": {
         "APP_NAME": "EasyFinance CRM",
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
         "APP_KEY": "base64:dbNBa0WIQ0UCV2amc8dJCLhNBZVKWFUOl9NyUkIRtz0=",
         "APP_SERVICES_CACHE": "/tmp/services.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
