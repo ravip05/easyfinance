@@ -37,6 +37,13 @@ $app = Application::configure(basePath: dirname(__DIR__))
 */
 if (isset($_SERVER['VERCEL_URL'])) {
     $app->useStoragePath('/tmp/storage');
+    
+    // FORCE runtime configuration for paths that might be cached with build-time absolute paths
+    config([
+        'view.compiled' => '/tmp/storage/framework/views',
+        'cache.stores.file.path' => '/tmp/storage/framework/cache/data',
+        'session.files' => '/tmp/storage/framework/sessions',
+    ]);
 }
 
 return $app;
