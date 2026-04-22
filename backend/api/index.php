@@ -16,5 +16,20 @@ if (isset($_GET['debug'])) {
 putenv('APP_SERVICES_CACHE=/tmp/services.php');
 putenv('APP_PACKAGES_CACHE=/tmp/packages.php');
 
+/*
+|--------------------------------------------------------------------------
+| Vercel IPv4 Connectivity Patch
+|--------------------------------------------------------------------------
+| Supabase hostnames resolve to both IPv4 and IPv6. Vercel often fails 
+| to assign a socket for IPv6. We manually resolve to IPv4 here.
+*/
+$dbHost = getenv('DB_HOST');
+if ($dbHost && !filter_var($dbHost, FILTER_VALIDATE_IP)) {
+    $ips = gethostbynamel($dbHost);
+    if ($ips && isset($ips[0])) {
+        putenv("DB_HOST={$ips[0]}"); // Force the first IPv4 address
+    }
+}
+
 // Forward Vercel requests to the public index
 require __DIR__ . '/../public/index.php';
