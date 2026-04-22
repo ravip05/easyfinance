@@ -32,7 +32,7 @@
     "env": {
         "APP_NAME": "EasyFinance CRM",
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
         "APP_KEY": "base64:dbNBa0WIQ0UCV2amc8dJCLhNBZVKWFUOl9NyUkIRtz0=",
         "APP_SERVICES_CACHE": "/tmp/services.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
@@ -47,6 +47,7 @@
         "DB_PORT": "6543",
         "DB_DATABASE": "postgres",
         "DB_USERNAME": "postgres",
-        "DB_PASSWORD": "u7.vyxeZ!Bks/2M"
+        "DB_PASSWORD": "u7.vyxeZ!Bks/2M",
+        "DB_SSLMODE": "require"
     }
 }
