@@ -1,10 +1,7 @@
 <?php
-// Suppress PHP 8.5 deprecation warnings for production
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
-
 /*
 |--------------------------------------------------------------------------
-| Vercel connectivity and filesystem patches
+| Vercel connectivity and filesystem patches (TOP LEVEL)
 |--------------------------------------------------------------------------
 */
 if (isset($_SERVER['VERCEL_URL'])) {
@@ -18,11 +15,15 @@ if (isset($_SERVER['VERCEL_URL'])) {
     putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
     
     // Ensure writable storage directories exist in /tmp
-    $dirs = ['/tmp/storage/framework/views', '/tmp/storage/framework/cache', '/tmp/storage/framework/sessions', '/tmp/storage/logs'];
+    $dirs = ['/tmp/storage/framework/views', '/tmp/storage/framework/cache/data', '/tmp/storage/framework/sessions', '/tmp/storage/logs'];
     foreach ($dirs as $dir) {
         if (!is_dir($dir)) mkdir($dir, 0777, true);
     }
 }
+
+// Suppress PHP 8.5 deprecation warnings for production
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
