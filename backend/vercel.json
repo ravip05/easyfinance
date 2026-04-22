@@ -9,12 +9,20 @@
     },
     "rewrites": [
         {
+            "source": "/api/hello.php",
+            "destination": "api/hello.php"
+        },
+        {
+            "source": "/api/db-check.php",
+            "destination": "api/db-check.php"
+        },
+        {
             "source": "/api/(.*)",
-            "destination": "/api/index.php"
+            "destination": "api/index.php"
         },
         {
             "source": "/((?!api/).*)",
-            "destination": "/api/index.php"
+            "destination": "api/index.php"
         }
     ],
     "routes": [
@@ -32,7 +40,7 @@
     "env": {
         "APP_NAME": "EasyFinance CRM",
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
         "APP_KEY": "base64:dbNBa0WIQ0UCV2amc8dJCLhNBZVKWFUOl9NyUkIRtz0=",
         "LOG_CHANNEL": "stderr",
         "DB_CONNECTION": "pgsql",
