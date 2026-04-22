@@ -16,7 +16,7 @@
     "env": {
         "APP_NAME": "EasyFinance CRM",
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
         "APP_KEY": "base64:dbNBa0WIQ0UCV2amc8dJCLhNBZVKWFUOl9NyUkIRtz0=",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
