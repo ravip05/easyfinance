@@ -13,6 +13,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        apiPrefix: '', // Remove Laravel's internal /api prefix so it doesn't conflict with Vercel's /api folder
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->api(prepend: [

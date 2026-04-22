@@ -16,17 +16,5 @@ if (isset($_GET['debug'])) {
 putenv('APP_SERVICES_CACHE=/tmp/services.php');
 putenv('APP_PACKAGES_CACHE=/tmp/packages.php');
 
-/*
-|--------------------------------------------------------------------------
-| URL Normalization for Vercel
-|--------------------------------------------------------------------------
-| Laravel 11 on Vercel often loses its prefix context. We explicitly 
-| tell Laravel to handle /api as the root for API requests.
-*/
-$uri = $_SERVER['REQUEST_URI'];
-if (strpos($uri, '/api') === 0) {
-    $_SERVER['REQUEST_URI'] = substr($uri, 4) ?: '/';
-}
-
 // Forward Vercel requests to the public index
 require __DIR__ . '/../public/index.php';
