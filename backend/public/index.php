@@ -15,6 +15,13 @@ if (isset($_SERVER['VERCEL_URL'])) {
     }
     putenv('APP_SERVICES_CACHE=/tmp/services.php');
     putenv('APP_PACKAGES_CACHE=/tmp/packages.php');
+    putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
+    
+    // Ensure writable storage directories exist in /tmp
+    $dirs = ['/tmp/storage/framework/views', '/tmp/storage/framework/cache', '/tmp/storage/framework/sessions', '/tmp/storage/logs'];
+    foreach ($dirs as $dir) {
+        if (!is_dir($dir)) mkdir($dir, 0777, true);
+    }
 }
 
 use Illuminate\Contracts\Http\Kernel;
