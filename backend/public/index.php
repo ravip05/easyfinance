@@ -1,4 +1,22 @@
 <?php
+// Suppress PHP 8.5 deprecation warnings for production
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+/*
+|--------------------------------------------------------------------------
+| Vercel connectivity and filesystem patches
+|--------------------------------------------------------------------------
+*/
+if (isset($_SERVER['VERCEL_URL'])) {
+    $dbHost = getenv('DB_HOST');
+    if ($dbHost && !filter_var($dbHost, FILTER_VALIDATE_IP)) {
+        $ips = gethostbynamel($dbHost);
+        if ($ips && isset($ips[0])) putenv("DB_HOST={$ips[0]}");
+    }
+    putenv('APP_SERVICES_CACHE=/tmp/services.php');
+    putenv('APP_PACKAGES_CACHE=/tmp/packages.php');
+}
+
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 define('LARAVEL_START', microtime(true));

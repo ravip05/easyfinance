@@ -6,6 +6,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('/{any?}', function () {
     $f = public_path('index.html');
     if (file_exists($f)) return response()->file($f);
-    return response('<h2>Run: npm run build in frontend/, then copy dist/ to backend/public/</h2>', 200)
-        ->header('Content-Type','text/html');
+    return abort(404);
 })->where('any', '.*');
