@@ -7,16 +7,26 @@
             "runtime": "vercel-php@0.9.0"
         }
     },
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/index.php"
+        },
+        {
+            "source": "/((?!api/).*)",
+            "destination": "/api/index.php"
+        }
+    ],
     "routes": [
         {
-            "src": "/(.*)",
-            "dest": "api/index.php",
+            "src": "/api/(.*)",
             "headers": {
                 "Access-Control-Allow-Origin": "https://easyfinance-rosy.vercel.app",
                 "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
                 "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
                 "Access-Control-Allow-Credentials": "true"
-            }
+            },
+            "continue": true
         }
     ],
     "env": {
