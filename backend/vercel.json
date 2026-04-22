@@ -21,7 +21,7 @@
         {
             "src": "/api/(.*)",
             "headers": {
-                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Origin": "https://easyfinance-rosy-three.vercel.app",
                 "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
                 "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
                 "Access-Control-Allow-Credentials": "true"
@@ -43,7 +43,7 @@
         "SESSION_DRIVER": "cookie",
         "LOG_CHANNEL": "stderr",
         "DB_CONNECTION": "pgsql",
-        "DB_HOST": "54.195.101.44",
+        "DB_HOST": "db.jggrwpctzxmlmolhfgun.supabase.co",
         "DB_PORT": "6543",
         "DB_DATABASE": "postgres",
         "DB_USERNAME": "postgres",
