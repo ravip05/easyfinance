@@ -1,0 +1,2 @@
+<?php
+echo "HELLO - PHP RUNTIME IS WORKING";
