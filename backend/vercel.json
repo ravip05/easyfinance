@@ -32,7 +32,7 @@
     "env": {
         "APP_NAME": "EasyFinance CRM",
         "APP_ENV": "production",
-        "APP_DEBUG": "true",
+        "APP_DEBUG": "false",
         "APP_KEY": "base64:dbNBa0WIQ0UCV2amc8dJCLhNBZVKWFUOl9NyUkIRtz0=",
         "APP_SERVICES_CACHE": "/tmp/services.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
@@ -43,7 +43,7 @@
         "SESSION_DRIVER": "cookie",
         "LOG_CHANNEL": "stderr",
         "DB_CONNECTION": "pgsql",
-        "DB_HOST": "db.jggrwpctzxmlmolhfgun.supabase.co",
+        "DB_HOST": "54.195.101.44",
         "DB_PORT": "6543",
         "DB_DATABASE": "postgres",
         "DB_USERNAME": "postgres",
