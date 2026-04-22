@@ -1,7 +1,7 @@
 <?php
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// Disable error reporting for production to prevent breaking headers
+ini_set('display_errors', 0);
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 if (isset($_GET['debug'])) {
     echo "<h1>Debug Info</h1>";
@@ -14,4 +14,3 @@ if (isset($_GET['debug'])) {
 
 // Forward Vercel requests to the public index
 require __DIR__ . '/../public/index.php';
-

@@ -19,8 +19,7 @@ return [
             'strict'        => true,
             'engine'        => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                // PDO::MYSQL_ATTR_SSL_CA is deprecated in PHP 8.5+
-                defined('PDO::MYSQL_ATTR_SSL_CA') ? PDO::MYSQL_ATTR_SSL_CA : null => env('MYSQL_ATTR_SSL_CA'),
+                // We are using Postgres; MySQL options are kept empty to avoid PHP 8.5 deprecations
             ]) : [],
         ],
         'sqlite' => ['driver'=>'sqlite','url'=>env('DATABASE_URL'),'database'=>env('DB_DATABASE',database_path('database.sqlite')),'prefix'=>'','foreign_key_constraints'=>env('DB_FOREIGN_KEYS',true)],
