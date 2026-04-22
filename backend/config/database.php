@@ -26,7 +26,14 @@ return [
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
+            'host' => (function() {
+                $host = env('DB_HOST', '127.0.0.1');
+                if ($host && strpos($host, '.') !== false && !filter_var($host, FILTER_VALIDATE_IP)) {
+                    $ips = gethostbynamel($host);
+                    return ($ips && isset($ips[0])) ? $ips[0] : $host;
+                }
+                return $host;
+            })(),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'forge'),
             'username' => env('DB_USERNAME', 'forge'),
@@ -35,7 +42,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => env('DB_SSLMODE', 'require'),
         ],
     ],
     'migrations' => 'migrations',
