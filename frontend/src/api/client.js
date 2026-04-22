@@ -1,11 +1,12 @@
 import axios from 'axios'
 
-const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:8000' 
-  : 'https://easyfinance-api-uyqg.onrender.com'
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname.endsWith('.trycloudflare.com') || window.location.hostname.endsWith('.loca.lt'))
+  ? '' 
+  : 'https://easyfinance-h5a4.vercel.app'
 
 const apiClient = axios.create({
   baseURL: `${API_URL}/api`,
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
   timeout: 30000,
 })
