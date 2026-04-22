@@ -3,7 +3,7 @@ import axios from 'axios'
 
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname.endsWith('.trycloudflare.com') || window.location.hostname.endsWith('.loca.lt'))
   ? '' 
-  : 'https://easyfinance-h5a4.vercel.app'
+  : 'https://backend-flax-delta-18.vercel.app'
 
 const apiClient = axios.create({
   baseURL: `${API_URL}/api`,
