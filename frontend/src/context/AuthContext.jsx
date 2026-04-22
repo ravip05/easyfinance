@@ -112,6 +112,14 @@ export function AuthProvider({ children }) {
    * On native: also enrolls biometric for future sessions.
    */
   const login = useCallback(async (email, password, role) => {
+    // Initialize CSRF protection (only needed if using stateful Sanctum)
+    if (window.location.hostname === 'localhost') {
+      try {
+        await apiClient.get('/../sanctum/csrf-cookie')
+      } catch (e) {
+        console.warn('CSRF initialization failed', e)
+      }
+    }
     const { data } = await apiClient.post('/auth/login', { email, password, role })
 
     sessionStorage.setItem('crm_token', data.token)
