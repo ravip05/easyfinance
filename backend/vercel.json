@@ -1,42 +1,30 @@
 {
-    "version": 2,
-    "public": true,
-    "name": "easyfinance-backend",
-    "functions": {
-        "api/index.php": {
-            "runtime": "vercel-php@0.9.0"
-        }
-    },
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "api/index.php"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "headers": {
-                "Access-Control-Allow-Origin": "https://easyfinance-rosy-three.vercel.app",
-                "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
-                "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
-                "Access-Control-Allow-Credentials": "true"
-            },
-            "continue": true
-        }
-    ],
-    "env": {
-        "APP_NAME": "EasyFinance CRM",
-        "APP_ENV": "production",
-        "APP_DEBUG": "false",
-        "APP_KEY": "base64:dbNBa0WIQ0UCV2amc8dJCLhNBZVKWFUOl9NyUkIRtz0=",
-        "LOG_CHANNEL": "stderr",
-        "DB_CONNECTION": "pgsql",
-        "DB_HOST": "db.jggrwpctzxmlmolhfgun.supabase.co",
-        "DB_PORT": "5432",
-        "DB_DATABASE": "postgres",
-        "DB_USERNAME": "postgres",
-        "DB_PASSWORD": "u7.vyxeZ!Bks/2M",
-        "DB_SSLMODE": "require"
+  "version": 2,
+  "public": true,
+  "name": "easyfinance-backend",
+  "functions": {
+    "api/*.php": {
+      "runtime": "vercel-php@0.6.0"
     }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.php"
+    }
+  ],
+  "env": {
+    "APP_NAME": "EasyFinance CRM",
+    "APP_ENV": "production",
+    "APP_DEBUG": "false",
+    "APP_KEY": "base64:dbNBa0WIQ0UCV2amc8dJCLhNBZVKWFUOl9NyUkIRtz0=",
+    "LOG_CHANNEL": "stderr",
+    "DB_CONNECTION": "pgsql",
+    "DB_HOST": "db.jggrwpctzxmlmolhfgun.supabase.co",
+    "DB_PORT": "5432",
+    "DB_DATABASE": "postgres",
+    "DB_USERNAME": "postgres",
+    "DB_PASSWORD": "u7.vyxeZ!Bks/2M",
+    "DB_SSLMODE": "require"
+  }
 }
