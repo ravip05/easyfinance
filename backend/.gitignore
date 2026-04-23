@@ -21,6 +21,7 @@ fix.php
 build.sh
 
 .vercel
-/bootstrap/cache/*.php
+# Allow manifests for Vercel
+!.gitkeep
 /api/index.php
 
