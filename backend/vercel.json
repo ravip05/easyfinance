@@ -9,19 +9,7 @@
     },
     "rewrites": [
         {
-            "source": "/api/hello.php",
-            "destination": "api/hello.php"
-        },
-        {
-            "source": "/api/db-check.php",
-            "destination": "api/db-check.php"
-        },
-        {
-            "source": "/api/(.*)",
-            "destination": "api/index.php"
-        },
-        {
-            "source": "/((?!api/).*)",
+            "source": "/(.*)",
             "destination": "api/index.php"
         }
     ],
