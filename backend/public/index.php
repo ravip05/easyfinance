@@ -15,10 +15,12 @@ if (isset($_SERVER['VERCEL_URL'])) {
     putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
     
     // Ensure writable storage directories exist in /tmp
-    $dirs = ['/tmp/storage/framework/views', '/tmp/storage/framework/cache/data', '/tmp/storage/framework/sessions', '/tmp/storage/logs'];
-    foreach ($dirs as $dir) {
-        if (!is_dir($dir)) mkdir($dir, 0777, true);
-    }
+    try {
+        $dirs = ['/tmp/storage/framework/views', '/tmp/storage/framework/cache/data', '/tmp/storage/framework/sessions', '/tmp/storage/logs'];
+        foreach ($dirs as $dir) {
+            if (!is_dir($dir)) @mkdir($dir, 0777, true);
+        }
+    } catch (\Throwable $e) {}
 }
 
 // Suppress PHP 8.5 deprecation warnings for production

@@ -1,2 +1,1 @@
-<?php
-echo "HELLO - PHP RUNTIME IS WORKING";
+<?php echo "PHP is healthy on Vercel!"; ?>
