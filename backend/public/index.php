@@ -1,30 +1,17 @@
 <?php
-/*
-|--------------------------------------------------------------------------
-| Vercel connectivity and filesystem patches (TOP LEVEL)
-|--------------------------------------------------------------------------
-*/
-if (isset($_SERVER['VERCEL_URL'])) {
-    $dbHost = getenv('DB_HOST');
-    if ($dbHost && !filter_var($dbHost, FILTER_VALIDATE_IP)) {
-        $ips = gethostbynamel($dbHost);
-        if ($ips && isset($ips[0])) putenv("DB_HOST={$ips[0]}");
-    }
-    putenv('APP_SERVICES_CACHE=/tmp/services.php');
-    putenv('APP_PACKAGES_CACHE=/tmp/packages.php');
-    putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
+
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+// Determine if the application is running in the console...
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
 }
 
-// Suppress PHP 8.5 deprecation warnings for production
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
-
-
-use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Http\Request;
-define('LARAVEL_START', microtime(true));
-if (file_exists($m = __DIR__.'/../storage/framework/maintenance.php')) require $m;
+// Register the Composer autoloader...
 require __DIR__.'/../vendor/autoload.php';
-$app = require_once __DIR__.'/../bootstrap/app.php';
-$kernel = $app->make(Kernel::class);
-$response = $kernel->handle($request = Request::capture())->send();
-$kernel->terminate($request, $response);
+
+// Bootstrap Laravel and handle the request...
+(require_once __DIR__.'/../bootstrap/app.php')
+    ->handleRequest(Request::capture());
