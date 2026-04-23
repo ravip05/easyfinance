@@ -37,6 +37,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
 */
 if (isset($_SERVER['VERCEL_URL'])) {
     $app->useStoragePath('/tmp/storage');
+    $app->usePackageManifestPath('/tmp/packages.php');
+    $app->useCachedServicesPath('/tmp/services.php');
     
     // FORCE runtime configuration for paths that might be cached with build-time absolute paths
     config([
