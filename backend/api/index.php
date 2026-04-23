@@ -8,6 +8,7 @@ if (isset($_SERVER['VERCEL_URL'])) {
         '/tmp/storage/framework/views',
         '/tmp/storage/framework/sessions',
         '/tmp/storage/framework/cache/data',
+        '/tmp/storage/bootstrap',
         '/tmp/storage/app/public',
         '/tmp/storage/logs',
     ];

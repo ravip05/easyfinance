@@ -29,6 +29,8 @@
     "DB_DATABASE": "postgres",
     "DB_USERNAME": "postgres",
     "DB_PASSWORD": "u7.vyxeZ!Bks/2M",
-    "DB_SSLMODE": "require"
+    "DB_SSLMODE": "require",
+    "LARAVEL_SERVICES_CACHE": "/tmp/storage/bootstrap/services.php",
+    "LARAVEL_PACKAGES_CACHE": "/tmp/storage/bootstrap/packages.php"
   }
 }
