@@ -1,9 +1,7 @@
 /** Definitive Cache Buster: 2026-04-23 00:30:00 **/
 import axios from 'axios'
 
-const API_URL = (window.location.hostname === 'localhost' || window.location.hostname.endsWith('.trycloudflare.com') || window.location.hostname.endsWith('.loca.lt'))
-  ? '' 
-  : 'https://backend-flax-delta-18.vercel.app'
+const API_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 const apiClient = axios.create({
   baseURL: `${API_URL}/api`,
