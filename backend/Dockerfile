@@ -28,6 +28,12 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
+# Monorepo support: If built from root, move backend files to /var/www/html
+RUN if [ -f "backend/composer.json" ]; then \
+    cp -r backend/. /var/www/html/ && \
+    rm -rf /var/www/html/backend; \
+    fi
+
 # Set Permissions
 RUN mkdir -p /var/www/html/storage/framework/cache/data \
     /var/www/html/storage/framework/views \
