@@ -14,12 +14,12 @@ use Illuminate\Foundation\Configuration\Middleware;
 */
 
 // 1. Atomic Storage and Bootstrap Initialization
-if (isset($_SERVER['VERCEL_URL'])) {
+if (isset($_SERVER['VERCEL_URL']) || isset($_SERVER['VERCEL']) || getenv('VERCEL')) {
     $storagePaths = [
         '/tmp/storage/framework/views',
         '/tmp/storage/framework/sessions',
         '/tmp/storage/framework/cache/data',
-        '/tmp/storage/bootstrap',
+        '/tmp/storage/bootstrap/cache',
         '/tmp/storage/app/public',
         '/tmp/storage/logs',
     ];
@@ -29,10 +29,12 @@ if (isset($_SERVER['VERCEL_URL'])) {
         }
     }
     
+    // Force environment to production
     putenv('APP_ENV=production');
-    putenv('APP_DEBUG=true'); 
-    putenv('LARAVEL_SERVICES_CACHE=/tmp/storage/bootstrap/services.php');
-    putenv('LARAVEL_PACKAGES_CACHE=/tmp/storage/bootstrap/packages.php');
+    
+    // Explicitly set cache paths for Laravel's PackageManifest
+    putenv('LARAVEL_SERVICES_CACHE=/tmp/storage/bootstrap/cache/services.php');
+    putenv('LARAVEL_PACKAGES_CACHE=/tmp/storage/bootstrap/cache/packages.php');
 }
 
 // 2. Load Autoloader
@@ -42,12 +44,14 @@ require __DIR__ . '/../vendor/autoload.php';
 if (!class_exists('VercelApplication')) {
     class VercelApplication extends Application {
         public function bootstrapPath($path = '') {
-            return isset($_SERVER['VERCEL_URL']) 
+            $isVercel = isset($_SERVER['VERCEL_URL']) || isset($_SERVER['VERCEL']) || getenv('VERCEL');
+            return $isVercel 
                 ? $this->joinPaths('/tmp/storage/bootstrap', $path)
                 : parent::bootstrapPath($path);
         }
         public function storagePath($path = '') {
-            return isset($_SERVER['VERCEL_URL']) 
+            $isVercel = isset($_SERVER['VERCEL_URL']) || isset($_SERVER['VERCEL']) || getenv('VERCEL');
+            return $isVercel 
                 ? $this->joinPaths('/tmp/storage', $path)
                 : parent::storagePath($path);
         }
@@ -77,9 +81,8 @@ $app = VercelApplication::configure(basePath: dirname(__DIR__))
     ->create();
 
 // 5. Final Path Redirections
-if (isset($_SERVER['VERCEL_URL'])) {
+if (isset($_SERVER['VERCEL_URL']) || isset($_SERVER['VERCEL']) || getenv('VERCEL')) {
     $app->useStoragePath('/tmp/storage');
-    $app->useBootstrapPath('/tmp/storage/bootstrap');
 }
 
 // 6. Handle Request

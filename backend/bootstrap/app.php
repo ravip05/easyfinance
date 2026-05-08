@@ -35,10 +35,12 @@ $app = Application::configure(basePath: dirname(__DIR__))
 | On Vercel, the filesystem is read-only. We must point the storage
 | and cache paths to the /tmp directory.
 */
-if (isset($_SERVER['VERCEL_URL'])) {
+if (isset($_SERVER['VERCEL_URL']) || isset($_SERVER['VERCEL'])) {
     $app->useStoragePath('/tmp/storage');
-    $app->usePackageManifestPath('/tmp/packages.php');
-    $app->useCachedServicesPath('/tmp/services.php');
+    
+    // Explicitly set cache paths for Laravel's PackageManifest
+    $app->usePackageManifestPath('/tmp/storage/bootstrap/cache/packages.php');
+    $app->useCachedServicesPath('/tmp/storage/bootstrap/cache/services.php');
     
     // FORCE runtime configuration for paths that might be cached with build-time absolute paths
     config([
