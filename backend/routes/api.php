@@ -42,6 +42,16 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])
          ->middleware('auth:sanctum')
          ->name('logout');
+         
+    // GET /api/auth/db-check — Public DB health check
+    Route::get('db-check', function() {
+        try {
+            \DB::connection()->getPdo();
+            return response()->json(['success' => true, 'message' => 'Database connection verified!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    });
 });
 
 // ── Private: Requires valid Sanctum Bearer token ───────────────────────────────
