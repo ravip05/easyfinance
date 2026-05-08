@@ -60,4 +60,5 @@ RUN chmod +x build.sh
 EXPOSE 80
 
 # Overwrite entrypoint to run migrations before starting Apache
-CMD bash -c "./build.sh && apache2-foreground"
+# Fix MPM at runtime and run migrations before starting Apache
+CMD bash -c "a2dismod mpm_event mpm_worker || true && a2enmod mpm_prefork || true && ./build.sh && apache2-foreground"
