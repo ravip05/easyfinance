@@ -28,7 +28,7 @@
     "DB_PORT": "5432",
     "DB_DATABASE": "postgres",
     "DB_USERNAME": "postgres.fskntpivmttjpsomqgqj",
-    "DB_PASSWORD": "Veda@54321",
+    "DB_PASSWORD": "iSzq9tTuRi6nDUev",
     "DB_SSLMODE": "require",
     "LARAVEL_SERVICES_CACHE": "/tmp/storage/bootstrap/services.php",
     "LARAVEL_PACKAGES_CACHE": "/tmp/storage/bootstrap/packages.php"
