@@ -59,16 +59,18 @@ export default function Franchise() {
     setIsDetailsLoading(true)
     setActiveDetailTab('info')
     try {
-      const [details, business] = await Promise.all([
+      const [details, business, payouts] = await Promise.all([
         apiClient.get(`/franchises/${fr.id}`),
-        apiClient.get(`/franchises/${fr.id}/leads`)
+        apiClient.get(`/franchises/${fr.id}/leads`),
+        apiClient.get(`/franchises/${fr.id}/payouts`)
       ])
       // Safeguard: Only update if the user hasn't closed the modal or switched to another franchise
       const fullData = details.data.data
       setSelected(prev => (prev && prev.id === fr.id) ? fullData : prev)
       setDetailData({ 
         leads: (business.data.data || []).filter(l => l.stage !== 'Disbursed'),
-        clients: (business.data.data || []).filter(l => l.stage === 'Disbursed')
+        clients: (business.data.data || []).filter(l => l.stage === 'Disbursed'),
+        payouts: payouts.data.data || []
       })
     } catch (e) {
       toast.error('Failed to fetch franchise details')
@@ -234,7 +236,7 @@ export default function Franchise() {
             </div>
             <div className="modal-body" style={{ padding: 0 }}>
               <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--bg2)', position: 'relative', overflowX: 'auto' }}>
-                {['info', 'leads', 'clients'].map(t => (
+                {['info', 'leads', 'clients', 'payouts'].map(t => (
                   <button 
                     key={t}
                     onClick={() => setActiveDetailTab(t)}
@@ -277,6 +279,7 @@ export default function Franchise() {
                         <InfoRow label="Phone" val={selected.phone} />
                         <InfoRow label="Email" val={selected.email} />
                         <InfoRow label="Commission" val={selected.commission_rate} />
+                        <InfoRow label="Type" val={selected.type} />
                       </tbody>
                     </table>
 
@@ -334,6 +337,10 @@ export default function Franchise() {
                 {activeDetailTab === 'clients' && (
                   <BusinessList data={detailData.clients} type="Clients" />
                 )}
+
+                {activeDetailTab === 'payouts' && (
+                  <PayoutsList data={detailData.payouts} />
+                )}
               </div>
             </div>
           </div>
@@ -388,4 +395,28 @@ const STAGE_BADGE = {
   'Docs Received':'badge-docs', CIBIL:'badge-cibil', Login:'badge-login',
   Processing:'badge-processing', Sanctioned:'badge-sanction',
   Disbursed:'badge-disbursed', Closed:'badge-closed',
+}
+
+function PayoutsList({ data }) {
+  if (!data?.length) return (
+    <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text3)' }}>
+      No payout history found for this franchise.
+    </div>
+  )
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {data.map(p => (
+        <div key={p.id} style={{ padding: '16px', background: 'var(--bg2)', border: '1.5px solid var(--border)', borderRadius: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontWeight: 800, fontSize: 13 }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : 'Monthly'} Payout</span>
+            <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--green)' }}>₹{p.amount || '0'}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text3)' }}>
+             <span>Ref: {p.reference || 'N/A'}</span>
+             <span className={`badge ${p.status === 'Paid' ? 'badge-active' : 'badge-new'}`}>{p.status}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }

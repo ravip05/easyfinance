@@ -13,6 +13,7 @@ export default function Announcements() {
   const { user } = useAuth()
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   const isAdmin = user?.role === 'admin' || user?.role === 'manager'
 
@@ -150,7 +151,16 @@ export default function Announcements() {
       <div className="card">
         <div className="card-header">
           <div className="card-title">📋 Announcements Feed</div>
-          <button className="btn btn-sm btn-ghost" onClick={fetchAnnouncements}>↻ Refresh</button>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <input 
+              type="text" 
+              placeholder="🔍 Search announcements..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, background: 'var(--bg2)', color: 'var(--text)' }}
+            />
+            <button className="btn btn-sm btn-ghost" onClick={fetchAnnouncements}>↻ Refresh</button>
+          </div>
         </div>
 
         {loading ? (
@@ -162,7 +172,12 @@ export default function Announcements() {
           </div>
         ) : (
           <div>
-            {announcements.map(ann => (
+            {announcements
+              .filter(ann => 
+                ann.title.toLowerCase().includes(search.toLowerCase()) || 
+                (ann.message || ann.content || '').toLowerCase().includes(search.toLowerCase())
+              )
+              .map(ann => (
               <div key={ann.id} style={{
                 padding: '14px 0', borderBottom: '1px solid var(--border)',
                 display: 'flex', gap: 12, alignItems: 'flex-start',

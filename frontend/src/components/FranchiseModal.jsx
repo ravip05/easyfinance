@@ -12,6 +12,7 @@ const EMPTY_FORM = () => ({
   city: '',
   commission_rate: 0.03, // 3% default
   status: 'Active',
+  type: 'Standard', // Default type
   phone: '',
   email: '',
   address: '',
@@ -170,6 +171,20 @@ export default function FranchiseModal({ isOpen, onClose, onSuccess, initialData
                 onChange={handleChange}
               />
               <div style={{ fontSize: 9, color: 'var(--text3)', marginTop: 2 }}>Max: 0.05 (5%)</div>
+            </div>
+
+            <div className="form-group">
+              <div className="form-label">Franchise Type</div>
+              <select 
+                className="form-select"
+                name="type"
+                value={form.type}
+                onChange={handleChange}
+              >
+                <option value="Standard">Standard</option>
+                <option value="Master">Master</option>
+                <option value="Partner">Partner</option>
+              </select>
             </div>
 
             <div className="form-group">

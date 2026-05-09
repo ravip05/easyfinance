@@ -194,9 +194,9 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; }
 body {
-  font-family: 'Inter', sans-serif;
-  background: #f0f4f9;
-  color: #1e293b;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -243,6 +243,32 @@ img { max-width: 100%; }
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
   --shadow: 0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
   --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+}
+
+body.dark-mode {
+  --bg: #0f172a;
+  --bg2: #1e293b;
+  --surface: #1e293b;
+  --surface2: #334155;
+  --border: #334155;
+  --border2: #475569;
+
+  --accent-light: rgba(37, 99, 235, 0.15);
+  --green-light: rgba(5, 150, 105, 0.15);
+  --gold-light: rgba(217, 119, 6, 0.15);
+  --purple-light: rgba(124, 58, 237, 0.15);
+  --red-light: rgba(220, 38, 38, 0.15);
+  --orange-light: rgba(234, 88, 12, 0.15);
+  --cyan-light: rgba(8, 145, 178, 0.15);
+
+  --text: #f8fafc;
+  --text2: #cbd5e1;
+  --text3: #94a3b8;
+  --text4: #64748b;
+  
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow: 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.4);
 }
 
 /* ===== SIDEBAR ===== */

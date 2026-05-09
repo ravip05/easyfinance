@@ -421,6 +421,7 @@ function Leaderboard({ employees }) {
 
 /** FollowUps — horizontal scroll of overdue/today/upcoming cards (buildFollowups() port) */
 function FollowUps({ leads }) {
+  const navigate = useNavigate()
   const fuLeads = leads.filter((l) => l.followup).slice(0, 8)
   const today   = new Date().toISOString().split('T')[0]
 
@@ -440,7 +441,12 @@ function FollowUps({ leads }) {
         const cls       = isOverdue ? 'overdue' : isToday ? 'today' : 'upcoming'
 
         return (
-          <div className={`fu-card ${cls}`} key={l.id}>
+          <div 
+            className={`fu-card ${cls}`} 
+            key={l.id}
+            onClick={() => navigate(`/leads?search=${encodeURIComponent(l.name)}`)}
+            style={{ cursor: 'pointer' }}
+          >
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{l.name}</div>
             <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>
               {l.type} · {l.amount}
@@ -470,6 +476,7 @@ function FollowUps({ leads }) {
 // ── Role-specific dashboard layouts ──────────────────────────────────────────
 
 function AdminDashboard({ leads, clients, employees, onViewLeads, extraStats }) {
+  const navigate = useNavigate()
   const totalLeads  = leads.length
   // Use API stats if available, fallback to local calculation
   const disbursed   = extraStats?.total_amount ?? leads.filter((l) => l.stage === 'Disbursed').reduce((s, l) => s + parseAmt(l.amount), 0)
@@ -503,7 +510,7 @@ function AdminDashboard({ leads, clients, employees, onViewLeads, extraStats }) 
       <div className="card" style={{ marginTop: 16 }}>
         <div className="card-header">
           <div className="card-title">⚡ Recent Activity</div>
-          <span className="badge badge-active">Live</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/announcements')}>View All →</button>
         </div>
         <ActivityFeed leads={leads} />
       </div>
@@ -559,6 +566,7 @@ function AdminDashboard({ leads, clients, employees, onViewLeads, extraStats }) 
 }
 
 function ManagerDashboard({ user, leads, clients, employees, onViewLeads }) {
+  const navigate = useNavigate()
   const totalLeads  = leads.length
   const converted   = leads.filter((l) => ['Sanctioned', 'Disbursed'].includes(l.stage)).length
   const disbursed   = leads.filter((l) => l.stage === 'Disbursed').reduce((s, l) => s + parseAmt(l.amount), 0)
@@ -620,6 +628,7 @@ function ManagerDashboard({ user, leads, clients, employees, onViewLeads }) {
 }
 
 function StaffDashboard({ user, leads, clients, onViewLeads }) {
+  const navigate = useNavigate()
   const myLeads   = leads.length
   const active    = leads.filter((l) => !['Disbursed', 'Closed'].includes(l.stage)).length
   const disbursed = leads.filter((l) => l.stage === 'Disbursed').reduce((s, l) => s + parseAmt(l.amount), 0)
@@ -661,6 +670,7 @@ function StaffDashboard({ user, leads, clients, onViewLeads }) {
 }
 
 function DSADashboard({ user, leads, clients, onViewLeads }) {
+  const navigate = useNavigate()
   const totalLeads     = leads.length
   const converted      = leads.filter((l) => ['Sanctioned', 'Disbursed'].includes(l.stage)).length
   const totalDisbursed = leads.filter((l) => l.stage === 'Disbursed').reduce((s, l) => s + parseAmt(l.amount), 0)

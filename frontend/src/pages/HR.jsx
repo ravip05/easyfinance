@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { useToast } from '../context/ToastContext'
 import { hrApi } from '../api/hr'
 import HolidayModal from '../components/HolidayModal'
@@ -7,6 +8,7 @@ import PolicyModal from '../components/PolicyModal'
 
 export default function HR() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const toast = useToast()
   const role = user?.role ?? 'staff'
   
@@ -17,6 +19,7 @@ export default function HR() {
   const [showPolicyModal, setShowPolicyModal] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [editingPolicy, setEditingPolicy] = useState(null)
+  const [acting, setActing] = useState(false)
 
   const tabs = [
     { id: 'attendance', label: 'My Attendance', icon: '📅' },
@@ -66,6 +69,26 @@ export default function HR() {
       // silent fallback
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handlePunch(type) {
+    if (acting) return
+    setActing(true)
+    try {
+      if (type === 'check-in') {
+        // Redirect to geofenced attendance page
+        navigate('/myattendance')
+        return
+      } else {
+        await hrApi.checkOut()
+        toast.success('Punched out successfully')
+      }
+      fetchData()
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to update attendance')
+    } finally {
+      setActing(false)
     }
   }
 
@@ -122,7 +145,7 @@ export default function HR() {
 
       {/* Content */}
       <div>
-        {activeTab === 'attendance' && <AttendanceView data={data.attendance} summary={data.summary} loading={loading} />}
+        {activeTab === 'attendance' && <AttendanceView data={data.attendance} summary={data.summary} loading={loading} onPunch={handlePunch} acting={acting} />}
         {activeTab === 'holidays' && <HolidaysView data={data.holidays} loading={loading} isAdmin={role === 'admin'} onDelete={handleDeleteHoliday} />}
         {activeTab === 'leaves' && <LeavesView data={data.leaves} loading={loading} role={role} onRefresh={fetchData} />}
         {activeTab === 'payouts' && <PayoutsView data={data.payouts} commissions={data.commissions} loading={loading} />}
@@ -161,15 +184,24 @@ export default function HR() {
 
 // ── Sub-Components ────────────────────────────────────────────────────────────
 
-function AttendanceView({ data, summary, loading }) {
+function AttendanceView({ data, summary, loading, onPunch, acting }) {
     if (loading) return <Loader />
     return (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-            <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '8px' }}>
+            <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '8px' }}>
                 <StatCard label="Present" value={summary?.present || 0} color="#10b981" />
                 <StatCard label="Late" value={summary?.late || 0} color="#f59e0b" />
                 <StatCard label="On Leave" value={summary?.['on-leave'] || 0} color="#3b82f6" />
                 <StatCard label="Absent" value={summary?.absent || 0} color="#ef4444" />
+                <div style={{ background: 'white', padding: '16px', borderRadius: '18px', border: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button 
+                      onClick={() => onPunch('check-in')} 
+                      disabled={acting}
+                      style={{ ...btnPrimary, width: '100%', height: '100%', margin: 0, padding: '12px' }}
+                    >
+                      {acting ? '...' : '⏰ Mark Attendance'}
+                    </button>
+                </div>
             </div>
             <div style={{ gridColumn: '1 / -1', background: 'white', borderRadius: '20px', border: '1px solid #e2e8f0', padding: '24px' }}>
                 <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: 800 }}>Check-in History</h3>

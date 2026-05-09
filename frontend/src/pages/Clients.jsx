@@ -7,6 +7,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import apiClient from '../api/client'
+import { useSearchQuery } from '../components/MainLayout'
 
 const STAGES = ['Docs Pending', 'Login', 'Processing', 'Sanctioned', 'Disbursed', 'Closed']
 const LOAN_TYPES = ['Home Loan', 'Business Loan', 'Personal Loan', 'Car Loan', 'LAP', 'Insurance']
@@ -24,6 +25,12 @@ export default function Clients() {
   const role = user?.role ?? 'staff'
   const canEdit = ['admin', 'manager'].includes(role)
   const canDelete = role === 'admin'
+
+  const searchQuery = useSearchQuery()
+
+  useEffect(() => {
+    setSearch(searchQuery)
+  }, [searchQuery])
 
   useEffect(() => {
     fetchClients()

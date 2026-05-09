@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import apiClient from '../api/client'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
+import { useSearchQuery } from '../components/MainLayout'
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const s = {
@@ -86,6 +87,11 @@ export default function LMS() {
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [search, setSearch] = useState('')
+
+  const searchQuery = useSearchQuery()
+  useEffect(() => {
+    setSearch(searchQuery)
+  }, [searchQuery])
 
   // Modals state
   const [showCourseModal, setShowCourseModal] = useState(false)
@@ -306,11 +312,11 @@ export default function LMS() {
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
                         {m.file_path && (
-                          <a href={`${apiClient.defaults.baseURL?.replace('/api','')}/storage/${m.file_path}`} target="_blank" rel="noreferrer"
+                          <a href={m.file_path.startsWith('http') ? m.file_path : `${apiClient.defaults.baseURL?.replace('/api','')}/storage/${m.file_path}`} target="_blank" rel="noreferrer"
                             className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>👁 View</a>
                         )}
                         {m.file_path && (
-                          <a href={`${apiClient.defaults.baseURL?.replace('/api','')}/storage/${m.file_path}`} download
+                          <a href={m.file_path.startsWith('http') ? m.file_path : `${apiClient.defaults.baseURL?.replace('/api','')}/storage/${m.file_path}`} download
                             className="btn btn-primary btn-sm" style={{ textDecoration: 'none' }}>⬇ Download</a>
                         )}
                       </div>
@@ -342,7 +348,14 @@ export default function LMS() {
                   </div>
                 )}
                 <button className="btn btn-primary btn-sm" style={{ width: '100%' }}
-                  onClick={() => setActiveQuiz(q)}>{q.attempted ? 'Retake Quiz' : 'Start Quiz'}</button>
+                  onClick={async () => {
+                    try {
+                      const res = await apiClient.get(`/lms/quizzes/${q.id}`)
+                      setActiveQuiz(res.data.data || res.data)
+                    } catch(e) {
+                      toast.error('Failed to load quiz questions')
+                    }
+                  }}>{q.attempted ? 'Retake Quiz' : 'Start Quiz'}</button>
               </div>
             ))}
           </div>
@@ -784,26 +797,27 @@ function QuizPlayer({ quiz, onBack }) {
   const [timeLeft, setTimeLeft] = useState((quiz.time_limit_minutes || 10) * 60)
   const timerRef = useRef(null)
 
-  // Fetch quiz detail with questions
+  // Use questions from the quiz object if available
   useEffect(() => {
-    const fetchQuiz = async () => {
-      try {
-        // If quiz has an ID, get its questions via the quizzes list
-        const res = await apiClient.get('/lms/quizzes')
-        const found = (res.data || []).find(q => q.id === quiz.id)
-        if (found) {
-          // Fetch the course detail to get quiz questions
-          const qRes = await apiClient.get(`/lms/courses/${found.course_id || quiz.course_id}`)
-          // For now, construct questions from the quiz data
+    if (quiz.questions?.length > 0) {
+      setQuestions(quiz.questions)
+      setLoading(false)
+    } else {
+      // Fallback: try to fetch again if empty
+      const fetchQuiz = async () => {
+        try {
+          const res = await apiClient.get(`/lms/quizzes/${quiz.id}`)
+          const fullQuiz = res.data.data || res.data
+          if (fullQuiz.questions?.length > 0) {
+            setQuestions(fullQuiz.questions)
+          }
+          setLoading(false)
+        } catch (e) {
+          setLoading(false)
         }
-        // Use questions from the quiz object if available, otherwise set sample
-        setQuestions(quiz.questions || [])
-        setLoading(false)
-      } catch (e) {
-        setLoading(false)
       }
+      fetchQuiz()
     }
-    fetchQuiz()
   }, [quiz])
 
   // Timer

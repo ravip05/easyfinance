@@ -18,7 +18,7 @@
  */
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNewLeadTrigger } from '../components/MainLayout'
+import { useNewLeadTrigger, useSearchQuery } from '../components/MainLayout'
 import LeadsList, { LeadsFilterBar } from '../components/LeadsList'
 import LeadModal from '../components/LeadModal'
 import DateRangeFilter from '../components/DateRangeFilter'
@@ -45,6 +45,13 @@ export default function Leads() {
   function handleFilterChange(key, val) {
     setFilters((prev) => ({ ...prev, [key]: val }))
   }
+
+  const searchQuery = useSearchQuery()
+
+  // Sync Topbar search with local filter
+  useEffect(() => {
+    setFilters((prev) => ({ ...prev, search: searchQuery }))
+  }, [searchQuery])
 
   // ── Register the Topbar "+ New Lead" trigger on mount ─────────────────────
   useEffect(() => {

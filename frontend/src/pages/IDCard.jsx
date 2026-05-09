@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import apiClient from '../api/client'
 
 export default function IDCard() {
   const { user } = useAuth()
@@ -7,16 +8,35 @@ export default function IDCard() {
   const [isVisitingCard, setIsVisitingCard] = useState(false)
   const isAdmin = user?.role === 'admin'
   const isManager = user?.role === 'manager'
+
+  const [allUsers, setAllUsers] = useState([])
+  const [selectedUserId, setSelectedUserId] = useState(user?.id)
+  const [targetUser, setTargetUser] = useState(user)
+
+  useEffect(() => {
+    if (isAdmin || isManager) {
+      apiClient.get('/employees').then(res => setAllUsers(res.data?.data || []))
+    }
+  }, [isAdmin, isManager])
+
+  useEffect(() => {
+    if (selectedUserId === user?.id) {
+        setTargetUser(user)
+    } else {
+        const found = allUsers.find(u => u.id === parseInt(selectedUserId))
+        if (found) setTargetUser(found)
+    }
+  }, [selectedUserId, allUsers, user])
   
-  const initials = user?.name
+  const initials = targetUser?.name
     ?.split(' ')
     .map(w => w[0])
     .join('')
     .slice(0, 2)
     .toUpperCase() || 'EF'
 
-  const empId = `EF-${String(user?.id || 1).padStart(5, '0')}`
-  const profilePic = localStorage.getItem('profilePicture') || null
+  const empId = `EF-${String(targetUser?.id || 1).padStart(5, '0')}`
+  const profilePic = targetUser?.profile_picture || null
 
   // Role Themes
   const theme = isAdmin ? {
@@ -70,6 +90,23 @@ export default function IDCard() {
           Visiting Card
         </button>
       </div>
+
+      {/* User Selector for Admin/Manager */}
+      {(isAdmin || isManager) && (
+        <div style={{ marginBottom: 30, width: '100%', maxWidth: 340 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' }}>Select Staff Member</div>
+            <select 
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: 14, border: '2.5px solid #e2e8f0', background: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer', outline: 'none' }}
+            >
+                <option value={user?.id}>Me ({user?.name})</option>
+                {allUsers.filter(u => u.id !== user?.id).map(u => (
+                    <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
+                ))}
+            </select>
+        </div>
+      )}
 
       {/* Card Wrapper (3D Effect) */}
       <div 
@@ -128,12 +165,12 @@ export default function IDCard() {
                     <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', width: '32px', height: '32px', background: '#22c55e', borderRadius: '12px', border: '4px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>✓</div>
                 </div>
 
-                <h2 style={{ fontSize: '24px', fontWeight: 900, color: isAdmin ? 'white' : '#0f172a', margin: '0 0 8px 0', textAlign: 'center' }}>{user?.name}</h2>
+                <h2 style={{ fontSize: '24px', fontWeight: 900, color: isAdmin ? 'white' : '#0f172a', margin: '0 0 8px 0', textAlign: 'center' }}>{targetUser?.name}</h2>
                 <div style={{ 
                     padding: '6px 16px', borderRadius: '12px', background: isAdmin ? `${theme.secondary}20` : '#eff6ff', 
                     color: isAdmin ? theme.secondary : '#1e40af', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' 
                 }}>
-                    {user?.role?.toUpperCase()}
+                    {targetUser?.role?.toUpperCase()}
                 </div>
 
                 {/* Details Grid */}
@@ -209,17 +246,17 @@ export default function IDCard() {
               <div style={{ color: isAdmin ? 'white' : '#1e40af', fontWeight: 900, fontSize: '24px', letterSpacing: '-0.02em', marginBottom: '40px' }}>
                  EASY<span style={{ color: isAdmin ? theme.secondary : '#3b82f6' }}>FINANCE</span>
               </div>
-              <h2 style={{ fontSize: '32px', fontWeight: 900, color: isAdmin ? 'white' : '#0f172a', margin: '0 0 8px 0' }}>{user?.name}</h2>
+              <h2 style={{ fontSize: '32px', fontWeight: 900, color: isAdmin ? 'white' : '#0f172a', margin: '0 0 8px 0' }}>{targetUser?.name}</h2>
               <div style={{ color: isAdmin ? '#94a3b8' : '#64748b', fontSize: '16px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '32px' }}>
-                 {user?.role === 'dsa' ? 'Franchise Partner' : (user?.department || 'Operations')}
+                 {targetUser?.role === 'dsa' ? 'Franchise Partner' : (targetUser?.department || 'Operations')}
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: isAdmin ? '#cbd5e1' : '#475569', fontSize: '14px', fontWeight: 500 }}>
-                    <span style={{ fontSize: '18px' }}>📞</span> {user?.phone || '+91 9876543210'}
+                    <span style={{ fontSize: '18px' }}>📞</span> {targetUser?.phone || '+91 9876543210'}
                  </div>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: isAdmin ? '#cbd5e1' : '#475569', fontSize: '14px', fontWeight: 500 }}>
-                    <span style={{ fontSize: '18px' }}>✉️</span> {user?.email}
+                    <span style={{ fontSize: '18px' }}>✉️</span> {targetUser?.email}
                  </div>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: isAdmin ? '#cbd5e1' : '#475569', fontSize: '14px', fontWeight: 500 }}>
                     <span style={{ fontSize: '18px' }}>🌐</span> www.easyfinance.in
@@ -249,11 +286,11 @@ export default function IDCard() {
             ctx.fillText('EASYFINANCE', 32, 50)
             ctx.font = '800 24px Inter, sans-serif'
             ctx.fillStyle = isAdmin ? '#ffffff' : '#0f172a'
-            ctx.fillText(user?.name || '', 70, isVisitingCard ? 150 : 200)
+            ctx.fillText(targetUser?.name || '', 70, isVisitingCard ? 150 : 200)
             ctx.font = '700 12px Inter, sans-serif'
             ctx.fillStyle = '#64748b'
             ctx.fillText(`ID: ${empId}`, 70, isVisitingCard ? 175 : 225)
-            ctx.fillText(`Role: ${user?.role?.toUpperCase()}`, 180, isVisitingCard ? 175 : 225)
+            ctx.fillText(`Role: ${targetUser?.role?.toUpperCase()}`, 180, isVisitingCard ? 175 : 225)
             ctx.fillText('EasyFinance CRM', 70, isVisitingCard ? 200 : 250)
             const link = document.createElement('a')
             link.download = `EasyFinance_${isVisitingCard ? 'VisitingCard' : 'IDCard'}_${empId}.png`
@@ -271,10 +308,10 @@ export default function IDCard() {
           const vcf = [
             'BEGIN:VCARD',
             'VERSION:3.0',
-            `FN:${user?.name || 'Employee'}`,
-            `TEL;TYPE=CELL:${user?.phone || ''}`,
-            `EMAIL:${user?.email || ''}`,
-            `TITLE:${user?.role?.toUpperCase() || 'STAFF'}`,
+            `FN:${targetUser?.name || 'Employee'}`,
+            `TEL;TYPE=CELL:${targetUser?.phone || ''}`,
+            `EMAIL:${targetUser?.email || ''}`,
+            `TITLE:${targetUser?.role?.toUpperCase() || 'STAFF'}`,
             `ORG:EasyFinance`,
             `NOTE:Employee ID: ${empId}`,
             'END:VCARD'
@@ -283,14 +320,14 @@ export default function IDCard() {
           const url = URL.createObjectURL(blob)
           if (navigator.share) {
             navigator.share({
-              title: `${user?.name} - EasyFinance`,
-              text: `Contact card for ${user?.name}`,
-              files: [new File([blob], `${user?.name}_EasyFinance.vcf`, { type: 'text/vcard' })]
+              title: `${targetUser?.name} - EasyFinance`,
+              text: `Contact card for ${targetUser?.name}`,
+              files: [new File([blob], `${targetUser?.name}_EasyFinance.vcf`, { type: 'text/vcard' })]
             }).catch(() => {
-              const a = document.createElement('a'); a.href = url; a.download = `${user?.name}_EasyFinance.vcf`; a.click()
+              const a = document.createElement('a'); a.href = url; a.download = `${targetUser?.name}_EasyFinance.vcf`; a.click()
             })
           } else {
-            const a = document.createElement('a'); a.href = url; a.download = `${user?.name}_EasyFinance.vcf`; a.click()
+            const a = document.createElement('a'); a.href = url; a.download = `${targetUser?.name}_EasyFinance.vcf`; a.click()
           }
         }} style={{
           padding: '12px 24px', borderRadius: 12, border: 'none',

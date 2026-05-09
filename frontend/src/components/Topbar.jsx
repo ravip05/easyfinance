@@ -81,6 +81,9 @@ export default function Topbar({
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [announcements, setAnnouncements] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem('theme') === 'dark' || document.body.classList.contains('dark-mode')
+  })
 
   const role       = user?.role ?? 'staff'
   const activePage = location.pathname.replace(/^\//, '').split('/')[0] || 'dashboard'
@@ -103,8 +106,21 @@ export default function Topbar({
   useState(() => {
     fetchNotifications()
     const interval = setInterval(fetchNotifications, 60000) // update every minute
+    
+    // Sync initial theme
+    if (isDark) document.body.classList.add('dark-mode')
+    else document.body.classList.remove('dark-mode')
+
     return () => clearInterval(interval)
   }, [])
+
+  function toggleTheme() {
+    const newDark = !isDark
+    setIsDark(newDark)
+    localStorage.setItem('theme', newDark ? 'dark' : 'light')
+    if (newDark) document.body.classList.add('dark-mode')
+    else document.body.classList.remove('dark-mode')
+  }
 
   // Derive the topbar title from the route
   const rawTitle = PAGE_TITLES[activePage] ?? activePage
@@ -198,6 +214,17 @@ export default function Topbar({
         >
           {pillConfig.label}
         </span>
+
+        {/* Theme Toggle */}
+        <button
+          className="icon-btn"
+          onClick={toggleTheme}
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label="Toggle theme"
+          style={{ fontSize: '18px' }}
+        >
+          {isDark ? '☀️' : '🌙'}
+        </button>
 
         {/* Notification bell */}
         <div style={{ position: 'relative' }}>

@@ -25,7 +25,7 @@
  *     import { useSearchQuery } from '../components/MainLayout'
  *     const searchQuery = useSearchQuery()
  */
-import { useState, createContext, useContext, useCallback } from 'react'
+import { useState, createContext, useContext, useCallback, useEffect, useRef } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar  from './Topbar'
@@ -80,6 +80,51 @@ export default function MainLayout() {
     newLeadCallback?.()
   }
 
+  // ── Pull to Refresh ──
+  const [pulling, setPulling] = useState(false)
+  const touchStart = useRef(0)
+  
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      if (window.scrollY === 0) {
+        touchStart.current = e.touches[0].clientY
+      } else {
+        touchStart.current = 0
+      }
+    }
+
+    const handleTouchMove = (e) => {
+      if (touchStart.current === 0) return
+      const currentY = e.touches[0].clientY
+      const diff = currentY - touchStart.current
+      if (diff > 50 && diff < 150) {
+        setPulling(true)
+      } else if (diff <= 50) {
+        setPulling(false)
+      }
+    }
+
+    const handleTouchEnd = (e) => {
+      if (touchStart.current === 0) return
+      const currentY = e.changedTouches[0].clientY
+      const diff = currentY - touchStart.current
+      if (diff > 100) {
+        window.location.reload()
+      }
+      setPulling(false)
+      touchStart.current = 0
+    }
+
+    window.addEventListener('touchstart', handleTouchStart)
+    window.addEventListener('touchmove', handleTouchMove)
+    window.addEventListener('touchend', handleTouchEnd)
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchmove', handleTouchMove)
+      window.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [])
+
   return (
     <NewLeadContext.Provider value={registerNewLeadHandler}>
       <SearchContext.Provider value={searchQuery}>
@@ -113,8 +158,17 @@ export default function MainLayout() {
 
           {/* ── Page content ── */}
           <div className="content">
+            {pulling && (
+              <div style={{ position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 999, background: 'white', padding: '8px 16px', borderRadius: 20, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ animation: 'spin 1s linear infinite' }}>↻</span> Release to refresh
+              </div>
+            )}
             <Outlet />
           </div>
+
+          <style>{`
+            @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          `}</style>
 
         </main>
 
