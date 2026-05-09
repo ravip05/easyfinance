@@ -14,4 +14,4 @@ php artisan route:cache
 php artisan view:cache
 
 echo "Running migrations with force flag..."
-php artisan migrate --force
+php artisan migrate --force --seed

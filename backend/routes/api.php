@@ -47,7 +47,12 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::get('db-check', function() {
         try {
             \DB::connection()->getPdo();
-            return response()->json(['success' => true, 'message' => 'Database connection verified!']);
+            $userCount = \App\Models\User::count();
+            return response()->json([
+                'success' => true, 
+                'message' => 'Database connection verified!',
+                'user_count' => $userCount
+            ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
