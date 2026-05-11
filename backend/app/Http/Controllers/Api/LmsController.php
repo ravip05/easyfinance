@@ -19,7 +19,7 @@ class LmsController extends Controller {
         if ($user->role !== 'admin') $q->where('is_active', true);
         return response()->json($q->orderBy('sort_order')->get()->map(function($c) use($user) {
             $enrollment = CourseEnrollment::where('user_id',$user->id)->where('course_id',$c->id)->first();
-            return array_merge((array)$c,['progress'=>$enrollment?->progress ?? 0,'enrolled'=>(bool)$enrollment]);
+            return array_merge($c->toArray(),['progress'=>$enrollment?->progress ?? 0,'enrolled'=>(bool)$enrollment]);
         }));
     }
     public function storeCourse(Request $request) {

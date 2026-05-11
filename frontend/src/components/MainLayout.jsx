@@ -159,8 +159,8 @@ export default function MainLayout() {
           {/* ── Page content ── */}
           <div className="content">
             {pulling && (
-              <div style={{ position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 999, background: 'white', padding: '8px 16px', borderRadius: 20, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 12, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ animation: 'spin 1s linear infinite' }}>↻</span> Release to refresh
+              <div style={{ position: 'fixed', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'var(--surface)', padding: '10px 20px', borderRadius: 24, boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', fontSize: 13, fontWeight: 800, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ animation: 'spin 1s linear infinite', fontSize: 18 }}>↻</span> Release to refresh
               </div>
             )}
             <Outlet />
